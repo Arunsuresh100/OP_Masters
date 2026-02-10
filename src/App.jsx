@@ -3,7 +3,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 // import LatestVideos from './components/LatestVideos';
 import AboutCards from './components/AboutCards';
-// import CardTypes from './components/CardTypes';
+import CardTypes from './components/CardTypes';
 // import LatestNews from './components/LatestNews';
 // import Shop from './components/Shop';
 // import Footer from './components/Footer';
