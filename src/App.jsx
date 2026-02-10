@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import LatestVideos from './components/LatestVideos';
+// import LatestVideos from './components/LatestVideos';
 import AboutCards from './components/AboutCards';
-import CardTypes from './components/CardTypes';
-import LatestNews from './components/LatestNews';
-import Shop from './components/Shop';
-import Footer from './components/Footer';
-import { API_KEY, CHANNEL_HANDLE, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS } from './constants';
-import { parseDuration, timeAgo } from './utils';
+// import CardTypes from './components/CardTypes';
+// import LatestNews from './components/LatestNews';
+// import Shop from './components/Shop';
+// import Footer from './components/Footer';
+import { API_KEY, CHANNEL_HANDLE, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS, RARITIES } from './constants';
+import { parseDuration, timeAgo, formatCompactNumber } from './utils';
 
 const App = () => {
   const [currency, setCurrency] = useState('USD');
@@ -27,6 +27,27 @@ const App = () => {
     avatar: CHANNEL_LOGO_URL 
   });
   const [latestVideos, setLatestVideos] = useState([]);
+
+  // Search Logic: Scroll to section if query matches
+  useEffect(() => {
+    if (!searchQuery) return;
+    const query = searchQuery.toLowerCase();
+    
+    // 1. "About" -> Scroll to AboutCards section
+    if (query.includes('about')) {
+      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+    } 
+    // 2. Rarity Name (e.g., "common", "manga") -> Scroll to Rarity Section
+    else {
+      const matchedRarity = RARITIES.find(r => 
+        r.name.toLowerCase().includes(query) || 
+        r.id.toLowerCase().includes(query)
+      );
+      if (matchedRarity) {
+        document.getElementById(matchedRarity.id)?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchYouTubeData = async () => {
@@ -55,9 +76,9 @@ const App = () => {
           name: channelItem.snippet.title,
           handle: channelItem.snippet.customUrl || '@OnepieceMasters',
           url: `https://www.youtube.com/channel/${channelId}`,
-          subscribers: parseInt(channelItem.statistics.subscriberCount).toLocaleString(),
-          videos: parseInt(channelItem.statistics.videoCount).toLocaleString(),
-          likes: parseInt(channelItem.statistics.viewCount).toLocaleString(),
+          subscribers: formatCompactNumber(channelItem.statistics.subscriberCount),
+          videos: formatCompactNumber(channelItem.statistics.videoCount),
+          likes: formatCompactNumber(channelItem.statistics.viewCount),
           avatar: CHANNEL_LOGO_URL 
         });
 
@@ -107,7 +128,12 @@ const App = () => {
 
       } catch (err) {
         console.warn("YouTube Fetch Error (Using Fallback):", err);
-        setChannelData(FALLBACK_CHANNEL_DATA);
+        setChannelData({
+            ...FALLBACK_CHANNEL_DATA,
+            subscribers: formatCompactNumber(102000),
+            videos: formatCompactNumber(450),
+            likes: formatCompactNumber(12500000)
+        });
         setLatestVideos(FALLBACK_VIDEOS);
         setLoading(false);
       }
@@ -129,17 +155,17 @@ const App = () => {
       
       <Hero channelData={channelData} />
       
-      <LatestVideos videos={latestVideos} loading={loading} />
+      {/* <LatestVideos videos={latestVideos} loading={loading} /> */}
       
       <AboutCards />
       
       <CardTypes searchQuery={searchQuery} currency={currency} />
       
-      <LatestNews />
+      {/* <LatestNews /> */}
       
-      <Shop currency={currency} />
+      {/* <Shop currency={currency} /> */}
       
-      <Footer channelUrl={channelData.url} />
+      {/* <Footer channelUrl={channelData.url} /> */}
 
       <style>{`@keyframes zoom { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.15); } }`}</style>
     </div>

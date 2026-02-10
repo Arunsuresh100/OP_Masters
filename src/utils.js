@@ -30,3 +30,12 @@ export const parseDuration = (isoDuration) => {
     }
     return `$${val.toFixed(2)}`;
   };
+
+  export const formatCompactNumber = (number) => {
+    const num = Number(number);
+    if (isNaN(num) || (!num && num !== 0)) return '---';
+    return new Intl.NumberFormat('en-US', {
+      notation: "compact",
+      maximumFractionDigits: 1
+    }).format(num);
+  };
