@@ -289,45 +289,49 @@ const App = () => {
 
 
 
-  // Fallback Data for when API fails (Quota limit or other errors)
+
+
+  // Fallback Data - SPECIFIC to One Piece Masters Channel Context
   const FALLBACK_CHANNEL_DATA = {
     name: 'One Piece Masters',
     handle: '@OnepieceMasters',
     url: 'https://www.youtube.com/@OnepieceMasters',
-    subscribers: 102000,
+    subscribers: 102000, // Estimated/Placeholder based on user request
     videos: 450,
     likes: 12500000,
     avatar: CHANNEL_LOGO_URL 
   };
 
+  // Using generic high-quality thumbnails that match the channel's "Opening/Pull" theme
   const FALLBACK_VIDEOS = [
     {
-      id: 'fallback-1',
-      title: 'HUNTING FOR MANGA SHAnKS! (OP-01 Booster Box Opening)',
-      thumbnail: 'https://tcgplayer-cdn.tcgplayer.com/product/454536_in_600x600.jpg', // Shanks
-      timeAgo: '2 days ago',
-      duration: 1205 // ~20 mins
+      id: 'fb-1',
+      title: 'OPENING THE NEW OP-10 GOD PACK?! 😱🔥',
+      thumbnail: 'https://i.ytimg.com/vi/placeholder1/maxresdefault.jpg', // We'll use a better placeholder below
+      imgUrl: 'https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=1600&auto=format&fit=crop', // Card spread
+      timeAgo: '1 day ago',
+      duration: 865 
     },
     {
-      id: 'fallback-2',
-      title: 'THE BEST DECK IN OP-05? Luffy Gear 5 Gameplay',
-      thumbnail: 'https://tcgplayer-cdn.tcgplayer.com/product/516558_in_600x600.jpg', // Luffy
-      timeAgo: '5 days ago',
-      duration: 1840 // ~30 mins
+      id: 'fb-2',
+      title: 'Searching for MANGA LUFFY in OP-05! (My Wallet Cries)',
+      imgUrl: 'https://images.unsplash.com/photo-1607604276583-eef5f076eb86?q=80&w=1600&auto=format&fit=crop', // Anime figure/cards
+      timeAgo: '3 days ago',
+      duration: 1420 
     },
     {
-      id: 'fallback-3',
-      title: 'MARKET WATCH: Manga Rare Prices SKYROCKET! 📈',
-      thumbnail: 'https://tcgplayer-cdn.tcgplayer.com/product/500118_in_600x600.jpg', // Sogeking
+      id: 'fb-3',
+      title: 'Top 10 MOST EXPENSIVE One Piece Cards Right Now �',
+      imgUrl: 'https://images.unsplash.com/photo-1593305841991-05c2e449e08e?q=80&w=1600&auto=format&fit=crop', // Cards
       timeAgo: '1 week ago',
-      duration: 950 // ~15 mins
+      duration: 1150 
     },
     {
-      id: 'fallback-4',
-      title: 'Golden DON!! Pull Reaction - 1 in 10 Cases?!',
-      thumbnail: 'https://tcgplayer-cdn.tcgplayer.com/product/586884_in_600x600.jpg', // Golden Don
+      id: 'fb-4',
+      title: 'Grading Returns! PSA 10 or Bust? 💎',
+      imgUrl: 'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?q=80&w=1600&auto=format&fit=crop', // Slabs
       timeAgo: '2 weeks ago',
-      duration: 645 // ~10 mins
+      duration: 980 
     }
   ];
 
@@ -335,13 +339,14 @@ const App = () => {
     const fetchYouTubeData = async () => {
       try {
         setLoading(true);
+        // ... (API calls remain the same)
         const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(CHANNEL_HANDLE)}&type=channel&key=${API_KEY}`;
         const searchRes = await fetch(searchUrl);
         const searchData = await searchRes.json();
         
         if (!searchData.items || searchData.items.length === 0) throw new Error('Channel not found.');
         const channelId = searchData.items[0].id.channelId;
-
+  
         const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&id=${channelId}&key=${API_KEY}`;
         const channelResponse = await fetch(channelUrl);
         const channelDetails = await channelResponse.json();
@@ -400,9 +405,15 @@ const App = () => {
 
       } catch (err) {
         console.warn("YouTube API Error (Using Fallback Data):", err);
-        // Apply Fallback Data
         setChannelData(FALLBACK_CHANNEL_DATA);
-        setLatestVideos(FALLBACK_VIDEOS);
+        // Map fallback videos to the expected format
+        setLatestVideos(FALLBACK_VIDEOS.map(v => ({
+            id: v.id,
+            title: v.title,
+            thumbnail: v.imgUrl,
+            timeAgo: v.timeAgo,
+            duration: v.duration
+        })));
         setVideoLoading(false);
       } finally {
         setLoading(false);
@@ -778,6 +789,31 @@ const App = () => {
         @keyframes zoom { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.15); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
+      {/* Mobile Bottom Navigation (App-like feel) */}
+      <div className="fixed bottom-0 left-0 w-full bg-slate-950/90 backdrop-blur-xl border-t border-white/10 md:hidden z-50 pb-safe">
+        <div className="flex justify-around items-center h-16">
+          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex flex-col items-center justify-center w-full h-full text-amber-500">
+            <TrendingUp className="w-6 h-6" />
+            <span className="text-[10px] font-bold mt-1">Home</span>
+          </button>
+          <button onClick={() => document.getElementById('latest-uploads')?.scrollIntoView({ behavior: 'smooth' })} className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
+            <Play className="w-6 h-6" />
+            <span className="text-[10px] font-bold mt-1">Videos</span>
+          </button>
+          <button onClick={() => document.getElementById('common')?.scrollIntoView({ behavior: 'smooth' })} className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
+            <Crown className="w-6 h-6" />
+            <span className="text-[10px] font-bold mt-1">Rarities</span>
+          </button>
+          <a href={channelData.url} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
+            <Users className="w-6 h-6" />
+            <span className="text-[10px] font-bold mt-1">Channel</span>
+          </a>
+        </div>
+      </div>
+      
+      {/* Safe Area Spacer for Mobile Nav */}
+      <div className="h-20 md:hidden"></div>
+
     </div>
   );
 };
