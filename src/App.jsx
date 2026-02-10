@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import heroImage from './assets/hero.png';
 import { 
   TrendingUp, 
   Shield, 
@@ -18,16 +17,14 @@ import {
   Play,
   ShoppingCart,
   Users,
-  Clock,
-  Instagram
+  Clock
 } from 'lucide-react';
 
-const USD_TO_INR = 84; 
+const USD_TO_INR = 83.5;
 const API_KEY = 'AIzaSyB3JbL6gT9m-IadtGVDJc1qwYb-68JYk38';
 const CHANNEL_HANDLE = 'OnepieceMasters'; 
 const CHANNEL_LOGO_URL = 'https://yt3.googleusercontent.com/z6rQcZJc1FCx3Edymkt5UgtdBe4GtIUGiVr8y--N6BYbYeo52PeVHhdLyEQ3aLEiYsc1j-v6=s160-c-k-c0x00ffffff-no-rj';
 
-// Updated with User's Specific Data & Image Links
 const RARITIES = [
   {
     id: 'common',
@@ -159,25 +156,26 @@ const RARITIES = [
 
 const PURCHASE_OPTIONS = [
   {
-    name: 'Booster Box (OP-14)',
-    price: 109.99,
+    name: 'Booster Box (24 Packs)',
+    price: 89.99,
     link: 'https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&view=grid',
-    tag: 'Azure Sea'
+    tag: 'Best Value'
   },
   {
-    name: 'Booster Pack (OP-14)',
+    name: 'Single Booster Pack',
     price: 4.99,
     link: 'https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&view=grid',
     tag: 'Try Your Luck'
   },
   {
-    name: 'Double Pack Set',
+    name: 'Starter Deck',
     price: 12.99,
     link: 'https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&view=grid',
-    tag: 'Bonus Don!!'
+    tag: 'Beginner'
   }
 ];
 
+// Helper: Convert ISO8601 duration to seconds (e.g., PT1M5S -> 65)
 const parseDuration = (isoDuration) => {
   const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
   const matches = isoDuration.match(regex);
@@ -204,14 +202,7 @@ const timeAgo = (dateString) => {
   return `${diffInDays}d ago`;
 };
 
-const formatCompactNumber = (num) => {
-  if (!num || isNaN(num)) return '---';
-  return new Intl.NumberFormat('en-US', {
-    notation: 'compact',
-    maximumFractionDigits: 1
-  }).format(num);
-};
-
+// New Skeleton Loader Component
 const VideoSkeleton = () => (
   <div className="min-w-[320px] w-[320px] bg-slate-800/50 rounded-2xl p-4 animate-pulse border border-white/5">
      <div className="w-full aspect-video bg-slate-700/50 rounded-xl mb-4"></div>
@@ -247,8 +238,7 @@ const App = () => {
   const [currency, setCurrency] = useState('USD');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [videoLoading, setVideoLoading] = useState(true); 
-  const [cardsLoading, setCardsLoading] = useState(true); 
+  const [videoLoading, setVideoLoading] = useState(true); // Specific loader for videos
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [channelData, setChannelData] = useState({
@@ -263,131 +253,63 @@ const App = () => {
   const [latestVideos, setLatestVideos] = useState([]);
 
   useEffect(() => {
-    if (!searchQuery) return;
-    const lowerQuery = searchQuery.toLowerCase();
-    
-    const matchedRarity = RARITIES.find(r => 
-      r.name.toLowerCase().includes(lowerQuery) || 
-      r.code.toLowerCase() === lowerQuery ||
-      r.id.includes(lowerQuery)
-    );
-
-    if (matchedRarity) {
-      const element = document.getElementById(matchedRarity.id);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-  }, [searchQuery]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCardsLoading(false);
-    }, 1200); 
-    return () => clearTimeout(timer);
-  }, []);
-
-
-
-
-
-  // Fallback Data - SPECIFIC to One Piece Masters Channel Context
-  const FALLBACK_CHANNEL_DATA = {
-    name: 'One Piece Masters',
-    handle: '@OnepieceMasters',
-    url: 'https://www.youtube.com/@OnepieceMasters',
-    subscribers: 102000, // Estimated/Placeholder based on user request
-    videos: 450,
-    likes: 12500000,
-    avatar: CHANNEL_LOGO_URL 
-  };
-
-  // Using generic high-quality thumbnails that match the channel's "Opening/Pull" theme
-  const FALLBACK_VIDEOS = [
-    {
-      id: 'fb-1',
-      title: 'OPENING THE NEW OP-10 GOD PACK?! 😱🔥',
-      thumbnail: 'https://i.ytimg.com/vi/placeholder1/maxresdefault.jpg', // We'll use a better placeholder below
-      imgUrl: 'https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=1600&auto=format&fit=crop', // Card spread
-      timeAgo: '1 day ago',
-      duration: 865 
-    },
-    {
-      id: 'fb-2',
-      title: 'Searching for MANGA LUFFY in OP-05! (My Wallet Cries)',
-      imgUrl: 'https://images.unsplash.com/photo-1607604276583-eef5f076eb86?q=80&w=1600&auto=format&fit=crop', // Anime figure/cards
-      timeAgo: '3 days ago',
-      duration: 1420 
-    },
-    {
-      id: 'fb-3',
-      title: 'Top 10 MOST EXPENSIVE One Piece Cards Right Now �',
-      imgUrl: 'https://images.unsplash.com/photo-1593305841991-05c2e449e08e?q=80&w=1600&auto=format&fit=crop', // Cards
-      timeAgo: '1 week ago',
-      duration: 1150 
-    },
-    {
-      id: 'fb-4',
-      title: 'Grading Returns! PSA 10 or Bust? 💎',
-      imgUrl: 'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?q=80&w=1600&auto=format&fit=crop', // Slabs
-      timeAgo: '2 weeks ago',
-      duration: 980 
-    }
-  ];
-
-  useEffect(() => {
     const fetchYouTubeData = async () => {
       try {
         setLoading(true);
-        // ... (API calls remain the same)
+        // 1. Channel ID Search
         const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(CHANNEL_HANDLE)}&type=channel&key=${API_KEY}`;
         const searchRes = await fetch(searchUrl);
         const searchData = await searchRes.json();
         
         if (!searchData.items || searchData.items.length === 0) throw new Error('Channel not found.');
         const channelId = searchData.items[0].id.channelId;
-  
+
+        // 2. Channel Details
         const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&id=${channelId}&key=${API_KEY}`;
         const channelResponse = await fetch(channelUrl);
         const channelDetails = await channelResponse.json();
-        
-        if (!channelDetails.items) throw new Error('Channel details failed');
         const channelItem = channelDetails.items[0];
         
         setChannelData({
           name: channelItem.snippet.title,
           handle: channelItem.snippet.customUrl || '@OnepieceMasters',
           url: `https://www.youtube.com/channel/${channelId}`,
-          subscribers: parseInt(channelItem.statistics.subscriberCount),
-          videos: parseInt(channelItem.statistics.videoCount),
-          likes: parseInt(channelItem.statistics.viewCount),
+          subscribers: parseInt(channelItem.statistics.subscriberCount).toLocaleString(),
+          videos: parseInt(channelItem.statistics.videoCount).toLocaleString(),
+          likes: parseInt(channelItem.statistics.viewCount).toLocaleString(),
           avatar: CHANNEL_LOGO_URL 
         });
 
         const uploadsPlaylistId = channelItem.contentDetails.relatedPlaylists.uploads;
 
+        // 3. Videos (Robust Fetch for Length)
         setVideoLoading(true);
+        // Get more items initially (30) to ensure we have enough after filtering shorts
         const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=30&key=${API_KEY}`;
         const playlistResponse = await fetch(playlistUrl);
         const playlistData = await playlistResponse.json();
 
         if (playlistData.items) {
+           // Get IDs to fetch duration
            const videoIds = playlistData.items.map(item => item.contentDetails.videoId).join(',');
+           
+           // Fetch Video Details for Duration
            const durationUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${API_KEY}`;
            const durationResponse = await fetch(durationUrl);
            const durationData = await durationResponse.json();
            
+           // Map durations to IDs
            const durationMap = {};
-           if (durationData.items) {
-             durationData.items.forEach(v => {
-                durationMap[v.id] = parseDuration(v.contentDetails.duration);
-             });
-           }
+           durationData.items.forEach(v => {
+              durationMap[v.id] = parseDuration(v.contentDetails.duration);
+           });
 
+           // Filter: Must be > 60 seconds (Shorts limit is usually 60s)
            const longFormVideos = playlistData.items.filter(item => {
               const duration = durationMap[item.contentDetails.videoId];
+              // YouTube shorts can be up to 60s, playing it safe with 65s filter
               return duration > 65; 
-           }).slice(0, 6);
+           }).slice(0, 6); // Take top 6 long videos
 
            const formattedVideos = longFormVideos.map(item => ({
              id: item.contentDetails.videoId,
@@ -398,35 +320,24 @@ const App = () => {
            }));
            
            setLatestVideos(formattedVideos);
-        } else {
-            throw new Error('Playlist items failed');
         }
+        setLoading(false);
         setVideoLoading(false);
 
       } catch (err) {
-        console.warn("YouTube API Error (Using Fallback Data):", err);
-        setChannelData(FALLBACK_CHANNEL_DATA);
-        // Map fallback videos to the expected format
-        setLatestVideos(FALLBACK_VIDEOS.map(v => ({
-            id: v.id,
-            title: v.title,
-            thumbnail: v.imgUrl,
-            timeAgo: v.timeAgo,
-            duration: v.duration
-        })));
-        setVideoLoading(false);
-      } finally {
+        console.error("YouTube Fetch Error:", err);
         setLoading(false);
+        setVideoLoading(false);
       }
     };
     fetchYouTubeData();
   }, []);
 
-  const formatPrice = (val, isApprox = false) => {
+  const formatPrice = (val) => {
     if (currency === 'INR') {
-       return `₹${Math.round(val * USD_TO_INR).toLocaleString('en-IN')}${isApprox ? '*' : ''}`; 
+       return `₹${(val * USD_TO_INR).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
     }
-    return `$${val.toFixed(2)}${isApprox ? '*' : ''}`;
+    return `$${val.toFixed(2)}`;
   };
 
   return (
@@ -452,7 +363,7 @@ const App = () => {
               </div>
               <input
                 type="text"
-                placeholder="Search rarity (e.g. 'Common', 'Manga')..."
+                placeholder="Search cards, sets..."
                 className="block w-full pl-10 pr-3 py-2 border border-slate-700 rounded-full leading-5 bg-slate-900/50 text-slate-300 placeholder-slate-500 focus:outline-none focus:bg-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 sm:text-sm transition-all shadow-inner"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -465,9 +376,6 @@ const App = () => {
                <button onClick={() => setCurrency('USD')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${currency === 'USD' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}>USD</button>
                <button onClick={() => setCurrency('INR')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${currency === 'INR' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}>INR</button>
              </div>
-             <a href="https://www.instagram.com/masterztcgverse/" target="_blank" rel="noopener noreferrer" className="p-2 text-slate-400 hover:text-pink-500 transition-colors">
-               <Instagram className="w-5 h-5" />
-             </a>
              <button className="md:hidden p-2 text-slate-400 hover:text-white transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
              </button>
@@ -478,88 +386,69 @@ const App = () => {
       {/* Hero Section */}
       <header className="relative w-full min-h-[600px] md:min-h-[700px] flex items-center overflow-hidden pt-20">
          <div className="absolute inset-0 z-0">
-           <img src="https://images.alphacoders.com/133/1334415.png" alt="One Piece Hero" className="w-full h-full object-cover opacity-20 scale-110 animate-[zoom_20s_ease-in-out_infinite]" />
-           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/95 to-slate-950/40" />
+           <img src="https://images.alphacoders.com/133/1334415.png" alt="One Piece Hero" className="w-full h-full object-cover opacity-30 scale-110 animate-[zoom_20s_ease-in-out_infinite]" />
+           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent" />
            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50" />
          </div>
-         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full py-12 md:py-20">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Left Content */}
-              <div className="space-y-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-600/20 to-red-800/20 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-                  <Youtube className="w-4 h-4" /> Official Channel
-                </div>
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[0.95] tracking-tighter">
-                  Discover <br /> Card <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-red-600 bg-clip-text text-transparent">Rarities</span>
-                </h1>
-                <p className="text-lg md:text-xl text-slate-300 max-w-xl leading-relaxed font-medium">
-                  Join One Piece Masters ({channelData.handle}) as we open packs, hunt for Mangas, and build the ultimate decks!
-                </p>
-                <div className="flex flex-wrap gap-4 pt-4">
-                  <a href={channelData.url} target="_blank" rel="noopener noreferrer" className="group px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl font-bold text-base hover:shadow-2xl hover:shadow-red-500/50 transition-all flex items-center gap-3 transform hover:scale-105">
-                    <Youtube className="w-5 h-5" /> Subscribe Now <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </a>
-                </div>
-                <div className="grid grid-cols-3 gap-4 pt-8 border-t border-white/5">
-                   <div className="text-left">
-                     <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{formatCompactNumber(channelData.subscribers)}</div>
-                     <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Subscribers</div>
-                   </div>
-                   <div className="text-left">
-                     <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{formatCompactNumber(channelData.videos)}</div>
-                     <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Videos</div>
-                   </div>
-                   <div className="text-left">
-                     <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{formatCompactNumber(channelData.likes)}</div>
-                     <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Views</div>
-                   </div>
-                </div>
+         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full py-20">
+            <div className="max-w-3xl space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-600/20 to-red-800/20 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
+                <Youtube className="w-4 h-4" /> Official Channel
               </div>
-
-              {/* Right Image - Desktop Only */}
-              <div className="hidden lg:block relative h-full min-h-[500px] w-full">
-                 <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-slate-950/20 z-10"></div>
-                 
-                 {/* Image Container with Loading State */}
-                 <div className={`transition-opacity duration-1000 ease-in-out ${loading ? 'opacity-0' : 'opacity-100'}`}>
-                   <img 
-                     src={heroImage} 
-                     alt="Luffy Joyboy" 
-                     className="w-full h-full object-contain drop-shadow-2xl mask-image-gradient"
-                     style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
-                     onLoad={() => setLoading(false)}
-                   />
+              <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.95] tracking-tighter">
+                Discover <br /> Card <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-red-600 bg-clip-text text-transparent">Rarities</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-slate-300 max-w-2xl leading-relaxed font-medium">
+                Join One Piece Masters ({channelData.handle}) as we open packs, hunt for Mangas, and build the ultimate decks!
+              </p>
+              <div className="flex flex-wrap gap-4 pt-6">
+                <a href={channelData.url} target="_blank" rel="noopener noreferrer" className="group px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl font-bold text-base hover:shadow-2xl hover:shadow-red-500/50 transition-all flex items-center gap-3 transform hover:scale-105">
+                  <Youtube className="w-5 h-5" /> Subscribe Now <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+              </div>
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-6 pt-8 max-w-xl">
+                 <div className="text-center">
+                   <div className="text-3xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{channelData.subscribers}</div>
+                   <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Subscribers</div>
                  </div>
-
-                 {/* Glow Effect */}
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-amber-500/20 blur-[100px] rounded-full -z-10"></div>
+                 <div className="text-center">
+                   <div className="text-3xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{channelData.videos}</div>
+                   <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Videos Posted</div>
+                 </div>
+                 <div className="text-center">
+                   <div className="text-3xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{channelData.likes}</div>
+                   <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Total Views</div>
+                 </div>
               </div>
             </div>
          </div>
       </header>
 
-      {/* Latest Uploads Section */}
+      {/* Improved Latest Uploads Section */}
       <section className="relative py-24 px-4 sm:px-6 overflow-hidden">
+        {/* Background Accents */}
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"></div>
         <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-red-900/10 blur-[150px] -translate-y-1/2 rounded-full pointer-events-none"></div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
-             <div>
-               <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20">
-                    <Play className="w-5 h-5 text-red-500" fill="currentColor" />
-                  </div>
-                  <h3 className="text-3xl md:text-4xl font-black text-white tracking-tight">Latest Openings</h3>
-               </div>
-               <p className="text-base text-slate-400 font-medium max-w-lg">
-                  Catch up on the newest box breaks, deck profiles, and rare pulls. 
-                  {/* <span className="text-amber-500 font-bold ml-1">Full content only, no shorts.</span> */}
-               </p>
-             </div>
-             <a href="https://www.youtube.com/@OnepieceMasters/videos" target="_blank" rel="noopener noreferrer" className="hidden md:flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition-colors group">
-                View All Videos <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-             </a>
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                 <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                   <Play className="w-5 h-5 text-red-500" fill="currentColor" />
+                 </div>
+                 <h3 className="text-3xl md:text-4xl font-black text-white tracking-tight">Latest Openings</h3>
+              </div>
+              <p className="text-base text-slate-400 font-medium max-w-lg">
+                 Catch up on the newest box breaks, deck profiles, and rare pulls. 
+                 <span className="text-amber-500 font-bold ml-1">Full content only, no shorts.</span>
+              </p>
+            </div>
+            
+            <a href="https://www.youtube.com/@OnepieceMasters/videos" target="_blank" rel="noopener noreferrer" className="hidden md:flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition-colors group">
+               View All Videos <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </a>
           </div>
           
           {videoLoading ? (
@@ -571,6 +460,7 @@ const App = () => {
              </div>
           ) : (
             <div className="relative group/slider">
+              {/* Main Scroll Container */}
               <div className="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory scroll-smooth hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {latestVideos.map((video) => (
                   <a 
@@ -580,23 +470,32 @@ const App = () => {
                     rel="noopener noreferrer"
                     className="group block min-w-[320px] w-[320px] snap-start relative transform transition-all hover:-translate-y-1"
                   >
+                    {/* Thumbnail Container */}
                     <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-800 border border-white/10 shadow-lg group-hover:shadow-red-900/20 transition-all">
                       <img 
                         src={video.thumbnail} 
                         alt={video.title}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
+                      
+                      {/* Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                      
+                      {/* Play Button */}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100">
                         <div className="w-14 h-14 rounded-full bg-red-600/90 backdrop-blur-sm flex items-center justify-center shadow-xl">
                           <Play className="w-6 h-6 text-white ml-1" fill="white" />
                         </div>
                       </div>
+
+                      {/* Duration Badge (Mocked or calculated if fetched) */}
                       <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 flex items-center gap-1.5 shadow-lg">
                         <Clock className="w-3 h-3 text-white" />
                         <span className="text-[10px] font-bold text-white tracking-wider">VIDEO</span>
                       </div>
                     </div>
+
+                    {/* Content */}
                     <div className="mt-4 px-1">
                       <h4 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-2 leading-snug">
                         {video.title}
@@ -612,6 +511,7 @@ const App = () => {
                   </a>
                 ))}
                 
+                {/* See All Card */}
                 <a 
                   href="https://www.youtube.com/@OnepieceMasters/videos" 
                   target="_blank" 
@@ -645,99 +545,80 @@ const App = () => {
               Explore the hierarchy below to learn what to look for!
             </p>
          </div>
+         {/* Decorative Background for Intro */}
          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
             <div className="absolute top-[-50%] left-[-20%] w-[1000px] h-[1000px] bg-gradient-to-r from-amber-500/20 to-transparent rounded-full blur-[150px]"></div>
          </div>
       </section>
 
-      {/* Rarity List with User Requested Format (No character names) */}
+      {/* Rarity List */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-24 space-y-16">
-        {cardsLoading ? (
-           <div className="space-y-16 animate-pulse">
-             {[1,2,3].map(i => (
-                <div key={i} className="flex flex-col lg:flex-row gap-12 opacity-50">
-                   <div className="w-20 h-20 bg-slate-800 rounded-3xl"></div>
-                   <div className="flex-1 space-y-4">
-                      <div className="h-10 bg-slate-800 rounded-xl w-1/3"></div>
-                      <div className="h-32 bg-slate-800 rounded-xl w-full"></div>
-                   </div>
-                </div>
-             ))}
-           </div>
-        ) : (
-          RARITIES.map((rarity, index) => {
-             const IconComponent = rarity.icon;
-             return (
-               <section 
-                 id={rarity.id} 
-                 key={rarity.id} 
-                 className="scroll-mt-32 border-b border-white/5 pb-16 last:border-0 last:pb-0 animate-[fadeIn_0.8s_ease-out_forwards]"
-                 style={{ animationDelay: `${index * 100}ms` }}
-               >
-                 <div className="flex flex-col gap-12">
-                   <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-                     <div className="flex items-start gap-5 lg:w-auto">
-                       <div className={`relative w-20 h-20 rounded-3xl bg-gradient-to-br ${rarity.gradient} flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform flex-shrink-0`}>
-                         <div className="absolute inset-0 bg-white/10 rounded-3xl backdrop-blur-sm"></div>
-                         <IconComponent className="relative z-10 w-10 h-10 text-white" strokeWidth={2} />
-                       </div>
-                       <div className="flex-1">
-                         <span className={`inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${rarity.textColor} bg-white/5 rounded-full mb-2`}>{rarity.tag}</span>
-                         <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">{rarity.name}</h2>
-                         <div className="flex items-center gap-2 mt-2">
-                           <div className={`w-auto px-3 h-8 rounded-lg bg-gradient-to-br ${rarity.gradient} flex items-center justify-center shadow-lg`}>
-                             <span className="text-xs font-black text-white whitespace-nowrap">{rarity.code}</span>
-                           </div>
-                         </div>
-                       </div>
+        {RARITIES.map((rarity) => {
+           const IconComponent = rarity.icon;
+           return (
+             <section key={rarity.id} className="scroll-mt-24 border-b border-white/5 pb-16 last:border-0 last:pb-0">
+               <div className="flex flex-col gap-12">
+                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                   <div className="flex items-start gap-5 lg:w-auto">
+                     <div className={`relative w-20 h-20 rounded-3xl bg-gradient-to-br ${rarity.gradient} flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform flex-shrink-0`}>
+                       <div className="absolute inset-0 bg-white/10 rounded-3xl backdrop-blur-sm"></div>
+                       <IconComponent className="relative z-10 w-10 h-10 text-white" strokeWidth={2} />
                      </div>
-                     <div className={`lg:flex-1 relative overflow-hidden bg-gradient-to-br from-slate-800/30 to-slate-900/30 border ${rarity.borderColor} rounded-2xl backdrop-blur-sm`}>
-                       <div className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${rarity.gradient} opacity-5 blur-3xl`}></div>
-                       <div className="relative z-10 p-6">
-                         <div className="flex items-center justify-between mb-4">
-                           <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> Collector's Value</span>
-                           <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full uppercase">Hobby</span>
-                         </div>
-                         <div className="flex items-center gap-4">
-                           <div className="flex-1">
-                             <span className="text-xs text-slate-500 font-bold uppercase mb-1 block">From</span>
-                             <span className="text-2xl font-black text-white">{formatPrice(rarity.minPrice)}</span>
-                           </div>
-                           <div className="w-12 h-[2px] bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 rounded-full"></div>
-                           <div className="flex-1 text-right">
-                             <span className="text-xs text-slate-500 font-bold uppercase mb-1 block">To</span>
-                             <span className="text-2xl font-black text-white">{formatPrice(rarity.maxPrice)}</span>
-                           </div>
+                     <div className="flex-1">
+                       <span className={`inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${rarity.textColor} bg-white/5 rounded-full mb-2`}>{rarity.tag}</span>
+                       <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">{rarity.name}</h2>
+                       <div className="flex items-center gap-2 mt-2">
+                         <div className={`w-auto px-3 h-8 rounded-lg bg-gradient-to-br ${rarity.gradient} flex items-center justify-center shadow-lg`}>
+                           <span className="text-xs font-black text-white whitespace-nowrap">{rarity.code}</span>
                          </div>
                        </div>
                      </div>
                    </div>
-                   <p className="text-base text-slate-400 leading-relaxed max-w-4xl">{rarity.description}</p>
-                   {/* EXAMPLE CARDS GRID - UPDATED FOR USER REQUEST */}
-                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 justify-items-center">
-                     {rarity.examples.map((card, idx) => (
-                       <div key={idx} className="group space-y-4 w-full max-w-[200px]">
-                         <div className={`relative aspect-[2/2.8] rounded-2xl bg-slate-800 border ${rarity.borderColor} overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-3xl hover:-translate-y-2 hover:scale-[1.02]`}>
-                           <img src={card.img} alt={card.name} className="w-full h-full object-cover" onError={(e) => { e.target.src = "https://placehold.co/400x560/1e293b/white?text=Add+Image"; }} />
+                   <div className={`lg:flex-1 relative overflow-hidden bg-gradient-to-br from-slate-800/30 to-slate-900/30 border ${rarity.borderColor} rounded-2xl backdrop-blur-sm`}>
+                     <div className={`absolute top-0 right-0 w-48 h-48 bg-gradient-to-br ${rarity.gradient} opacity-5 blur-3xl`}></div>
+                     <div className="relative z-10 p-6">
+                       <div className="flex items-center justify-between mb-4">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> Collector's Value</span>
+                         <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full uppercase">Hobby</span>
+                       </div>
+                       <div className="flex items-center gap-4">
+                         <div className="flex-1">
+                           <span className="text-xs text-slate-500 font-bold uppercase mb-1 block">From</span>
+                           <span className="text-2xl font-black text-white">{formatPrice(rarity.minPrice)}</span>
                          </div>
-                         <div className="px-1 space-y-1 text-center">
-                           {/* User requested: No name, just the price strings provided */}
-                           <h4 className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors truncate">{card.name}</h4>
-                           <div className="space-y-1">
-                              <p className="text-[10px] text-slate-500 font-mono tracking-wider">{card.set}</p>
-                           </div>
+                         <div className="w-12 h-[2px] bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 rounded-full"></div>
+                         <div className="flex-1 text-right">
+                           <span className="text-xs text-slate-500 font-bold uppercase mb-1 block">To</span>
+                           <span className="text-2xl font-black text-white">{formatPrice(rarity.maxPrice)}</span>
                          </div>
                        </div>
-                     ))}
+                     </div>
                    </div>
                  </div>
-               </section>
-             );
-          })
-        )}
+                 <p className="text-base text-slate-400 leading-relaxed max-w-4xl">{rarity.description}</p>
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 justify-items-center">
+                   {rarity.examples.map((card, idx) => (
+                     <div key={idx} className="group space-y-4 w-full max-w-[200px]">
+                       <div className={`relative aspect-[2/2.8] rounded-2xl bg-slate-800 border ${rarity.borderColor} overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-3xl hover:-translate-y-2 hover:scale-[1.02]`}>
+                         <img src={card.img} alt={card.name} className="w-full h-full object-cover" onError={(e) => { e.target.src = "https://placehold.co/400x560/1e293b/white?text=Add+Image"; }} />
+                       </div>
+                       <div className="px-1 space-y-1 text-center">
+                         <h4 className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors truncate">{card.name}</h4>
+                         <div className="flex justify-between items-center px-2">
+                           <p className="text-[11px] text-slate-500 font-mono tracking-wider">{card.set}</p>
+                           <ExternalLink className="w-3 h-3 text-slate-600 group-hover:text-amber-400 transition-colors" />
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             </section>
+           );
+        })}
       </main>
 
-      {/* Market Intelligence (Updated with OP-14 Azure Sea's Seven) */}
+      {/* Market Intelligence & Purchase Sections */}
       <section className="relative py-32 px-4 sm:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"></div>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-r from-amber-500/10 to-orange-600/10 blur-[120px]"></div>
@@ -749,9 +630,9 @@ const App = () => {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <NewsItem category="Released" title="OP-14: The Azure Sea's Seven is HERE" date="JAN 2026" gradient="from-purple-600 to-pink-600" link="https://en.onepiece-cardgame.com"/>
-            <NewsItem category="Market Watch" title="Manga Rare prices stabilize post OP-14" date="FEB 2026" gradient="from-amber-500 to-orange-600" link="https://www.tcgplayer.com"/>
-            <NewsItem category="Meta" title="New Leader builds dominating 2026 Regionals" date="FEB 2026" gradient="from-blue-600 to-cyan-600" link="https://onepiece.limitlesstcg.com"/>
+            <NewsItem category="New Release" title="OP-10: Sovereignty of Kings Visual Reveal" date="FEB 2026" gradient="from-purple-600 to-pink-600" link="https://en.onepiece-cardgame.com/products/boosters/op10.php"/>
+            <NewsItem category="Price Alert" title="Manga Rare Shanks Reaches All-Time High" date="JAN 2026" gradient="from-amber-500 to-orange-600" link="https://www.tcgplayer.com/search/one-piece-card-game/product"/>
+            <NewsItem category="Meta Shift" title="Black/Yellow Deck dominance affects SR supply" date="JAN 2026" gradient="from-blue-600 to-cyan-600" link="https://onepiece.limitlesstcg.com/decks"/>
           </div>
         </div>
       </section>
@@ -778,17 +659,9 @@ const App = () => {
       </section>
 
        {/* Footer */}
-      <footer className="relative py-12 border-t border-white/10 text-center flex flex-col items-center gap-4">
-        <a href="https://www.instagram.com/masterztcgverse/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-slate-500 hover:text-pink-500 transition-colors">
-            <Instagram className="w-5 h-5" />
-            <span className="font-bold text-sm">@masterztcgverse</span>
-        </a>
+      <footer className="relative py-12 border-t border-white/10 text-center">
         <p className="text-slate-600 text-sm">© 2026 OP Masters. Unofficial Fan Site. <br/>One Piece is a trademark of Eiichiro Oda / Shueisha / Toei Animation.</p>
       </footer>
-      <style>{`
-        @keyframes zoom { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.15); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
       {/* Mobile Bottom Navigation (App-like feel) */}
       <div className="fixed bottom-0 left-0 w-full bg-slate-950/90 backdrop-blur-xl border-t border-white/10 md:hidden z-50 pb-safe">
         <div className="flex justify-around items-center h-16">
@@ -796,13 +669,14 @@ const App = () => {
             <TrendingUp className="w-6 h-6" />
             <span className="text-[10px] font-bold mt-1">Home</span>
           </button>
-          <button onClick={() => document.getElementById('latest-uploads')?.scrollIntoView({ behavior: 'smooth' })} className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
+          <a href="https://www.youtube.com/@OnepieceMasters/videos" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
             <Play className="w-6 h-6" />
             <span className="text-[10px] font-bold mt-1">Videos</span>
-          </button>
+          </a>
+          {/* Linked to 'common' id for Rarities section */}
           <button onClick={() => document.getElementById('common')?.scrollIntoView({ behavior: 'smooth' })} className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
-            <Crown className="w-6 h-6" />
-            <span className="text-[10px] font-bold mt-1">Rarities</span>
+             <Crown className="w-6 h-6" />
+             <span className="text-[10px] font-bold mt-1">Rarities</span>
           </button>
           <a href={channelData.url} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
             <Users className="w-6 h-6" />
@@ -811,9 +685,10 @@ const App = () => {
         </div>
       </div>
       
-      {/* Safe Area Spacer for Mobile Nav */}
+      {/* Spacer to prevent Footer from being hidden behind Nav */}
       <div className="h-20 md:hidden"></div>
 
+      <style>{`@keyframes zoom { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.15); } }`}</style>
     </div>
   );
 };
