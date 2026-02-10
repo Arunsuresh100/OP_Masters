@@ -287,6 +287,50 @@ const App = () => {
     return () => clearTimeout(timer);
   }, []);
 
+
+
+  // Fallback Data for when API fails (Quota limit or other errors)
+  const FALLBACK_CHANNEL_DATA = {
+    name: 'One Piece Masters',
+    handle: '@OnepieceMasters',
+    url: 'https://www.youtube.com/@OnepieceMasters',
+    subscribers: 102000,
+    videos: 450,
+    likes: 12500000,
+    avatar: CHANNEL_LOGO_URL 
+  };
+
+  const FALLBACK_VIDEOS = [
+    {
+      id: 'fallback-1',
+      title: 'HUNTING FOR MANGA SHAnKS! (OP-01 Booster Box Opening)',
+      thumbnail: 'https://tcgplayer-cdn.tcgplayer.com/product/454536_in_600x600.jpg', // Shanks
+      timeAgo: '2 days ago',
+      duration: 1205 // ~20 mins
+    },
+    {
+      id: 'fallback-2',
+      title: 'THE BEST DECK IN OP-05? Luffy Gear 5 Gameplay',
+      thumbnail: 'https://tcgplayer-cdn.tcgplayer.com/product/516558_in_600x600.jpg', // Luffy
+      timeAgo: '5 days ago',
+      duration: 1840 // ~30 mins
+    },
+    {
+      id: 'fallback-3',
+      title: 'MARKET WATCH: Manga Rare Prices SKYROCKET! 📈',
+      thumbnail: 'https://tcgplayer-cdn.tcgplayer.com/product/500118_in_600x600.jpg', // Sogeking
+      timeAgo: '1 week ago',
+      duration: 950 // ~15 mins
+    },
+    {
+      id: 'fallback-4',
+      title: 'Golden DON!! Pull Reaction - 1 in 10 Cases?!',
+      thumbnail: 'https://tcgplayer-cdn.tcgplayer.com/product/586884_in_600x600.jpg', // Golden Don
+      timeAgo: '2 weeks ago',
+      duration: 645 // ~10 mins
+    }
+  ];
+
   useEffect(() => {
     const fetchYouTubeData = async () => {
       try {
@@ -301,6 +345,8 @@ const App = () => {
         const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&id=${channelId}&key=${API_KEY}`;
         const channelResponse = await fetch(channelUrl);
         const channelDetails = await channelResponse.json();
+        
+        if (!channelDetails.items) throw new Error('Channel details failed');
         const channelItem = channelDetails.items[0];
         
         setChannelData({
@@ -327,9 +373,11 @@ const App = () => {
            const durationData = await durationResponse.json();
            
            const durationMap = {};
-           durationData.items.forEach(v => {
-              durationMap[v.id] = parseDuration(v.contentDetails.duration);
-           });
+           if (durationData.items) {
+             durationData.items.forEach(v => {
+                durationMap[v.id] = parseDuration(v.contentDetails.duration);
+             });
+           }
 
            const longFormVideos = playlistData.items.filter(item => {
               const duration = durationMap[item.contentDetails.videoId];
@@ -345,11 +393,16 @@ const App = () => {
            }));
            
            setLatestVideos(formattedVideos);
+        } else {
+            throw new Error('Playlist items failed');
         }
         setVideoLoading(false);
 
       } catch (err) {
-        console.error("YouTube Fetch Error:", err);
+        console.warn("YouTube API Error (Using Fallback Data):", err);
+        // Apply Fallback Data
+        setChannelData(FALLBACK_CHANNEL_DATA);
+        setLatestVideos(FALLBACK_VIDEOS);
         setVideoLoading(false);
       } finally {
         setLoading(false);
