@@ -130,9 +130,9 @@ const App = () => {
         console.warn("YouTube Fetch Error (Using Fallback):", err);
         setChannelData({
             ...FALLBACK_CHANNEL_DATA,
-            subscribers: formatCompactNumber(102000),
-            videos: formatCompactNumber(450),
-            likes: formatCompactNumber(12500000)
+            subscribers: formatCompactNumber(FALLBACK_CHANNEL_DATA.subscribers),
+            videos: formatCompactNumber(FALLBACK_CHANNEL_DATA.videos),
+            likes: formatCompactNumber(FALLBACK_CHANNEL_DATA.likes)
         });
         setLatestVideos(FALLBACK_VIDEOS);
         setLoading(false);

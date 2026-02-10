@@ -156,13 +156,14 @@ export const PURCHASE_OPTIONS = [
 ];
 
 export const FALLBACK_CHANNEL_DATA = {
-    name: 'One Piece Masters',
+    name: 'ONE PIECE Masters',
     handle: '@OnepieceMasters',
     url: 'https://www.youtube.com/@OnepieceMasters',
-    subscribers: '102,000',
-    videos: '450',
-    likes: '12,500,000',
-    avatar: CHANNEL_LOGO_URL 
+    subscribers: '3810', // 3.81k
+    videos: '68',
+    likes: '586175', // Views
+    avatar: CHANNEL_LOGO_URL,
+    description: 'Welcome to OnePiece Masterz, the channel dedicated to One Piece TCG openings, manga card pulls, deck highlights, collector tips, and rare card hunts.'
   };
 
 export const FALLBACK_VIDEOS = [

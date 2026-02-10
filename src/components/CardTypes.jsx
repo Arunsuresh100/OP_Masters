@@ -13,7 +13,16 @@ const CardTypes = ({ searchQuery, currency }) => {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-24 space-y-16">
-        {filteredRarities.map((rarity) => {
+        {filteredRarities.length === 0 ? (
+           <div className="text-center py-20">
+             <div className="inline-block p-6 rounded-2xl bg-slate-800/50 border border-white/10 mb-4">
+               <TrendingUp className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+               <h3 className="text-xl font-bold text-white">No results found</h3>
+               <p className="text-slate-400 mt-2">We couldn't find any card rarities matching "{searchQuery}"</p>
+             </div>
+           </div>
+        ) : (
+            filteredRarities.map((rarity) => {
            const IconComponent = rarity.icon;
            return (
              <section key={rarity.id} id={rarity.id} className="scroll-mt-24 border-b border-white/5 pb-16 last:border-0 last:pb-0">
@@ -76,6 +85,7 @@ const CardTypes = ({ searchQuery, currency }) => {
              </section>
            );
         })}
+      )}
       </main>
   );
 };
