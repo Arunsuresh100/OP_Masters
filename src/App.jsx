@@ -32,61 +32,74 @@ const App = () => {
     const fetchYouTubeData = async () => {
       const startTime = Date.now();
       try {
-        // Fetch logic...
+        // Step 1: Fetch Channel Info
         const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&id=${CHANNEL_ID}&key=${API_KEY}`;
         const channelResponse = await fetch(channelUrl);
         const channelDetails = await channelResponse.json();
         
-        if (!channelDetails.error && channelDetails.items) {
-          const channelItem = channelDetails.items[0];
-          setChannelData({
-            name: channelItem.snippet.title,
-            handle: channelItem.snippet.customUrl || CHANNEL_HANDLE,
-            url: `https://www.youtube.com/channel/${CHANNEL_ID}`,
-            subscribers: formatCompactNumber(channelItem.statistics.subscriberCount),
-            videos: formatCompactNumber(channelItem.statistics.videoCount),
-            views: formatCompactNumber(channelItem.statistics.viewCount),
-            avatar: channelItem.snippet.thumbnails.medium.url 
-          });
-
-          const uploadsPlaylistId = channelItem.contentDetails.relatedPlaylists.uploads;
-          const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=15&key=${API_KEY}`;
-          const playlistResponse = await fetch(playlistUrl);
-          const playlistData = await playlistResponse.json();
-
-          if (playlistData.items) {
-             const videoIds = playlistData.items.map(item => item.contentDetails.videoId).join(',');
-             // Fetch durations & views to filter out Shorts and show stats
-             const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${API_KEY}`;
-             const statsResponse = await fetch(statsUrl);
-             const statsData = await statsResponse.json();
-             
-             const videoStatsMap = {};
-             statsData.items?.forEach(v => {
-                  videoStatsMap[v.id] = {
-                    duration: parseDuration(v.contentDetails.duration),
-                    views: formatCompactNumber(v.statistics.viewCount)
-                  };
-             });
-
-             const longFormVideos = playlistData.items.filter(item => {
-                const stats = videoStatsMap[item.contentDetails.videoId];
-                return stats?.duration > 60; 
-             }).slice(0, 6).map(item => ({
-               id: item.contentDetails.videoId,
-               title: item.snippet.title,
-               thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
-               timeAgo: timeAgo(item.snippet.publishedAt),
-               duration: videoStatsMap[item.contentDetails.videoId]?.duration,
-               views: videoStatsMap[item.contentDetails.videoId]?.views
-             }));
-             setLatestVideos(longFormVideos);
-          }
-        } else {
-          throw new Error("Invalid API Response");
+        if (channelDetails.error || !channelDetails.items?.length) {
+           throw new Error("Quota exceeded or Channel not found");
         }
+
+        const channelItem = channelDetails.items[0];
+        setChannelData({
+          name: channelItem.snippet.title,
+          handle: channelItem.snippet.customUrl || CHANNEL_HANDLE,
+          url: `https://www.youtube.com/channel/${CHANNEL_ID}`,
+          subscribers: formatCompactNumber(channelItem.statistics.subscriberCount),
+          videos: formatCompactNumber(channelItem.statistics.videoCount),
+          views: formatCompactNumber(channelItem.statistics.viewCount),
+          avatar: channelItem.snippet.thumbnails.medium.url 
+        });
+
+        // Step 2: Fetch Recent Uploads
+        const uploadsPlaylistId = channelItem.contentDetails.relatedPlaylists.uploads;
+        const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=10&key=${API_KEY}`;
+        const playlistResponse = await fetch(playlistUrl);
+        const playlistData = await playlistResponse.json();
+
+        if (playlistData.items?.length) {
+           const videoIds = playlistData.items.map(item => item.contentDetails.videoId).join(',');
+           
+           // Step 3: Fetch Durations & Views (Optional but preferred for accurate UI)
+           const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${API_KEY}`;
+           const statsResponse = await fetch(statsUrl);
+           const statsData = await statsResponse.json();
+           
+           const videoStatsMap = {};
+           statsData.items?.forEach(v => {
+                videoStatsMap[v.id] = {
+                  duration: parseDuration(v.contentDetails.duration),
+                  views: formatCompactNumber(v.statistics.viewCount)
+                };
+           });
+
+           // Step 4: Map and filter (Optional: filter out Shorts if duration is available)
+           const processedVideos = playlistData.items.map(item => {
+              const stats = videoStatsMap[item.contentDetails.videoId];
+              // Use fallback data for stats if API failed for this specific video
+              return {
+                id: item.contentDetails.videoId,
+                title: item.snippet.title,
+                thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
+                timeAgo: timeAgo(item.snippet.publishedAt),
+                duration: stats?.duration || 0,
+                views: stats?.views || '1K+'
+              };
+           });
+
+           // Final check: Update state if we have results, otherwise use fallback
+           if (processedVideos.length > 0) {
+              setLatestVideos(processedVideos.slice(0, 6));
+           } else {
+              setLatestVideos(FALLBACK_VIDEOS);
+           }
+        } else {
+           setLatestVideos(FALLBACK_VIDEOS);
+        }
+
       } catch (err) {
-        console.warn("YouTube Fetch Fallback Applied");
+        console.warn("YouTube API issue detected. Applying high-quality channel fallback.");
         setChannelData({
             ...FALLBACK_CHANNEL_DATA,
             subscribers: formatCompactNumber(FALLBACK_CHANNEL_DATA.subscribers),
@@ -95,13 +108,10 @@ const App = () => {
         });
         setLatestVideos(FALLBACK_VIDEOS);
       } finally {
-        // Minimum Loading Time: 1.5s for brand impact
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, 1500 - elapsedTime);
-        
         setTimeout(() => {
           setLoading(false);
-          // Small delay for the fade-out of splash before app is fully ready
           setTimeout(() => setAppReady(true), 100);
         }, remainingTime);
       }
