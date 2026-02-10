@@ -4,8 +4,8 @@ import Hero from './components/Hero';
 import LatestVideos from './components/LatestVideos';
 import AboutCards from './components/AboutCards';
 import CardTypes from './components/CardTypes';
-// import LatestNews from './components/LatestNews';
-// import Shop from './components/Shop';
+import LatestNews from './components/LatestNews';
+import Shop from './components/Shop';
 import Footer from './components/Footer';
 import { API_KEY, CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS, RARITIES } from './constants';
 import { parseDuration, timeAgo, formatCompactNumber } from './utils';
@@ -157,6 +157,8 @@ const App = () => {
         <LatestVideos videos={latestVideos} loading={loading} />
         <AboutCards id="about" />
         <CardTypes searchQuery={searchQuery} currency={currency} />
+        <LatestNews />
+        <Shop currency={currency} />
         <Footer channelUrl={channelData.url} />
       </div>
 
