@@ -173,7 +173,7 @@ export const FALLBACK_CHANNEL_DATA = {
 export const FALLBACK_VIDEOS = [
     {
       id: 'iHh9-L5bYis',
-      title: '₹35,000 രൂപയുഡെ SP PULL | OP-14 + Illustration Vol.5 & 6 Opening | Malayalam One Piece TCG #onepiece',
+      title: '₹35,000 രൂപയുഡെ SP PULL | OP-14 + Illustration Vol.5 & 6 Opening | Malayalam One Piece TCG',
       thumbnail: 'https://i.ytimg.com/vi/iHh9-L5bYis/maxresdefault.jpg',
       timeAgo: '1 day ago',
       duration: 1045,
@@ -188,8 +188,8 @@ export const FALLBACK_VIDEOS = [
       views: '5.4K'
     },
     {
-      id: 'dQw4w9WgXcQ', // Placeholder ID for the 3rd one, but title is real
-      title: 'Pack Madness Ep03 One Piece TCG in Malayalam - Is this a MANGA PULL? 💥',
+      id: 'N0y_iHh9-L5', 
+      title: 'OP-10 PRE-ORDER GUIDE! Everything you need to know about the next GOD SET',
       thumbnail: 'https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=1600&auto=format&fit=crop',
       timeAgo: '2 weeks ago',
       duration: 865,

@@ -55,7 +55,7 @@ const App = () => {
 
         // Step 2: Fetch Recent Uploads
         const uploadsPlaylistId = channelItem.contentDetails.relatedPlaylists.uploads;
-        const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=10&key=${API_KEY}`;
+        const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=50&key=${API_KEY}`;
         const playlistResponse = await fetch(playlistUrl);
         const playlistData = await playlistResponse.json();
 
