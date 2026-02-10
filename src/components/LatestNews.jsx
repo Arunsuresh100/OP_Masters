@@ -6,7 +6,7 @@ const NewsCard = ({ title, date, category, gradient, link, isFeatured = false })
       href={link}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group relative overflow-hidden flex flex-col justify-end bg-slate-900/40 border border-white/5 backdrop-blur-md rounded-[2rem] transition-all duration-700 hover:-translate-y-2 hover:border-white/20 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] ${isFeatured ? 'md:col-span-2 aspect-[16/9] md:aspect-auto h-[400px]' : 'aspect-square'}`}
+      className={`group relative overflow-hidden flex flex-col justify-end bg-slate-900/40 border border-white/5 backdrop-blur-md rounded-[2rem] transition-all duration-700 hover:-translate-y-2 hover:border-white/20 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] ${isFeatured ? 'md:col-span-2 aspect-[4/5] md:aspect-auto min-h-[300px] md:h-[450px]' : 'aspect-square'}`}
     >
       {/* Background Glow */}
       <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br ${gradient} opacity-5 blur-[100px] group-hover:opacity-10 transition-opacity duration-700`}></div>
