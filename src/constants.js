@@ -163,44 +163,44 @@ export const FALLBACK_CHANNEL_DATA = {
     name: 'ONE PIECE Masters',
     handle: '@OnepieceMasters',
     url: 'https://www.youtube.com/@OnepieceMasters',
-    subscribers: '3.85k',
-    videos: '68',
-    views: '593,236',
+    subscribers: 3850,
+    videos: 68,
+    views: 593236,
     avatar: CHANNEL_LOGO_URL,
     description: 'Welcome to OnePiece Masterz, the channel dedicated to One Piece TCG openings, manga card pulls, deck highlights, collector tips, and rare card hunts in Malayalam.'
   };
 
 export const FALLBACK_VIDEOS = [
     {
-      id: 'iHh9-L5bYis',
-      title: '₹35,000 രൂപയുഡെ SP PULL | OP-14 + Illustration Vol.5 & 6 Opening | Malayalam One Piece TCG',
-      thumbnail: 'https://i.ytimg.com/vi/iHh9-L5bYis/maxresdefault.jpg',
+      id: 'xtq17a5VYd8',
+      title: 'BIGGEST Giveaway Yet | Illustration Box Vol 5 & 6 Opening | One Piece TCG Malayalam',
+      thumbnail: 'https://i.ytimg.com/vi/xtq17a5VYd8/maxresdefault.jpg',
       timeAgo: '1 day ago',
-      duration: 1045,
-      views: '12K'
+      duration: '15:23',
+      views: '1.5K'
     },
     {
-      id: '9YfNfB78t6k',
-      title: 'How to Play One Piece TCG in Malayalam | Luffy Starter Deck Opening | OPTCG Beginner Guide',
-      thumbnail: 'https://i.ytimg.com/vi/9YfNfB78t6k/maxresdefault.jpg',
-      timeAgo: '1 week ago',
-      duration: 1250,
-      views: '5.4K'
+      id: 'ciD4ox542Yo',
+      title: 'Can I Pull a Manga?! | One Piece TCG Box Opening | Malayalam',
+      thumbnail: 'https://i.ytimg.com/vi/ciD4ox542Yo/maxresdefault.jpg',
+      timeAgo: '1 month ago',
+      duration: '22:50',
+      views: '3.4K'
     },
     {
-      id: 'dQw4w9WgXcQ', // Classic Never Gonna Give You Up as a safety backup if needed, but title is real Malayalam content
-      title: 'Pack Madness Ep03 One Piece TCG in Malayalam - Is this a MANGA PULL? 💥',
-      thumbnail: 'https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=1600&auto=format&fit=crop',
-      timeAgo: '2 weeks ago',
-      duration: 865,
-      views: '3.1K'
-    },
-    {
-      id: '9YfNfB78t6k', // Repeated for variety in UI if search fails
-      title: 'TOP 5 MUST HAVE One Piece Cards in 2026! (Malayalam Analysis)',
-      thumbnail: 'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?q=80&w=1600&auto=format&fit=crop',
-      timeAgo: '3 weeks ago',
-      duration: 980,
+      id: 'SbC23PVCKFE',
+      title: 'One Piece TCG Malayalam | 10 Packs Opening | Any Manga?',
+      thumbnail: 'https://i.ytimg.com/vi/SbC23PVCKFE/maxresdefault.jpg',
+      timeAgo: '2 months ago',
+      duration: '12:45',
       views: '2.8K'
+    },
+    {
+      id: 'jKXI6DL6Dyk',
+      title: 'Pack Madness Ep.01 | One Piece TCG Malayalam | CRAZY HITS!',
+      thumbnail: 'https://i.ytimg.com/vi/jKXI6DL6Dyk/maxresdefault.jpg',
+      timeAgo: '3 months ago',
+      duration: '14:20',
+      views: '3.1K'
     }
   ];

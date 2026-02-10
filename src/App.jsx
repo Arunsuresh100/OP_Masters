@@ -8,7 +8,7 @@ import LatestNews from './components/LatestNews';
 import Shop from './components/Shop';
 import Footer from './components/Footer';
 import { API_KEY, CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS, RARITIES } from './constants';
-import { parseDuration, timeAgo, formatCompactNumber } from './utils';
+import { parseDuration, timeAgo, formatDuration, formatCompactNumber } from './utils';
 
 const App = () => {
   // Deployment Sync: v1.0.4 - Ensuring latest authentic YouTube fallbacks are active
@@ -84,7 +84,7 @@ const App = () => {
                 title: item.snippet.title,
                 thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
                 timeAgo: timeAgo(item.snippet.publishedAt),
-                duration: stats?.duration || 0,
+                duration: stats?.duration ? formatDuration(stats.duration) : '10:00',
                 views: stats?.views || '1K+'
               };
            });
@@ -102,10 +102,13 @@ const App = () => {
       } catch (err) {
         console.warn("YouTube API issue detected. Applying high-quality channel fallback.");
         setChannelData({
-            ...FALLBACK_CHANNEL_DATA,
+            name: FALLBACK_CHANNEL_DATA.name,
+            handle: FALLBACK_CHANNEL_DATA.handle,
+            url: FALLBACK_CHANNEL_DATA.url,
             subscribers: formatCompactNumber(FALLBACK_CHANNEL_DATA.subscribers),
             videos: formatCompactNumber(FALLBACK_CHANNEL_DATA.videos),
-            views: formatCompactNumber(FALLBACK_CHANNEL_DATA.views)
+            views: formatCompactNumber(FALLBACK_CHANNEL_DATA.views),
+            avatar: FALLBACK_CHANNEL_DATA.avatar
         });
         setLatestVideos(FALLBACK_VIDEOS);
       } finally {
