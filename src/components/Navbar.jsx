@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Menu, X, Instagram } from 'lucide-react';
+import { Search, Menu, X, Instagram, Youtube } from 'lucide-react';
 import { CHANNEL_LOGO_URL } from '../constants';
 
 const Navbar = ({ 
@@ -52,6 +52,46 @@ const Navbar = ({
            </button>
          </div>
        </div>
+
+      {/* Mobile Menu Overlay */}
+      <div className={`absolute top-full left-0 w-full bg-slate-950/95 backdrop-blur-3xl border-b border-white/10 transition-all duration-300 md:hidden flex flex-col p-6 gap-6 shadow-2xl ${mobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
+          
+          {/* Mobile Search */}
+          <div className="relative w-full">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-slate-500" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search cards..."
+              className="block w-full pl-10 pr-3 py-3 border border-slate-700/50 rounded-xl bg-slate-900/50 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-all text-base"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-3">
+             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pricing Region</h4>
+             <div className="bg-slate-900/50 p-1 rounded-xl flex">
+                <button onClick={() => setCurrency('USD')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${currency === 'USD' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400'}`}>USD</button>
+                <button onClick={() => setCurrency('INR')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${currency === 'INR' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400'}`}>INR</button>
+             </div>
+          </div>
+
+          <div className="space-y-3 pb-4">
+             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Community</h4>
+             <div className="grid grid-cols-2 gap-3">
+               <a href="https://www.instagram.com/masterztcgverse/" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-900/50 border border-white/5 hover:border-pink-500/30 hover:bg-pink-500/10 transition-all group">
+                 <Instagram className="w-5 h-5 text-pink-500 group-hover:scale-110 transition-transform" />
+                 <span className="text-xs font-bold text-slate-300">Instagram</span>
+               </a>
+               <a href={channelUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-900/50 border border-white/5 hover:border-red-500/30 hover:bg-red-500/10 transition-all group">
+                 <Youtube className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform" />
+                 <span className="text-xs font-bold text-slate-300">YouTube</span>
+               </a>
+             </div>
+          </div>
+      </div>
     </nav>
   );
 };

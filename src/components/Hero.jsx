@@ -13,7 +13,7 @@ const Hero = ({ channelData }) => {
   }, []);
 
   return (
-    <header className="relative w-full min-h-[600px] md:min-h-[700px] flex items-center overflow-hidden pt-20 bg-slate-950">
+    <header className="relative w-full min-h-[550px] md:min-h-[700px] flex items-center overflow-hidden pt-12 md:pt-20 bg-slate-950">
       {/* Background Layer */}
       <div className="absolute inset-0 z-0">
         <img 
@@ -25,18 +25,18 @@ const Hero = ({ channelData }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full py-20 flex flex-col md:flex-row items-center gap-12">
-        <div className="flex-1 space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-600/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-            <Youtube className="w-4 h-4" /> Official Channel
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full py-12 md:py-20 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+        <div className="flex-1 space-y-5 md:space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-red-600/10 border border-red-500/20 text-red-400 text-[10px] md:text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
+            <Youtube className="w-3 h-3 md:w-4 md:h-4" /> Official Channel
           </div>
           
-          <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.95] tracking-tighter">
+          <h1 className="text-5xl md:text-8xl font-black text-white leading-[0.9] tracking-tighter">
             Discover <br /> Card <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-red-600 bg-clip-text text-transparent">Rarities</span>
           </h1>
 
           {/* Reduced size: text-lg instead of 2xl, max-w-xl for better readability */}
-          <p className="text-base md:text-lg text-slate-400 max-w-xl leading-relaxed font-medium">
+          <p className="text-sm md:text-lg text-slate-400 max-w-xl leading-relaxed font-medium">
             Join One Piece Masters ({channelData.handle}) as we open packs, hunt for Mangas, and build the ultimate decks!
           </p>
 
@@ -53,18 +53,18 @@ const Hero = ({ channelData }) => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 pt-8 max-w-md">
+          <div className="grid grid-cols-3 gap-3 md:gap-6 pt-6 md:pt-8 max-w-md">
              <div className="text-center md:text-left">
-               <div className="text-2xl font-black text-white">{channelData.subscribers}</div>
-               <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Subscribers</div>
+               <div className="text-xl md:text-2xl font-black text-white">{channelData.subscribers}</div>
+               <div className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Subscribers</div>
              </div>
              <div className="text-center md:text-left">
-               <div className="text-2xl font-black text-white">{channelData.videos}</div>
-               <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Videos</div>
+               <div className="text-xl md:text-2xl font-black text-white">{channelData.videos}</div>
+               <div className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Videos</div>
              </div>
              <div className="text-center md:text-left">
-               <div className="text-2xl font-black text-white">{channelData.likes}</div>
-               <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Total Views</div>
+               <div className="text-xl md:text-2xl font-black text-white">{channelData.likes}</div>
+               <div className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Total Views</div>
              </div>
           </div>
         </div>

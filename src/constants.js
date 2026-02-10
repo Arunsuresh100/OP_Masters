@@ -2,8 +2,12 @@ import { Shield, TrendingUp, Star, Users, Sparkles, Gem, Crown } from 'lucide-re
 
 export const USD_TO_INR = 83.5;
 export const API_KEY = 'AIzaSyB3JbL6gT9m-IadtGVDJc1qwYb-68JYk38';
+export const CHANNEL_ID = 'UCfKU5WX-CUPWtkGA4uIhiKQ'; 
 export const CHANNEL_HANDLE = 'OnepieceMasters'; 
 export const CHANNEL_LOGO_URL = 'https://yt3.googleusercontent.com/z6rQcZJc1FCx3Edymkt5UgtdBe4GtIUGiVr8y--N6BYbYeo52PeVHhdLyEQ3aLEiYsc1j-v6=s160-c-k-c0x00ffffff-no-rj';
+
+// ADD THIS LINE: It turns your channel ID into a direct link to your video list
+export const UPLOADS_PLAYLIST_ID = CHANNEL_ID.replace(/^UC/, 'UU');
 
 export const RARITIES = [
   {

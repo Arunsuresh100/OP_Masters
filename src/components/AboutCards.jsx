@@ -3,13 +3,13 @@ import { Crown } from 'lucide-react';
 
 const AboutCards = () => {
     return (
-        <section id="about" className="relative py-24 px-4 sm:px-6 bg-slate-950 text-center">
+        <section id="about" className="relative py-16 md:py-24 px-4 sm:px-6 bg-slate-950 text-center">
          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider mb-6">
-              <Crown className="w-4 h-4" /> Ultimate Guide
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4 md:mb-6">
+              <Crown className="w-3 h-3 md:w-4 md:h-4" /> Ultimate Guide
             </div>
             
-            <h2 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-6">
+            <h2 className="text-3xl md:text-6xl font-black text-white tracking-tight mb-4 md:mb-6">
               One Piece <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">Card Types</span>
             </h2>
 
