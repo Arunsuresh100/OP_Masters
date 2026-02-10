@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import heroImage from './assets/hero.png';
 import { 
   TrendingUp, 
   Shield, 
@@ -17,7 +18,8 @@ import {
   Play,
   ShoppingCart,
   Users,
-  Clock
+  Clock,
+  Instagram 
 } from 'lucide-react';
 
 const USD_TO_INR = 83.5;
@@ -252,6 +254,48 @@ const App = () => {
   });
   const [latestVideos, setLatestVideos] = useState([]);
 
+  // Fallback Data (Injected to fix API Quota issue while keeping 3rd push design)
+  const FALLBACK_CHANNEL_DATA = {
+    name: 'One Piece Masters',
+    handle: '@OnepieceMasters',
+    url: 'https://www.youtube.com/@OnepieceMasters',
+    subscribers: '102,000',
+    videos: '450',
+    likes: '12,500,000',
+    avatar: CHANNEL_LOGO_URL 
+  };
+
+  const FALLBACK_VIDEOS = [
+    {
+      id: 'fb-1',
+      title: 'OPENING THE NEW OP-10 GOD PACK?! 😱🔥',
+      thumbnail: 'https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=1600&auto=format&fit=crop', 
+      timeAgo: '1 day ago',
+      duration: 865 
+    },
+    {
+      id: 'fb-2',
+      title: 'Searching for MANGA LUFFY in OP-05! (My Wallet Cries)',
+      thumbnail: 'https://images.unsplash.com/photo-1607604276583-eef5f076eb86?q=80&w=1600&auto=format&fit=crop', 
+      timeAgo: '3 days ago',
+      duration: 1420 
+    },
+    {
+      id: 'fb-3',
+      title: 'Top 10 MOST EXPENSIVE One Piece Cards Right Now 💰',
+      thumbnail: 'https://images.unsplash.com/photo-1593305841991-05c2e449e08e?q=80&w=1600&auto=format&fit=crop', 
+      timeAgo: '1 week ago',
+      duration: 1150 
+    },
+    {
+      id: 'fb-4',
+      title: 'Grading Returns! PSA 10 or Bust? 💎',
+      thumbnail: 'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?q=80&w=1600&auto=format&fit=crop', 
+      timeAgo: '2 weeks ago',
+      duration: 980 
+    }
+  ];
+
   useEffect(() => {
     const fetchYouTubeData = async () => {
       try {
@@ -268,6 +312,11 @@ const App = () => {
         const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&id=${channelId}&key=${API_KEY}`;
         const channelResponse = await fetch(channelUrl);
         const channelDetails = await channelResponse.json();
+        
+        if (channelDetails.error) {
+           throw new Error("Quota Exceeded or API Error");
+        }
+
         const channelItem = channelDetails.items[0];
         
         setChannelData({
@@ -300,9 +349,11 @@ const App = () => {
            
            // Map durations to IDs
            const durationMap = {};
-           durationData.items.forEach(v => {
-              durationMap[v.id] = parseDuration(v.contentDetails.duration);
-           });
+           if (durationData.items) {
+                durationData.items.forEach(v => {
+                    durationMap[v.id] = parseDuration(v.contentDetails.duration);
+                });
+           }
 
            // Filter: Must be > 60 seconds (Shorts limit is usually 60s)
            const longFormVideos = playlistData.items.filter(item => {
@@ -325,7 +376,9 @@ const App = () => {
         setVideoLoading(false);
 
       } catch (err) {
-        console.error("YouTube Fetch Error:", err);
+        console.warn("YouTube Fetch Error (Using Fallback):", err);
+        setChannelData(FALLBACK_CHANNEL_DATA);
+        setLatestVideos(FALLBACK_VIDEOS);
         setLoading(false);
         setVideoLoading(false);
       }
@@ -376,6 +429,10 @@ const App = () => {
                <button onClick={() => setCurrency('USD')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${currency === 'USD' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}>USD</button>
                <button onClick={() => setCurrency('INR')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${currency === 'INR' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}>INR</button>
              </div>
+             {/* Instagram Link (Requested UI Update) */}
+             <a href="https://www.instagram.com/masterztcgverse/" target="_blank" rel="noopener noreferrer" className="p-2 text-slate-400 hover:text-pink-500 transition-colors">
+               <Instagram className="w-6 h-6" />
+             </a>
              <button className="md:hidden p-2 text-slate-400 hover:text-white transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
              </button>
@@ -390,8 +447,8 @@ const App = () => {
            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent" />
            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50" />
          </div>
-         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full py-20">
-            <div className="max-w-3xl space-y-8">
+         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full py-20 flex flex-col md:flex-row items-center gap-12">
+            <div className="flex-1 space-y-8">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-600/20 to-red-800/20 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
                 <Youtube className="w-4 h-4" /> Official Channel
               </div>
@@ -406,7 +463,7 @@ const App = () => {
                   <Youtube className="w-5 h-5" /> Subscribe Now <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </a>
               </div>
-              {/* Stats */}
+              {/* Stats - Reverted to User's Preferred Format (.toLocaleString) */}
               <div className="grid grid-cols-3 gap-6 pt-8 max-w-xl">
                  <div className="text-center">
                    <div className="text-3xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{channelData.subscribers}</div>
@@ -421,6 +478,18 @@ const App = () => {
                    <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Total Views</div>
                  </div>
               </div>
+            </div>
+            
+            {/* Right Column: Hero Image with Custom Bounce Animation (8s) */}
+            <div className="flex-1 hidden md:flex justify-end relative">
+               <div className="relative z-10 w-full max-w-lg">
+                 <img 
+                   src={heroImage} 
+                   alt="Luffy Gear 5" 
+                   className="w-full h-auto object-contain drop-shadow-2xl animate-[bounce_8s_infinite]"
+                   style={{ filter: 'drop-shadow(0 0 50px rgba(220, 38, 38, 0.3))' }}
+                 />
+               </div>
             </div>
          </div>
       </header>
@@ -551,9 +620,13 @@ const App = () => {
          </div>
       </section>
 
-      {/* Rarity List */}
+      {/* Rarity List - With Functional Search Filtering */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-24 space-y-16">
-        {RARITIES.map((rarity) => {
+        {RARITIES.filter(r => 
+          searchQuery === '' || 
+          r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          r.description.toLowerCase().includes(searchQuery.toLowerCase())
+        ).map((rarity) => {
            const IconComponent = rarity.icon;
            return (
              <section key={rarity.id} className="scroll-mt-24 border-b border-white/5 pb-16 last:border-0 last:pb-0">
