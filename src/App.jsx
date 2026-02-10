@@ -452,32 +452,24 @@ const App = () => {
               </div>
 
               {/* Right Image - Desktop Only */}
-<div className="hidden lg:flex relative h-full min-h-[500px] w-full items-center justify-center">
-  
-  {/* 1. Injecting the CSS directly into the JSX */}
-  <style>
-    {`
-      @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-30px); }
-        100% { transform: translateY(0px); }
-      }
-      .animate-float {
-        animation: float 8s ease-in-out infinite;
-      }
-    `}
-  </style>
+              {/* Right Image - Desktop Only */}
+              <div className="hidden lg:block relative h-full min-h-[500px] w-full">
+                 <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-slate-950/20 z-10"></div>
+                 
+                 {/* Image Container with Loading State */}
+                 <div className={`transition-opacity duration-1000 ease-in-out ${loading ? 'opacity-0' : 'opacity-100'}`}>
+                   <img 
+                     src="https://www.wallsnapy.com/img_gallery/joyboy-monkey-d-luffy-one-piece-4k-anime-free-sticker-type-png-download-30260.png" 
+                     alt="Luffy Joyboy" 
+                     className="w-full h-full object-contain drop-shadow-2xl mask-image-gradient"
+                     style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
+                     onLoad={() => setLoading(false)}
+                   />
+                 </div>
 
-  {/* Gradient Overlay (Unchanged) */}
-  <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-slate-950/20 z-10"></div>
-
-  {/* Image with Reduced Size and Animation */}
-  <img 
-    src="https://www.wallsnapy.com/img_gallery/joyboy-monkey-d-luffy-one-piece-4k-anime-free-sticker-type-png-download-649796.png" 
-    alt="Luffy Joyboy" 
-    /* - h-[80%] reduces the size (was h-full)
-       - animate-float triggers the CSS above 
-       - z-20 ensures it stays above the background effects
+                 {/* Glow Effect */}
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-amber-500/20 blur-[100px] rounded-full -z-10"></div>
+              </div>
     */
     className="h-[80%] w-auto object-contain drop-shadow-2xl mask-image-gradient animate-float z-20"
     style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
