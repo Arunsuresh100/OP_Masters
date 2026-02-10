@@ -11,6 +11,7 @@ import { API_KEY, CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL
 import { parseDuration, timeAgo, formatCompactNumber } from './utils';
 
 const App = () => {
+  // Deployment Sync: v1.0.4 - Ensuring latest authentic YouTube fallbacks are active
   const [currency, setCurrency] = useState('USD');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
