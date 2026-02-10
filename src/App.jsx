@@ -459,7 +459,7 @@ const App = () => {
                  {/* Image Container with Loading State */}
                  <div className={`transition-opacity duration-1000 ease-in-out ${loading ? 'opacity-0' : 'opacity-100'}`}>
                    <img 
-                     src="https://www.wallsnapy.com/img_gallery/joyboy-monkey-d-luffy-one-piece-4k-anime-free-sticker-type-png-download-30260.png" 
+                     src="./assets/hero.png" 
                      alt="Luffy Joyboy" 
                      className="w-full h-full object-contain drop-shadow-2xl mask-image-gradient"
                      style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
