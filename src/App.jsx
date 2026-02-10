@@ -252,48 +252,6 @@ const App = () => {
   });
   const [latestVideos, setLatestVideos] = useState([]);
 
-  // Fallback Data to ensure site is never empty
-  const FALLBACK_CHANNEL_DATA = {
-    name: 'One Piece Masters',
-    handle: '@OnepieceMasters',
-    url: 'https://www.youtube.com/@OnepieceMasters',
-    subscribers: '102,000',
-    videos: '450',
-    likes: '12,500,000',
-    avatar: CHANNEL_LOGO_URL 
-  };
-
-  const FALLBACK_VIDEOS = [
-    {
-      id: 'fb-1',
-      title: 'OPENING THE NEW OP-10 GOD PACK?! 😱🔥',
-      thumbnail: 'https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=1600&auto=format&fit=crop', 
-      timeAgo: '1 day ago',
-      duration: 865 
-    },
-    {
-      id: 'fb-2',
-      title: 'Searching for MANGA LUFFY in OP-05! (My Wallet Cries)',
-      thumbnail: 'https://images.unsplash.com/photo-1607604276583-eef5f076eb86?q=80&w=1600&auto=format&fit=crop', 
-      timeAgo: '3 days ago',
-      duration: 1420 
-    },
-    {
-      id: 'fb-3',
-      title: 'Top 10 MOST EXPENSIVE One Piece Cards Right Now 💰',
-      thumbnail: 'https://images.unsplash.com/photo-1593305841991-05c2e449e08e?q=80&w=1600&auto=format&fit=crop', 
-      timeAgo: '1 week ago',
-      duration: 1150 
-    },
-    {
-      id: 'fb-4',
-      title: 'Grading Returns! PSA 10 or Bust? 💎',
-      thumbnail: 'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?q=80&w=1600&auto=format&fit=crop', 
-      timeAgo: '2 weeks ago',
-      duration: 980 
-    }
-  ];
-
   useEffect(() => {
     const fetchYouTubeData = async () => {
       try {
@@ -367,9 +325,7 @@ const App = () => {
         setVideoLoading(false);
 
       } catch (err) {
-        console.warn("YouTube Fetch Error (Using Fallback):", err);
-        setChannelData(FALLBACK_CHANNEL_DATA);
-        setLatestVideos(FALLBACK_VIDEOS);
+        console.error("YouTube Fetch Error:", err);
         setLoading(false);
         setVideoLoading(false);
       }
@@ -706,7 +662,31 @@ const App = () => {
       <footer className="relative py-12 border-t border-white/10 text-center">
         <p className="text-slate-600 text-sm">© 2026 OP Masters. Unofficial Fan Site. <br/>One Piece is a trademark of Eiichiro Oda / Shueisha / Toei Animation.</p>
       </footer>
-
+      {/* Mobile Bottom Navigation (App-like feel) */}
+      <div className="fixed bottom-0 left-0 w-full bg-slate-950/90 backdrop-blur-xl border-t border-white/10 md:hidden z-50 pb-safe">
+        <div className="flex justify-around items-center h-16">
+          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex flex-col items-center justify-center w-full h-full text-amber-500">
+            <TrendingUp className="w-6 h-6" />
+            <span className="text-[10px] font-bold mt-1">Home</span>
+          </button>
+          <a href="https://www.youtube.com/@OnepieceMasters/videos" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
+            <Play className="w-6 h-6" />
+            <span className="text-[10px] font-bold mt-1">Videos</span>
+          </a>
+          {/* Linked to 'common' id for Rarities section */}
+          <button onClick={() => document.getElementById('common')?.scrollIntoView({ behavior: 'smooth' })} className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
+             <Crown className="w-6 h-6" />
+             <span className="text-[10px] font-bold mt-1">Rarities</span>
+          </button>
+          <a href={channelData.url} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-white transition-colors">
+            <Users className="w-6 h-6" />
+            <span className="text-[10px] font-bold mt-1">Channel</span>
+          </a>
+        </div>
+      </div>
+      
+      {/* Spacer to prevent Footer from being hidden behind Nav */}
+      <div className="h-20 md:hidden"></div>
 
       <style>{`@keyframes zoom { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.15); } }`}</style>
     </div>
