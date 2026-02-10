@@ -158,7 +158,6 @@ const App = () => {
         <AboutCards id="about" />
         <CardTypes searchQuery={searchQuery} currency={currency} />
         <LatestNews />
-        <Shop currency={currency} />
         <Footer channelUrl={channelData.url} />
       </div>
 
