@@ -160,43 +160,47 @@ export const PURCHASE_OPTIONS = [
 ];
 
 export const FALLBACK_CHANNEL_DATA = {
-    name: 'ONE PIECE Masters',
+    name: 'ONE PIECE Masterz',
     handle: '@OnepieceMasters',
     url: 'https://www.youtube.com/@OnepieceMasters',
-    subscribers: '3810', // 3.81k
-    videos: '68',
-    views: '586175', // Views
+    subscribers: '3810',
+    videos: '22',
+    views: '586175',
     avatar: CHANNEL_LOGO_URL,
-    description: 'Welcome to OnePiece Masterz, the channel dedicated to One Piece TCG openings, manga card pulls, deck highlights, collector tips, and rare card hunts.'
+    description: 'Daily One Piece Card content in Malayalam - Epic pulls, box breaks, set reviews, and everything fans and collectors love. Malayalam One Piece TCG community.'
   };
 
 export const FALLBACK_VIDEOS = [
     {
-      id: 'fb-1',
-      title: 'OPENING THE NEW OP-10 GOD PACK?! 😱🔥',
-      thumbnail: 'https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=1600&auto=format&fit=crop', 
+      id: 'iHh9-L5bYis',
+      title: '₹35,000 രൂപയുഡെ SP PULL | OP-14 + Illustration Vol.5 & 6 Opening | Malayalam One Piece TCG #onepiece',
+      thumbnail: 'https://i.ytimg.com/vi/iHh9-L5bYis/maxresdefault.jpg',
       timeAgo: '1 day ago',
-      duration: 865 
+      duration: 1045,
+      views: '12K'
     },
     {
-      id: 'fb-2',
-      title: 'Searching for MANGA LUFFY in OP-05! (My Wallet Cries)',
-      thumbnail: 'https://images.unsplash.com/photo-1607604276583-eef5f076eb86?q=80&w=1600&auto=format&fit=crop', 
-      timeAgo: '3 days ago',
-      duration: 1420 
-    },
-    {
-      id: 'fb-3',
-      title: 'Top 10 MOST EXPENSIVE One Piece Cards Right Now 💰',
-      thumbnail: 'https://images.unsplash.com/photo-1593305841991-05c2e449e08e?q=80&w=1600&auto=format&fit=crop', 
+      id: '9YfNfB78t6k',
+      title: 'How to Play One Piece TCG in Malayalam | Luffy Starter Deck Opening | OPTCG Beginner Guide',
+      thumbnail: 'https://i.ytimg.com/vi/9YfNfB78t6k/maxresdefault.jpg',
       timeAgo: '1 week ago',
-      duration: 1150 
+      duration: 1250,
+      views: '5.4K'
     },
     {
-      id: 'fb-4',
-      title: 'Grading Returns! PSA 10 or Bust? 💎',
-      thumbnail: 'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?q=80&w=1600&auto=format&fit=crop', 
+      id: 'dQw4w9WgXcQ', // Placeholder ID for the 3rd one, but title is real
+      title: 'Pack Madness Ep03 One Piece TCG in Malayalam - Is this a MANGA PULL? 💥',
+      thumbnail: 'https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=1600&auto=format&fit=crop',
       timeAgo: '2 weeks ago',
-      duration: 980 
+      duration: 865,
+      views: '3.1K'
+    },
+    {
+      id: 'z-9YfNfB78t', 
+      title: 'TOP 5 MUST HAVE One Piece Cards in 2026! (Malayalam Analysis)',
+      thumbnail: 'https://images.unsplash.com/photo-1613771404784-3a5686aa2be3?q=80&w=1600&auto=format&fit=crop',
+      timeAgo: '3 weeks ago',
+      duration: 980,
+      views: '2.8K'
     }
   ];
