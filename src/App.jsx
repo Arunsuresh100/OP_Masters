@@ -452,14 +452,13 @@ const App = () => {
               </div>
 
               {/* Right Image - Desktop Only */}
-              {/* Right Image - Desktop Only */}
               <div className="hidden lg:block relative h-full min-h-[500px] w-full">
                  <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-slate-950/20 z-10"></div>
                  
                  {/* Image Container with Loading State */}
                  <div className={`transition-opacity duration-1000 ease-in-out ${loading ? 'opacity-0' : 'opacity-100'}`}>
                    <img 
-                     src="./assets/hero.png" 
+                     src={heroImage} 
                      alt="Luffy Joyboy" 
                      className="w-full h-full object-contain drop-shadow-2xl mask-image-gradient"
                      style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
@@ -470,14 +469,6 @@ const App = () => {
                  {/* Glow Effect */}
                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-amber-500/20 blur-[100px] rounded-full -z-10"></div>
               </div>
-    */
-    className="h-[80%] w-auto object-contain drop-shadow-2xl mask-image-gradient animate-float z-20"
-    style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
-  />
-
-  {/* Glow Effect (Unchanged) */}
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-amber-500/20 blur-[100px] rounded-full -z-10"></div>
-</div>
             </div>
          </div>
       </header>
@@ -498,7 +489,7 @@ const App = () => {
                </div>
                <p className="text-base text-slate-400 font-medium max-w-lg">
                   Catch up on the newest box breaks, deck profiles, and rare pulls. 
-                  <span className="text-amber-500 font-bold ml-1">Full content only, no shorts.</span>
+                  {/* <span className="text-amber-500 font-bold ml-1">Full content only, no shorts.</span> */}
                </p>
              </div>
              <a href="https://www.youtube.com/@OnepieceMasters/videos" target="_blank" rel="noopener noreferrer" className="hidden md:flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition-colors group">
