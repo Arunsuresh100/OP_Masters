@@ -17,6 +17,20 @@ const Cards = ({ currency }) => {
   const COLORS = ['Red', 'Blue', 'Green', 'Purple', 'Black', 'Yellow'];
   const SETS = ['OP01', 'OP02', 'OP03', 'OP04', 'OP05', 'OP06', 'OP07', 'OP08', 'OP09', 'OP10', 'OP11', 'OP12', 'OP13'];
 
+  // Upload Logic
+  const fileInputRef = React.useRef(null);
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
+
+  const handleImageUpload = (e) => {
+    if (e.target.files && e.target.files[0]) {
+        // In a real app, we would upload functionality here
+        // For now, prompt the user as requested
+        setShowUploadPopup(true);
+        // Reset input
+        e.target.value = '';
+    }
+  };
+
   useEffect(() => {
     fetch('http://localhost:3001/api/cards')
       .then(res => res.json())
@@ -118,7 +132,17 @@ const Cards = ({ currency }) => {
               {/* Upload Section */}
               <div className="pt-4 border-t border-white/5">
                  <div className="group relative">
-                    <button className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 text-amber-500 font-bold flex flex-col items-center justify-center gap-2 hover:from-amber-500 hover:to-orange-500 hover:text-white transition-all shadow-lg shadow-amber-900/10 hover:shadow-amber-500/20">
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleImageUpload}
+                    />
+                    <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 text-amber-500 font-bold flex flex-col items-center justify-center gap-2 hover:from-amber-500 hover:to-orange-500 hover:text-white transition-all shadow-lg shadow-amber-900/10 hover:shadow-amber-500/20"
+                    >
                        <Upload className="w-6 h-6" />
                        <span className="text-xs uppercase tracking-wider">Upload Image</span>
                     </button>
@@ -288,6 +312,7 @@ const Cards = ({ currency }) => {
       {/* Detail Popup (Modal) */}
       {selectedCard && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedCard(null)}>
+          {/* ... existing card detail modal ... */}
           <div 
             className="bg-slate-900 w-full max-w-lg rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-200"
             onClick={e => e.stopPropagation()}
@@ -324,7 +349,6 @@ const Cards = ({ currency }) => {
                        <span className="text-slate-500">Rarity</span>
                        <span className="font-bold">{selectedCard.rarity}</span>
                     </div>
-                    {/* Add more details here if available in data */}
                  </div>
                  
                  <div className="mt-auto pt-4">
@@ -336,6 +360,36 @@ const Cards = ({ currency }) => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Upload Feature Popup */}
+      {showUploadPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setShowUploadPopup(false)}>
+            <div className="bg-slate-900 border border-white/10 p-8 rounded-2xl max-w-sm w-full text-center relative shadow-2xl animate-in fade-in zoom-in duration-200">
+                <button 
+                  onClick={() => setShowUploadPopup(false)}
+                  className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                
+                <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                    <Upload className="w-8 h-8 text-amber-500" />
+                </div>
+                
+                <h3 className="text-xl font-black text-white mb-2">AI Scanner Coming Soon!</h3>
+                <p className="text-slate-400 text-sm mb-6">
+                    We are building an advanced AI model to identify your cards automatically from photos. Stay tuned for updates!
+                </p>
+                
+                <button 
+                    onClick={() => setShowUploadPopup(false)}
+                    className="w-full py-3 rounded-xl bg-amber-500 text-slate-900 font-bold hover:bg-amber-400 transition-colors"
+                >
+                    Got it
+                </button>
+            </div>
         </div>
       )}
 

@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import MobileBottomNav from './components/MobileBottomNav';
 import Home from './pages/Home';
 import Marketplace from './pages/Marketplace';
 import Cards from './pages/Cards';
-import Admin from './pages/Admin'; // Added this import
+import Admin from './pages/Admin';
+import Profile from './pages/Profile';
+import AuthModals from './components/AuthModals';
+import { useUser } from './context/UserContext';
 import { CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS } from './constants';
 import { parseDuration, timeAgo, formatDuration, formatCompactNumber } from './utils';
 
@@ -30,6 +34,7 @@ const App = () => {
     avatar: CHANNEL_LOGO_URL 
   });
   const [latestVideos, setLatestVideos] = useState([]);
+  const { authModal, closeAuth } = useUser();
 
   useEffect(() => {
     const fetchYouTubeData = async () => {
@@ -125,6 +130,12 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans overflow-x-hidden selection:bg-amber-500/30">
+      
+      <AuthModals 
+        isOpen={authModal.isOpen} 
+        onClose={closeAuth} 
+        initialMode={authModal.mode} 
+      />
       {/* Cinematic Splash Screen */}
       <div className={`fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center transition-all duration-1000 ease-in-out ${!loading ? 'opacity-0 pointer-events-none scale-110' : 'opacity-100'}`}>
         <div className="relative">
@@ -149,7 +160,8 @@ const App = () => {
         channelUrl={channelData.url}
       />
       
-      <Routes>
+      <div className="pb-16 md:pb-0">
+        <Routes>
         <Route path="/" element={
           <Home 
             channelData={channelData} 
@@ -166,12 +178,17 @@ const App = () => {
         <Route path="/marketplace" element={
           <Marketplace currency={currency} />
         } />
+        <Route path="/profile" element={
+          <Profile />
+        } />
         <Route path="/admin" element={
           <Admin />
         } />
       </Routes>
+      </div>
 
       <Footer channelUrl={channelData.url} />
+      <MobileBottomNav />
 
       <style>{`
         @keyframes loading-bar {
