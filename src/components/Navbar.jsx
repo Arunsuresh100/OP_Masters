@@ -1,6 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Menu, X, Instagram, Youtube } from 'lucide-react';
 import { CHANNEL_LOGO_URL } from '../constants';
+
+const LOGO_PATH = '/logo.png';
+const APP_LOGO = LOGO_PATH;
 
 const Navbar = ({ 
   currency, 
@@ -19,15 +23,16 @@ const Navbar = ({
        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
          {/* STANDARD NAVBAR CONTENT */}
          <div className={`flex items-center justify-between w-full transition-all duration-300 transform ${mobileSearchActive ? 'opacity-0 translate-y-10 pointer-events-none absolute' : 'opacity-100 translate-y-0 relative'}`}>
-             <a href={channelUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group cursor-pointer flex-shrink-0 min-w-0">
+             <Link to="/" className="flex items-center gap-3 group cursor-pointer flex-shrink-0 min-w-0">
                <div className="relative flex-shrink-0">
-                 <img src={CHANNEL_LOGO_URL} alt="Logo" className="relative w-10 h-10 md:w-12 md:h-12 rounded-full object-cover bg-black border border-white/10" />
+                 <img src={APP_LOGO} alt="Logo" className="relative w-10 h-10 md:w-12 md:h-12 rounded-full object-cover bg-black border border-white/10" 
+                      onError={(e) => e.target.src = CHANNEL_LOGO_URL} />
                </div>
                <div className="flex flex-col flex-shrink-0 min-w-0">
-                 <span className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent truncate">OP MASTERS</span>
-                 <span className="hidden md:block text-[9px] font-bold text-slate-500 uppercase tracking-widest -mt-1">Card Opening Channel</span>
+                 <span className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent truncate uppercase">OP MASTER</span>
+                 <span className="hidden md:block text-[9px] font-bold text-slate-500 uppercase tracking-widest -mt-1">TCG Trading Platform</span>
                </div>
-             </a>
+             </Link>
          
          <div className="hidden md:flex items-center gap-6 flex-1 justify-center max-w-md">
           <div className="relative w-full group">
@@ -44,6 +49,15 @@ const Navbar = ({
           </div>
          </div>
 
+             <div className="flex items-center gap-6">
+               <Link to="/" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Home</Link>
+               <Link to="/marketplace" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Cards</Link>
+               <Link to="/marketplace" className="text-sm font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-2">
+                 Marketplace
+                 <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[8px] uppercase tracking-tighter border border-amber-500/20">Hot</span>
+               </Link>
+             </div>
+             
              <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
                {/* Mobile Search Icon */}
                <button 

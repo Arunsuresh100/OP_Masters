@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import LatestVideos from './components/LatestVideos';
-import AboutCards from './components/AboutCards';
-import CardTypes from './components/CardTypes';
-import LatestNews from './components/LatestNews';
-import Shop from './components/Shop';
 import Footer from './components/Footer';
-import { API_KEY, CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS, RARITIES } from './constants';
+import Home from './pages/Home';
+import Marketplace from './pages/Marketplace';
+import Admin from './pages/Admin'; // Added this import
+import { CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS } from './constants';
 import { parseDuration, timeAgo, formatDuration, formatCompactNumber } from './utils';
 
+// Using a public path for the logo to prevent build crashes if the file is missing
+const LOGO_PATH = '/logo.png'; 
+const APP_LOGO = LOGO_PATH; // Fallback to CHANNEL_LOGO_URL if you prefer: LOGO_PATH || CHANNEL_LOGO_URL
+
 const App = () => {
-  // Deployment Sync: v1.0.4 - Ensuring latest authentic YouTube fallbacks are active
-  const [currency, setCurrency] = useState('USD');
+  // Deployment Sync: v1.1.0 - Integrated Marketplace and One Piece Master branding
+  const [currency, setCurrency] = useState('INR');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [appReady, setAppReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [channelData, setChannelData] = useState({
-    name: 'One Piece Masters',
+    name: 'OP MASTER',
     handle: '@OnepieceMasters',
     url: `https://www.youtube.com/@OnepieceMasters`,
     subscribers: '---',
@@ -28,18 +30,18 @@ const App = () => {
   });
   const [latestVideos, setLatestVideos] = useState([]);
 
-  // Sequence: Fetch Data -> Wait min time -> Fade In App
   useEffect(() => {
     const fetchYouTubeData = async () => {
       const startTime = Date.now();
       try {
-        // Step 1: Fetch Channel Info
-        const channelUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&id=${CHANNEL_ID}&key=${API_KEY}`;
-        const channelResponse = await fetch(channelUrl);
+        const backendUrl = 'http://localhost:3001/api/youtube';
+        
+        // 1. Fetch channel info from proxy
+        const channelResponse = await fetch(`${backendUrl}/channel`);
         const channelDetails = await channelResponse.json();
         
         if (channelDetails.error || !channelDetails.items?.length) {
-           throw new Error("Quota exceeded or Channel not found");
+           throw new Error("Proxy error or Channel not found");
         }
 
         const channelItem = channelDetails.items[0];
@@ -53,18 +55,17 @@ const App = () => {
           avatar: channelItem.snippet.thumbnails.medium.url 
         });
 
-        // Step 2: Fetch Recent Uploads
         const uploadsPlaylistId = channelItem.contentDetails.relatedPlaylists.uploads;
-        const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=50&key=${API_KEY}`;
-        const playlistResponse = await fetch(playlistUrl);
+        
+        // 2. Fetch videos from proxy
+        const playlistResponse = await fetch(`${backendUrl}/videos?playlistId=${uploadsPlaylistId}`);
         const playlistData = await playlistResponse.json();
 
         if (playlistData.items?.length) {
            const videoIds = playlistData.items.map(item => item.contentDetails.videoId).join(',');
            
-           // Step 3: Fetch Durations & Views (Optional but preferred for accurate UI)
-           const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${API_KEY}`;
-           const statsResponse = await fetch(statsUrl);
+           // 3. Fetch video stats from proxy
+           const statsResponse = await fetch(`${backendUrl}/stats?ids=${videoIds}`);
            const statsData = await statsResponse.json();
            
            const videoStatsMap = {};
@@ -75,10 +76,8 @@ const App = () => {
                 };
            });
 
-           // Step 4: Map and filter (Optional: filter out Shorts if duration is available)
            const processedVideos = playlistData.items.map(item => {
               const stats = videoStatsMap[item.contentDetails.videoId];
-              // Use fallback data for stats if API failed for this specific video
               return {
                 id: item.contentDetails.videoId,
                 title: item.snippet.title,
@@ -89,7 +88,6 @@ const App = () => {
               };
            });
 
-           // Final check: Update state if we have results, otherwise use fallback
            if (processedVideos.length > 0) {
               setLatestVideos(processedVideos.slice(0, 6));
            } else {
@@ -100,7 +98,7 @@ const App = () => {
         }
 
       } catch (err) {
-        console.warn("YouTube API issue detected. Applying high-quality channel fallback.");
+        console.error('Fetch error:', err);
         setChannelData({
             name: FALLBACK_CHANNEL_DATA.name,
             handle: FALLBACK_CHANNEL_DATA.handle,
@@ -124,22 +122,6 @@ const App = () => {
     fetchYouTubeData();
   }, []);
 
-  // Search Logic
-  useEffect(() => {
-    if (!searchQuery) return;
-    const query = searchQuery.toLowerCase();
-    if (query.includes('about')) {
-      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      const matchedRarity = RARITIES.find(r => 
-        r.name.toLowerCase().includes(query) || r.id.toLowerCase().includes(query)
-      );
-      if (matchedRarity) {
-        document.getElementById(matchedRarity.id)?.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  }, [searchQuery]);
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans overflow-x-hidden selection:bg-amber-500/30">
       {/* Cinematic Splash Screen */}
@@ -147,7 +129,8 @@ const App = () => {
         <div className="relative">
           <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-t-2 border-amber-500 animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <img src={CHANNEL_LOGO_URL} alt="Loading" className="w-14 h-14 md:w-20 md:h-20 rounded-full animate-pulse shadow-2xl" />
+            <img src={APP_LOGO} alt="Loading" className="w-14 h-14 md:w-20 md:h-20 rounded-full animate-pulse shadow-2xl" 
+                 onError={(e) => e.target.src = CHANNEL_LOGO_URL} />
           </div>
         </div>
         <div className="mt-12 flex flex-col items-center gap-3">
@@ -158,22 +141,33 @@ const App = () => {
         </div>
       </div>
 
-      {/* Main Content with Fade-In */}
-      <div className={`transition-all duration-1000 ease-out ${appReady ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        <Navbar 
-          currency={currency} setCurrency={setCurrency} 
-          mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
-          searchQuery={searchQuery} setSearchQuery={setSearchQuery}
-          channelUrl={channelData.url}
-        />
-        
-        <Hero channelData={channelData} />
-        <LatestVideos videos={latestVideos} loading={loading} />
-        <AboutCards id="about" />
-        <CardTypes searchQuery={searchQuery} currency={currency} />
-        <LatestNews />
-        <Footer channelUrl={channelData.url} />
-      </div>
+      <Navbar 
+        currency={currency} setCurrency={setCurrency} 
+        mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+        searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+        channelUrl={channelData.url}
+      />
+      
+      <Routes>
+        <Route path="/" element={
+          <Home 
+            channelData={channelData} 
+            latestVideos={latestVideos} 
+            loading={loading} 
+            appReady={appReady} 
+            searchQuery={searchQuery} 
+            currency={currency} 
+          />
+        } />
+        <Route path="/marketplace" element={
+          <Marketplace currency={currency} />
+        } />
+        <Route path="/admin" element={
+          <Admin />
+        } />
+      </Routes>
+
+      <Footer channelUrl={channelData.url} />
 
       <style>{`
         @keyframes loading-bar {

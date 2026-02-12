@@ -89,9 +89,7 @@ const NewsItem = ({ title, date, category, gradient, link }) => (
 const App = () => {
   const [currency, setCurrency] = useState('USD');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [videoLoading, setVideoLoading] = useState(true); // Specific loader for videos
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [channelData, setChannelData] = useState({
     name: 'One Piece Masters',
@@ -107,7 +105,7 @@ const App = () => {
   useEffect(() => {
     const fetchYouTubeData = async () => {
       try {
-        setLoading(true);
+        /* Removed setLoading */
         // 1. Channel ID Search
         const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(CHANNEL_HANDLE)}&type=channel&key=${API_KEY}`;
         const searchRes = await fetch(searchUrl);
@@ -173,24 +171,19 @@ const App = () => {
            
            setLatestVideos(formattedVideos);
         }
-        setLoading(false);
+        /* Removed setLoading */
         setVideoLoading(false);
 
       } catch (err) {
         console.error("YouTube Fetch Error:", err);
-        setLoading(false);
+        /* Removed setLoading */
         setVideoLoading(false);
       }
     };
     fetchYouTubeData();
   }, []);
 
-  const formatPrice = (val) => {
-    if (currency === 'INR') {
-       return `₹${(val * USD_TO_INR).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
-    }
-    return `$${val.toFixed(2)}`;
-  };
+  /* Removed unused formatPrice */
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans overflow-x-hidden selection:bg-amber-500/30">

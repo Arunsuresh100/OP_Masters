@@ -1,12 +1,15 @@
 import React from 'react';
 import { Newspaper, Calendar, ArrowUpRight, Megaphone, Hash, Activity } from 'lucide-react';
 
-const NewsWireItem = ({ category, title, date, link, tagColor }) => (
+const NewsWireItem = ({ category, title, date, link, tagColor, index, isVisible }) => (
   <a 
     href={link} 
     target="_blank" 
     rel="noopener noreferrer" 
-    className="group relative flex flex-col md:flex-row md:items-center justify-between p-6 md:p-8 bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-500 rounded-3xl overflow-hidden"
+    className={`group relative flex flex-col md:flex-row md:items-center justify-between p-6 md:p-8 bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-700 rounded-3xl overflow-hidden ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+    }`}
+    style={{ transitionDelay: `${index * 100}ms` }}
   >
     {/* Dynamic Background Highlight */}
     <div className={`absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b ${tagColor} scale-y-0 group-hover:scale-y-100 transition-transform duration-500`}></div>
@@ -43,6 +46,26 @@ const NewsWireItem = ({ category, title, date, link, tagColor }) => (
 );
 
 const LatestNews = () => {
+    const [news, setNews] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [isVisible, setIsVisible] = React.useState(false);
+
+    React.useEffect(() => {
+        const fetchNews = async () => {
+            try {
+                const res = await fetch('http://localhost:3001/api/news');
+                const data = await res.json();
+                setNews(data);
+            } catch (err) {
+                console.error('Error fetching news:', err);
+            } finally {
+                setLoading(false);
+                setTimeout(() => setIsVisible(true), 100);
+            }
+        };
+        fetchNews();
+    }, []);
+
     return (
         <section className="relative py-32 px-4 sm:px-6 overflow-hidden">
         {/* Editorial Ambient Light */}
@@ -64,43 +87,42 @@ const LatestNews = () => {
                 LATEST RELEASES & NEWS
              </h3>
              <p className="text-sm md:text-base text-slate-500 font-medium max-w-md">
-                Authoritative updates on the One Piece Card Game ecosystem, verified by the Grand Line editorial team.
+                Authoritative updates on the One Piece Card Game ecosystem, verified by the OP MASTER editorial team.
              </p>
           </div>
 
           {/* News Wire Container */}
           <div className="space-y-4">
-            <NewsWireItem 
-              category="World Premire" 
-              title="Official: OP-14 'The Azure Sea's Seven' English Release Scheduled for Jan 16" 
-              date="FEB 10, 2026" 
-              tagColor="from-amber-500 to-orange-600"
-              link="https://en.onepiece-cardgame.com/news/"
-            />
-            
-            <NewsWireItem 
-              category="Meta Analysis" 
-              title="Post-Regional Report: Blue Bottom Deck variants seeing 15% increase in top-cut usage" 
-              date="FEB 08, 2026" 
-              tagColor="from-blue-500 to-cyan-500"
-              link="https://onepiece.limitlesstcg.com/"
-            />
-
-            <NewsWireItem 
-              category="Stock Alert" 
-              title="Distribution Notice: Second wave of EB-01 Booster Boxes arriving at major retailers" 
-              date="FEB 05, 2026" 
-              tagColor="from-emerald-500 to-teal-500"
-              link="https://www.tcgplayer.com/"
-            />
-            
-            <NewsWireItem 
-              category="Legal Update" 
-              title="Comprehensive Rulebook v1.7.2 published with specific timing adjustments for Leader Effects" 
-              date="FEB 01, 2026" 
-              tagColor="from-slate-500 to-slate-700"
-              link="https://en.onepiece-cardgame.com/rules/"
-            />
+            {loading ? (
+                // Loading Skeletons
+                [1,2,3].map(i => (
+                    <div key={i} className="animate-pulse flex flex-col md:flex-row md:items-center justify-between p-8 bg-white/[0.01] border border-white/5 rounded-3xl h-32">
+                        <div className="flex-1 space-y-4">
+                            <div className="h-4 bg-white/10 rounded w-1/4"></div>
+                            <div className="h-6 bg-white/10 rounded w-3/4"></div>
+                        </div>
+                    </div>
+                ))
+            ) : (
+                news.length > 0 ? (
+                    news.map((item, idx) => (
+                        <NewsWireItem 
+                            key={idx}
+                            index={idx}
+                            isVisible={isVisible}
+                            category={item.category}
+                            title={item.title}
+                            date={item.date}
+                            tagColor={item.tagColor}
+                            link={item.link}
+                        />
+                    ))
+                ) : (
+                    <div className="text-center py-10 text-slate-500 font-bold uppercase tracking-widest">
+                        No recent intelligence found. Set sail later.
+                    </div>
+                )
+            )}
           </div>
 
           {/* Footer News Control */}
@@ -108,16 +130,16 @@ const LatestNews = () => {
              <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                    <Activity className="w-4 h-4 text-emerald-500" />
-                   <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Feed Status: Active</span>
+                   <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Feed Status: {loading ? 'Syncing...' : 'Active'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                    <Hash className="w-4 h-4 text-amber-500" />
-                   <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Total Articles: 154</span>
+                   <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Articles Found: {news.length}</span>
                 </div>
              </div>
-             <button className="flex items-center gap-2 text-[10px] font-black text-white uppercase tracking-[0.3em] hover:text-amber-500 transition-colors">
-                Open Global Archive <Newspaper className="w-4 h-4" />
-             </button>
+             <a href="https://en.onepiece-cardgame.com/topics/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[10px] font-black text-white uppercase tracking-[0.3em] hover:text-amber-500 transition-colors">
+                Open Official Archive <Newspaper className="w-4 h-4" />
+             </a>
           </div>
         </div>
       </section>

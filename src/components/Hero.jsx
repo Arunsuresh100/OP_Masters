@@ -39,7 +39,7 @@ const Hero = ({ channelData }) => {
           </h1>
 
           <p className="text-sm md:text-lg text-slate-300 max-w-xl mx-auto md:mx-0 leading-relaxed font-medium drop-shadow-md">
-            Join One Piece Masters ({channelData.handle}) as we open packs, hunt for Mangas, and build the ultimate decks!
+            Join OP MASTER ({channelData.handle}) as we open packs, hunt for Mangas, and build the ultimate decks!
           </p>
           
           {/* Main CTA */}

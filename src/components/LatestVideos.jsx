@@ -9,8 +9,30 @@ const VideoSkeleton = () => (
   </div>
 );
 
+const CinematicImage = ({ src, alt }) => {
+    const [loaded, setLoaded] = React.useState(false);
+    return (
+        <div className="relative w-full h-full">
+            <div className={`absolute inset-0 bg-slate-900 animate-pulse transition-opacity duration-700 ${loaded ? 'opacity-0' : 'opacity-100'}`}></div>
+            <img 
+              src={src} 
+              alt={alt}
+              onLoad={() => setLoaded(true)}
+              className={`w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 ${loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+            />
+        </div>
+    );
+};
+
 const LatestVideos = ({ videos = [], loading }) => {
   const scrollContainer = useRef(null);
+  const [isVisible, setIsVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!loading) {
+      setTimeout(() => setIsVisible(true), 150);
+    }
+  }, [loading]);
 
   return (
     <section className="relative py-12 md:py-24 px-4 sm:px-6 overflow-hidden bg-slate-950">
@@ -55,20 +77,22 @@ const LatestVideos = ({ videos = [], loading }) => {
               className="flex gap-4 md:gap-8 overflow-x-auto pb-8 snap-x snap-mandatory scroll-smooth hide-scrollbar px-1" 
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {videos.length > 0 ? videos.map((video) => (
+              {videos.length > 0 ? videos.map((video, idx) => (
                 <a 
                   key={video.id}
                   href={`https://www.youtube.com/watch?v=${video.id}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="group block min-w-[280px] sm:min-w-[320px] md:min-w-[360px] snap-center md:snap-start relative"
+                  className={`group block min-w-[280px] sm:min-w-[320px] md:min-w-[360px] snap-center md:snap-start relative transition-all duration-700 ${
+                    isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'
+                  }`}
+                  style={{ transitionDelay: `${idx * 150}ms` }}
                 >
                   {/* Card Image Container - Glassmorphic Border with subtle Shadow */}
                   <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-500 group-hover:shadow-red-600/20 group-hover:border-red-500/30 group-hover:-translate-y-2">
-                    <img 
+                    <CinematicImage 
                       src={video.thumbnail} 
                       alt={video.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     
                     {/* Dark Overlay Gradient */}

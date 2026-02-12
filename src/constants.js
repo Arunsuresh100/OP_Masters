@@ -1,7 +1,7 @@
 import { Shield, TrendingUp, Star, Users, Sparkles, Gem, Crown } from 'lucide-react';
 
 export const USD_TO_INR = 83.5;
-export const API_KEY = 'AIzaSyB3JbL6gT9m-IadtGVDJc1qwYb-68JYk38';
+export const API_KEY = ''; // Moved to Backend for Security
 export const CHANNEL_ID = 'UCfKU5WX-CUPWtkGA4uIhiKQ'; 
 export const CHANNEL_HANDLE = 'OnepieceMasters'; 
 export const CHANNEL_LOGO_URL = 'https://yt3.googleusercontent.com/z6rQcZJc1FCx3Edymkt5UgtdBe4GtIUGiVr8y--N6BYbYeo52PeVHhdLyEQ3aLEiYsc1j-v6=s160-c-k-c0x00ffffff-no-rj';
@@ -14,126 +14,132 @@ export const RARITIES = [
     id: 'common',
     code: 'C',
     name: 'Common',
-    description: 'The foundation of any One Piece TCG deck. While they are the most frequently pulled cards in a pack, Commons often include essential utility characters (2k counters), searchers, and event cards that are staples in competitive play. Don\'t overlook them just because they are plentiful!',
-    minPrice: 0.05,
-    maxPrice: 0.20,
-    tag: 'Base Tier',
+    description: 'The backbone of every deck. While plentiful, C-rarities contain essential utility cards and 2k counters.',
+    minPrice: 0.01,
+    maxPrice: 0.50,
+    tag: 'Base',
     gradient: 'from-slate-600 to-slate-800',
-    borderColor: 'border-slate-600/30',
+    borderColor: 'border-slate-500/30',
     textColor: 'text-slate-400',
     icon: Shield,
     examples: [
-      { name: 'Market Price: $0.06', set: 'OP01-001', img: 'https://tcgplayer-cdn.tcgplayer.com/product/454520_in_600x600.jpg' },
-      { name: 'Market Price: $6.79', set: 'OP01-016', img: 'https://tcgplayer-cdn.tcgplayer.com/product/453507_in_600x600.jpg' },
-      { name: 'Market Price: $0.04', set: 'OP01-006', img: 'https://tcgplayer-cdn.tcgplayer.com/product/541598_in_600x600.jpg' }
+      { name: 'Nami', set: 'OP01-016', img: 'https://tcgplayer-cdn.tcgplayer.com/product/453507_in_600x600.jpg' },
+      { name: 'Otama', set: 'OP01-006', img: 'https://tcgplayer-cdn.tcgplayer.com/product/541598_in_600x600.jpg' }
     ]
   },
   {
     id: 'uncommon',
     code: 'UC',
     name: 'Uncommon',
-    description: 'A step up in complexity from Commons, Uncommon cards introduce more specialized effects and stronger power levels. These cards often define the specific strategies of a color or archetype, providing key synergy pieces that support your Leader\'s game plan.',
+    description: 'Stronger synergy components that often define specific color archetypes.',
     minPrice: 0.20,
-    maxPrice: 1.00,
+    maxPrice: 2.00,
     tag: 'Step Up',
     gradient: 'from-emerald-600 to-emerald-800',
     borderColor: 'border-emerald-500/30',
     textColor: 'text-emerald-400',
     icon: TrendingUp,
-    examples: [
-      { name: 'Market Price: $4.67', set: 'OP01-025', img: 'https://tcgplayer-cdn.tcgplayer.com/product/593439_in_600x600.jpg' },
-      { name: 'Market Price: $4.67', set: 'OP01-013', img: 'https://tcgplayer-cdn.tcgplayer.com/product/593439_in_600x600.jpg' },
-      { name: 'Market Price: $0.15', set: 'OP01-042', img: 'https://tcgplayer-cdn.tcgplayer.com/product/516752_in_600x600.jpg' }
-    ]
+    examples: []
   },
   {
     id: 'rare',
     code: 'R',
     name: 'Rare',
-    description: 'Easily identified by their holographic name text and borders, Rare cards are the workhorses of high-level decks. Every pack guarantees at least one Rare or higher, and these cards typically feature powerful on-play effects or strong stat lines that can swing the momentum in your favor.',
+    description: 'Guaranteed holographic text/borders. High-utility cards for competitive strategies.',
     minPrice: 1.00,
-    maxPrice: 5.00,
-    tag: 'Foil Tier',
+    maxPrice: 10.00,
+    tag: 'Foil',
     gradient: 'from-blue-600 to-blue-800',
     borderColor: 'border-blue-500/30',
     textColor: 'text-blue-400',
     icon: Star,
-    examples: [
-      { name: 'Market Price: $2.87', set: 'OP01-047', img: 'https://tcgplayer-cdn.tcgplayer.com/product/454534_in_600x600.jpg' },
-      { name: 'Market Price: $457.18', set: 'OP01-051', img: 'https://tcgplayer-cdn.tcgplayer.com/product/454536_in_600x600.jpg' },
-      { name: 'Market Price: $34.00', set: 'OP01-032', img: 'https://tcgplayer-cdn.tcgplayer.com/product/539492_in_600x600.jpg' }
-    ]
+    examples: []
   },
   {
     id: 'leader',
     code: 'L',
     name: 'Leader',
-    description: 'The most crucial card in your deck! Your Leader determines your starting life total, your deck\'s color identity, and your overall playstyle. With unique abilities that can be activated once per turn, choosing the right Leader is the first step to becoming the Pirate King.',
+    description: 'The commander of your deck. Choice of Leader defines your entire game strategy.',
     minPrice: 0.50,
-    maxPrice: 10.00,
+    maxPrice: 50.00,
     tag: 'Commander',
     gradient: 'from-red-600 to-red-800',
     borderColor: 'border-red-500/30',
     textColor: 'text-red-400',
     icon: Users,
-    examples: [
-      { name: 'Market Price: $0.73', set: 'OP01-001', img: 'https://tcgplayer-cdn.tcgplayer.com/product/498253_in_600x600.jpg' },
-      { name: 'Market Price: $324.60', set: 'OP01-060', img: 'https://tcgplayer-cdn.tcgplayer.com/product/498254_in_600x600.jpg' },
-      { name: 'Market Price: $795.50', set: 'OP02-013', img: 'https://tcgplayer-cdn.tcgplayer.com/product/453506_in_600x600.jpg' }
-    ]
+    examples: []
   },
   {
     id: 'super-rare',
     code: 'SR',
     name: 'Super Rare',
-    description: 'The heavy hitters of the card game. Super Rares boast intricate holofoil patterns and powerful, game-ending abilities. You will typically find 3 to 4 of these in a booster box. These are often the boss monsters or key combo pieces that decks are built around.',
+    description: 'Boss monsters with intricate foil patterns. Only 3-4 per booster box.',
     minPrice: 5.00,
-    maxPrice: 30.00,
-    tag: 'High Hit',
+    maxPrice: 80.00,
+    tag: 'Hit',
     gradient: 'from-purple-600 to-purple-800',
     borderColor: 'border-purple-500/30',
     textColor: 'text-purple-400',
     icon: Sparkles,
-    examples: [
-      { name: 'Market Price: $1.16', set: 'OP01-078', img: 'https://tcgplayer-cdn.tcgplayer.com/product/514543_in_600x600.jpg' },
-      { name: 'Market Price: $34.48', set: 'OP01-120', img: 'https://tcgplayer-cdn.tcgplayer.com/product/514544_in_600x600.jpg' },
-      { name: 'Market Price: $691.15', set: 'OP01-121', img: 'https://tcgplayer-cdn.tcgplayer.com/product/516558_in_600x600.jpg' }
-    ]
+    examples: []
   },
   {
     id: 'secret-rare',
     code: 'SEC',
     name: 'Secret Rare',
-    description: 'The elusive treasures of a set! Secret Rares feature textured foiling and gold accents that make the art pop. Extremely scarce, with only about 2 appearing in an entire case of booster boxes. Pulling one is a major event for any collector.',
+    description: 'Elite treasures featuring gold accents and textured foiling. Highly elusive.',
     minPrice: 20.00,
-    maxPrice: 150.00,
-    tag: 'Elite Tier',
+    maxPrice: 300.00,
+    tag: 'Elite',
     gradient: 'from-orange-500 to-orange-700',
     borderColor: 'border-orange-500/30',
     textColor: 'text-orange-400',
     icon: Gem,
-    examples: [
-      { name: 'Market Price: $12.21', set: 'OP01-120', img: 'https://tcgplayer-cdn.tcgplayer.com/product/501997_in_600x600.jpg' },
-      { name: 'Market Price: $21.47', set: 'OP02-121', img: 'https://tcgplayer-cdn.tcgplayer.com/product/500116_in_600x600.jpg' },
-      { name: 'Market Price: $782.10', set: 'OP03-122', img: 'https://tcgplayer-cdn.tcgplayer.com/product/500118_in_600x600.jpg' }
-    ]
+    examples: []
   },
   {
-    id: 'gold',
-    code: 'Golden DON!!',
-    name: 'Solid Gold',
-    description: 'The ultimate collector\'s item. These are special versions of the DON!! resource cards, completely foiled in gold. They are incredibly rare and add a level of prestige to your board that is unmatched. The true One Piece for card collectors!',
+    id: 'special-rare',
+    code: 'SP',
+    name: 'Special Rare',
+    description: 'Alternative art versions of popular cards with unique framing and textures.',
+    minPrice: 50.00,
+    maxPrice: 500.00,
+    tag: 'Alternate',
+    gradient: 'from-cyan-500 to-blue-600',
+    borderColor: 'border-cyan-500/30',
+    textColor: 'text-cyan-400',
+    icon: Sparkles,
+    examples: []
+  },
+  {
+    id: 'treasure-rare',
+    code: 'TR',
+    name: 'Treasure Rare',
+    description: 'Special reprints with treasure-map inspired designs and premium foiling.',
+    minPrice: 30.00,
+    maxPrice: 200.00,
+    tag: 'Treasure',
+    gradient: 'from-rose-500 to-pink-600',
+    borderColor: 'border-rose-500/30',
+    textColor: 'text-rose-400',
+    icon: Gem,
+    examples: []
+  },
+  {
+    id: 'manga',
+    code: 'Manga',
+    name: 'Manga Rare',
+    description: 'The ultimate chase. Features original Eiichiro Oda manga artwork. The holy grail of One Piece TCG.',
     minPrice: 500.00,
-    maxPrice: 2000.00,
-    tag: 'Masterpiece',
-    gradient: 'from-yellow-400 via-yellow-500 to-yellow-600',
-    borderColor: 'border-yellow-500/50',
-    textColor: 'text-yellow-400',
+    maxPrice: 5000.00,
+    tag: 'Ultimate',
+    gradient: 'from-yellow-400 via-amber-500 to-yellow-600',
+    borderColor: 'border-amber-500/50',
+    textColor: 'text-amber-400',
     icon: Crown,
     examples: [
-      { name: 'Market Price: $81.61', set: 'Sample', img: 'https://tcgplayer-cdn.tcgplayer.com/product/586884_in_600x600.jpg' },
-      { name: 'Market Price: $144.99', set: 'Sample', img: 'https://tcgplayer-cdn.tcgplayer.com/product/586554_in_600x600.jpg' },
-      { name: 'Market Price: $135.31', set: 'Sample', img: 'https://tcgplayer-cdn.tcgplayer.com/product/587706_in_600x600.jpg' }
+      { name: 'Sogeking (Manga)', set: 'OP03-122', img: 'https://tcgplayer-cdn.tcgplayer.com/product/500118_in_600x600.jpg' },
+      { name: 'Portgas.D.Ace (Manga)', set: 'OP02-120', img: 'https://tcgplayer-cdn.tcgplayer.com/product/484918_in_600x600.jpg' }
     ]
   }
 ];
@@ -160,7 +166,7 @@ export const PURCHASE_OPTIONS = [
 ];
 
 export const FALLBACK_CHANNEL_DATA = {
-    name: 'ONE PIECE Masters',
+    name: 'OP MASTER',
     handle: '@OnepieceMasters',
     url: 'https://www.youtube.com/@OnepieceMasters',
     subscribers: 3850,
