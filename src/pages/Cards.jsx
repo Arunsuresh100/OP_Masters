@@ -101,13 +101,12 @@ const Cards = ({ currency }) => {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar (Search, Upload, Filters) */}
-        <div className="lg:col-span-1 space-y-6">
-           {/* Added 'no-scrollbar' class (assuming it exists in CSS or using style) */}
-           <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 space-y-6 sticky top-24 max-h-[85vh] overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="lg:col-span-1 space-y-6 lg:mt-[120px]">
+           <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 space-y-6 sticky top-24">
               <style>{`
                 .no-scrollbar::-webkit-scrollbar {
                   display: none;
@@ -194,8 +193,8 @@ const Cards = ({ currency }) => {
            </div>
         </div>
 
-        {/* Main Content */}
-        <div className="lg:col-span-3">
+        {/* Right Content (Cards Grid) */}
+        <div className="lg:col-span-3 pt-0">
            
            {/* Top Rarity Filter (Centered) */}
            <div className="mb-8 flex justify-center">
