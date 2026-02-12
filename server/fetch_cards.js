@@ -123,6 +123,16 @@ const fetchCards = async () => {
 
                     card.price = parseFloat(basePrice.toFixed(2));
 
+                    // Simulated Market Data
+                    const change = (Math.random() * 30) - 15; // -15% to +15%
+                    card.percentChange = parseFloat(change.toFixed(2));
+                    card.marketTrend = change > 0 ? 'up' : change < 0 ? 'down' : 'neutral';
+                    card.volume = Math.floor(Math.random() * 500) + 10; // 10 to 510 daily trades
+                    
+                    // Last Sold Price (slightly different from current price)
+                    const lastSoldVariance = (Math.random() * 0.2) - 0.1; // +/- 10%
+                    card.lastSoldPrice = parseFloat((card.price * (1 + lastSoldVariance)).toFixed(2));
+
                     cardDetails.push(card);
                     successCount++;
 

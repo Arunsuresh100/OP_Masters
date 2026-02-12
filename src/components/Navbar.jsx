@@ -51,7 +51,7 @@ const Navbar = ({
 
              <div className="flex items-center gap-6">
                <Link to="/" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Home</Link>
-               <Link to="/marketplace" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Cards</Link>
+               <Link to="/cards" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Cards</Link>
                <Link to="/marketplace" className="text-sm font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-2">
                  Marketplace
                  <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[8px] uppercase tracking-tighter border border-amber-500/20">Hot</span>

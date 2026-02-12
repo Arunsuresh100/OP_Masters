@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Marketplace from './pages/Marketplace';
+import Cards from './pages/Cards';
 import Admin from './pages/Admin'; // Added this import
 import { CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS } from './constants';
 import { parseDuration, timeAgo, formatDuration, formatCompactNumber } from './utils';
@@ -158,6 +159,9 @@ const App = () => {
             searchQuery={searchQuery} 
             currency={currency} 
           />
+        } />
+        <Route path="/cards" element={
+          <Cards currency={currency} />
         } />
         <Route path="/marketplace" element={
           <Marketplace currency={currency} />
