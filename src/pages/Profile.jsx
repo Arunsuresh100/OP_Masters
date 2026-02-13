@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useUser } from '../context/UserContext';
-import { Camera, Mail, Calendar, ShoppingBag, TrendingUp, TrendingDown, Shield } from 'lucide-react';
+import { Camera, Mail, Calendar, ShoppingBag, TrendingUp, TrendingDown, Shield, DollarSign, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { formatPrice } from '../utils';
+import { USD_TO_INR } from '../constants';
 
 // Import character images
 import luffyImg from '../assets/luffy.png';
