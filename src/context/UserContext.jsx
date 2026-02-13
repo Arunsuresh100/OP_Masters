@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import luffyImg from '../assets/luffy.png';
 
 const UserContext = createContext();
 
@@ -14,9 +15,12 @@ export const UserProvider = ({ children }) => {
         
         if (savedUser) {
             const userData = JSON.parse(savedUser);
-            // Ensure default avatar
+            // Ensure default avatar and avatar URL
             if (!userData.selectedAvatar) {
                 userData.selectedAvatar = 'luffy';
+            }
+            if (!userData.avatar) {
+                userData.avatar = luffyImg;
             }
             setUser(userData);
         }
@@ -33,6 +37,7 @@ export const UserProvider = ({ children }) => {
         const userWithDefaults = {
             ...userData,
             selectedAvatar: userData.selectedAvatar || 'luffy',
+            avatar: userData.avatar || luffyImg,
             joinedDate: userData.joinedDate || new Date().toISOString()
         };
         setUser(userWithDefaults);

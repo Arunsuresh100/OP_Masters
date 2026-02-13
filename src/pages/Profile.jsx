@@ -51,36 +51,31 @@ const Profile = () => {
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
     const [currency, setCurrency] = useState('usd');
 
-    if (!user) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-                <div className="text-center">
-                    <h2 className="text-2xl font-black text-white mb-4">Please Login</h2>
-                    <p className="text-slate-400">You need to be logged in to view your profile.</p>
-                </div>
-            </div>
-        );
-    }
-
-    const handleAvatarChange = (avatarId) => {
-        setSelectedAvatar(avatarId);
-        const newAvatar = CHARACTER_AVATARS.find(a => a.id === avatarId);
-        if (newAvatar && updateAvatar) {
-            updateAvatar(newAvatar.image, avatarId);
+    // Sync selectedAvatar when user changes
+    React.useEffect(() => {
+        if (user?.selectedAvatar) {
+            setSelectedAvatar(user.selectedAvatar);
         }
-        setShowAvatarSelector(false);
-    };
+    }, [user]);
 
-    const currentAvatar = CHARACTER_AVATARS.find(a => a.id === selectedAvatar) || CHARACTER_AVATARS[0];
-
-    // Get all transactions
-    const allTransactions = getTransactions ? getTransactions() : [];
-    const purchases = getTransactions ? getTransactions('buy') : [];
-    const sales = getTransactions ? getTransactions('sell') : [];
+    // Get all transactions (hooks must be called before early return)
+    const allTransactions = user && getTransactions ? getTransactions() : [];
+    const purchases = user && getTransactions ? getTransactions('buy') : [];
+    const sales = user && getTransactions ? getTransactions('sell') : [];
     const listings = allTransactions.filter(t => t.status === 'listed');
 
-    // Calculate portfolio stats
+    // Calculate portfolio stats (hooks must be called unconditionally)
     const portfolioStats = useMemo(() => {
+        if (!user || purchases.length === 0) {
+            return {
+                totalInvested: 0,
+                currentValue: 0,
+                totalProfit: 0,
+                profitPercent: 0,
+                activePurchases: []
+            };
+        }
+
         const activePurchases = purchases.filter(p => p.status === 'active');
         
         const totalInvested = activePurchases.reduce((sum, p) => sum + (p.total || 0), 0);
@@ -102,7 +97,29 @@ const Profile = () => {
             profitPercent,
             activePurchases
         };
-    }, [purchases]);
+    }, [user, purchases]);
+
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+                <div className="text-center">
+                    <h2 className="text-2xl font-black text-white mb-4">Please Login</h2>
+                    <p className="text-slate-400">You need to be logged in to view your profile.</p>
+                </div>
+            </div>
+        );
+    }
+
+    const handleAvatarChange = (avatarId) => {
+        setSelectedAvatar(avatarId);
+        const newAvatar = CHARACTER_AVATARS.find(a => a.id === avatarId);
+        if (newAvatar && updateAvatar) {
+            updateAvatar(newAvatar.image, avatarId);
+        }
+        setShowAvatarSelector(false);
+    };
+
+    const currentAvatar = CHARACTER_AVATARS.find(a => a.id === selectedAvatar) || CHARACTER_AVATARS[0];
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-24 pb-12 px-4">
