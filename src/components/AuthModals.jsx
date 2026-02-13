@@ -10,28 +10,30 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
 
     if (!isOpen) return null;
 
-    const handleGoogleSuccess = (credentialResponse) => {
+    const handleGoogleSuccess = async (credentialResponse) => {
         try {
-            // Decode the JWT token from Google
-            const decoded = jwtDecode(credentialResponse.credential);
+            setLoading(true);
+            const res = await fetch('http://localhost:3001/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: credentialResponse.credential }),
+                credentials: 'include'
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Login failed');
+            }
             
-            // Create user object from Google data
-            const googleUser = {
-                id: decoded.sub,
-                username: decoded.name,
-                displayName: decoded.name,
-                email: decoded.email,
-                avatar: decoded.picture,
-                provider: 'google',
-                verified: decoded.email_verified,
-                selectedAvatar: 'luffy' // Default character avatar
-            };
-            
-            login(googleUser);
+            // Login with user data from backend
+            login(data.user);
             onClose();
         } catch (error) {
             console.error('Google login error:', error);
-            alert('Login failed. Please try again.');
+            alert('Login failed: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 

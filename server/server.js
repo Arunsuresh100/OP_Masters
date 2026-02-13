@@ -5,7 +5,56 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+import jwt from 'jsonwebtoken';
 import { fetchLatestNews } from './scraper.js';
+import { OAuth2Client } from 'google-auth-library';
+import Joi from 'joi';
+
+// Google Client Init
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Validation Schemas
+const cardSchema = Joi.object({
+    id: Joi.string().required(),
+    name: Joi.string().required().min(2).max(100),
+    set: Joi.string().required(),
+    number: Joi.string().required(),
+    rarity: Joi.string().valid('C', 'UC', 'R', 'SR', 'SEC', 'L', 'SP').required(),
+    type: Joi.string().required(),
+    colors: Joi.array().items(Joi.string()).min(1).required(),
+    power: Joi.number().integer().min(0).allow(null),
+    counter: Joi.number().integer().min(0).allow(null),
+    attribute: Joi.string().allow('', null),
+    effect: Joi.string().allow('', null),
+    image: Joi.string().uri().allow('', null),
+    price: Joi.number().min(0).default(0)
+});
+
+// Middleware for Card Validation
+const validateCard = (req, res, next) => {
+    const { error } = cardSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ error: error.details[0].message });
+    }
+    next();
+};
+
+// Helper to verify Google Token
+const verifyGoogleToken = async (token) => {
+    try {
+        const ticket = await googleClient.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        return ticket.getPayload();
+    } catch (error) {
+        console.error('Google Token Verification Failed:', error);
+        return null;
+    }
+};
 
 dotenv.config();
 
@@ -24,10 +73,63 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YOUTUBE_API_KEY;
 const CHANNEL_ID = process.env.CHANNEL_ID;
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'op-masters-secret-2026';
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'op-masters-secret-2026'; // In production, this fallback must be removed!
+const JWT_SECRET = process.env.JWT_SECRET || 'op-jwt-super-secret-key-change-me'; // Use a strong secret in .env
 
-app.use(cors());
+// --- SECURITY MIDDLEWARE ---
+
+// 1. Secure HTTP Headers
+app.use(helmet());
+
+// 2. Strict CORS
+const allowedOrigins = [
+  'http://localhost:5173', 
+  'http://localhost:3000', 
+  'http://127.0.0.1:5173'
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true // Allow cookies
+}));
+
+// 3. Rate Limiting (Prevent Brute Force)
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
+app.use(limiter);
+
 app.use(express.json());
+app.use(cookieParser());
+
+// --- AUTH MIDDLEWARE ---
+const authenticateAdmin = (req, res, next) => {
+    const token = req.cookies.admin_token;
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.admin = decoded;
+        next();
+    } catch (err) {
+        res.clearCookie('admin_token');
+        return res.status(403).json({ error: 'Forbidden: Invalid token' });
+    }
+};
 
 const CARDS_FILE = path.join(__dirname, 'cards.json');
 const NEWS_CACHE_FILE = path.join(__dirname, 'news_cache.json');
@@ -146,23 +248,163 @@ const writeCards = (cards) => {
     }
 };
 
+const USERS_FILE = path.join(__dirname, 'users.json');
+const TRANSACTIONS_FILE = path.join(__dirname, 'transactions.json');
+
+// Helper to read/write users
+const readUsers = () => {
+    try {
+        const data = fs.readFileSync(USERS_FILE, 'utf8');
+        return JSON.parse(data).users || [];
+    } catch (err) { return []; }
+};
+const writeUsers = (users) => {
+    try { fs.writeFileSync(USERS_FILE, JSON.stringify({ users }, null, 2)); } catch (err) { console.error(err); }
+};
+
+// Helper to read/write transactions
+const readTransactions = () => {
+    try {
+        const data = fs.readFileSync(TRANSACTIONS_FILE, 'utf8');
+        return JSON.parse(data).transactions || [];
+    } catch (err) { return []; }
+};
+
+// --- AUTH ENDPOINTS ---
+
+app.post('/api/auth/login', (req, res) => {
+    const { password } = req.body;
+    
+    if (password === ADMIN_SECRET) {
+        // Generate Token
+        const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '2h' });
+        
+        // Set HttpOnly Cookie
+        res.cookie('admin_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // true in prod
+            sameSite: 'strict',
+            maxAge: 2 * 60 * 60 * 1000 // 2 hours
+        });
+
+        res.json({ success: true, message: 'Authenticated' });
+    } else {
+        res.status(401).json({ error: 'Invalid Credentials' });
+    }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('admin_token');
+    res.json({ success: true, message: 'Logged out' });
+});
+
+app.get('/api/auth/check', authenticateAdmin, (req, res) => {
+    res.json({ authenticated: true });
+});
+
+app.post('/api/auth/google', async (req, res) => {
+    const { token } = req.body;
+    
+    if (!token) {
+        return res.status(400).json({ error: 'Token is required' });
+    }
+
+    const payload = await verifyGoogleToken(token);
+    
+    if (!payload) {
+        return res.status(401).json({ error: 'Invalid Google Token' });
+    }
+
+    // Save User to File-Based DB
+    const users = readUsers();
+    let user = users.find(u => u.email === payload.email);
+    
+    if (!user) {
+        console.log(`[DEBUG] New User Detected: ${payload.email}. Saving to users.json...`);
+        user = {
+            id: payload.sub,
+            email: payload.email,
+            name: payload.name,
+            picture: payload.picture,
+            role: 'user',
+            joinedAt: new Date().toISOString()
+        };
+        users.push(user);
+        writeUsers(users);
+        console.log(`[DEBUG] User Saved. Total Users: ${users.length}`);
+    } else {
+        console.log(`[DEBUG] Existing User Logged In: ${payload.email}`);
+    }
+
+    // Create session (JWT)
+    const sessionToken = jwt.sign({ 
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        picture: user.picture,
+        role: user.role
+    }, JWT_SECRET, { expiresIn: '24h' });
+
+    // Set HttpOnly Cookie
+    res.cookie('auth_token', sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+
+    res.json({ 
+        success: true, 
+        user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            picture: user.picture
+        }
+    });
+});
+
+// --- USERS ENDPOINT ---
+app.get('/api/users', authenticateAdmin, (req, res) => {
+    const users = readUsers();
+    // Sort by joinedAt desc
+    const sortedUsers = users.sort((a, b) => new Date(b.joinedAt) - new Date(a.joinedAt));
+    res.json({ users: sortedUsers });
+});
+
+// --- STATS ENDPOINT ---
+app.get('/api/stats', authenticateAdmin, (req, res) => {
+    const users = readUsers();
+    const transactions = readTransactions();
+    const cards = readCards();
+
+    // Calculate Stats
+    const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const activeListings = cards.length; // Simplified for now
+    
+    // Calculate Growth (Mock logic based on real data)
+    const usersLastMonth = users.filter(u => new Date(u.joinedAt) > new Date(Date.now() - 30*24*60*60*1000)).length;
+    const userGrowth = users.length > 0 ? ((usersLastMonth / users.length) * 100).toFixed(1) : 0;
+
+    res.json({
+        totalUsers: users.length,
+        totalRevenue,
+        activeListings,
+        userGrowth,
+        revenueGrowth: 0, // Need transaction dates for this
+        listingsGrowth: 0,
+        recentActivity: transactions.slice(-5).reverse() // Last 5 transactions
+    });
+});
+
 // Endpoint to get all cards
 app.get('/api/cards', (req, res) => {
     res.json(readCards());
 });
 
-// Endpoint to post a new card (Protected)
-app.post('/api/cards', (req, res) => {
-    const secret = req.headers['x-api-key'];
-    if (secret !== ADMIN_SECRET) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-
+// Endpoint to post a new card (Protected with Middleware)
+app.post('/api/cards', authenticateAdmin, validateCard, (req, res) => {
     const newCard = req.body;
-    if (!newCard.id || !newCard.name) {
-        return res.status(400).json({ error: 'Card ID and Name are required' });
-    }
-
     const cards = readCards();
     cards.push(newCard);
     writeCards(cards);
@@ -212,5 +454,5 @@ app.get('/api/youtube/stats', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT} with Secure CORS`);
 });

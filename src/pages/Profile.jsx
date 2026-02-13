@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useUser } from '../context/UserContext';
+import { useSupport } from '../context/SupportContext';
+import SupportTicketModal from '../components/SupportTicketModal';
 import { Camera, Mail, Calendar, ShoppingBag, TrendingUp, TrendingDown, Shield, DollarSign, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { formatPrice } from '../utils';
 import { USD_TO_INR } from '../constants';
@@ -49,7 +51,10 @@ const Profile = () => {
     const { user, updateAvatar, getTransactions } = useUser();
     const [selectedAvatar, setSelectedAvatar] = useState(user?.selectedAvatar || 'luffy');
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+    const [showSupportModal, setShowSupportModal] = useState(false);
     const [currency, setCurrency] = useState('usd');
+    const { getUserTickets } = useSupport();
+    const userTickets = user ? getUserTickets(user.email) : [];
 
     // Sync selectedAvatar when user changes
     React.useEffect(() => {
@@ -405,6 +410,107 @@ const Profile = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Support & Help Section */}
+                <div className="mt-6 bg-slate-900 border border-white/10 rounded-2xl p-5 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                                <Shield className="w-5 h-5 text-blue-500" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-black text-white uppercase tracking-tight">Support & Help</h2>
+                                <p className="text-xs text-slate-500">Report issues or request assistance</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => setShowSupportModal(true)}
+                            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all border border-white/5 shadow-lg shadow-black/20 active:scale-95"
+                        >
+                            Report an Issue
+                        </button>
+                    </div>
+
+                    {userTickets.length === 0 ? (
+                        <div className="text-center py-8 bg-slate-950/30 rounded-xl border border-white/5 border-dashed">
+                            <p className="text-sm font-bold text-slate-600">No support tickets yet</p>
+                            <p className="text-xs text-slate-700 mt-1">If you encounter any problems, let us know!</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {userTickets.map((ticket) => (
+                                <div key={ticket.id} className="bg-slate-950/50 border border-white/5 rounded-xl p-4 hover:border-white/10 transition-all group">
+                                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                                        
+                                        {/* Status Icon & Info */}
+                                        <div className="flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-3 sm:w-32 flex-shrink-0">
+                                            <div className={`px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider w-fit ${
+                                                ticket.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                ticket.status === 'closed' ? 'bg-slate-700/30 text-slate-400 border-slate-700/50' :
+                                                ticket.status === 'in-progress' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                                'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                            }`}>
+                                                {ticket.status.replace('-', ' ')}
+                                            </div>
+                                            <span className="text-[10px] text-slate-600 font-mono">
+                                                {new Date(ticket.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded ${
+                                                    ticket.priority === 'critical' ? 'bg-red-500/20 text-red-400' :
+                                                    ticket.priority === 'high' ? 'bg-amber-500/20 text-amber-400' :
+                                                    ticket.priority === 'medium' ? 'bg-blue-500/20 text-blue-400' :
+                                                    'bg-slate-500/20 text-slate-400'
+                                                }`}>
+                                                    {ticket.priority}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                    • {ticket.category}
+                                                </span>
+                                            </div>
+                                            
+                                            <h3 className="text-sm font-bold text-white truncate mb-1 group-hover:text-amber-500 transition-colors">
+                                                {ticket.subject}
+                                            </h3>
+                                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                                                {ticket.description}
+                                            </p>
+                                            
+                                            {/* Admin Response Preview */}
+                                            {ticket.responses && ticket.responses.length > 0 && (
+                                                <div className="mt-3 pl-3 border-l-2 border-amber-500/30 bg-amber-500/5 p-2 rounded-r-lg">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <div className="w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center text-[8px] font-black text-slate-950">
+                                                            {ticket.responses[ticket.responses.length - 1].adminName.charAt(0)}
+                                                        </div>
+                                                        <span className="text-[10px] text-amber-500 font-bold">
+                                                            {ticket.responses[ticket.responses.length - 1].adminName}
+                                                        </span>
+                                                        <span className="text-[9px] text-slate-600">
+                                                            {new Date(ticket.responses[ticket.responses.length - 1].timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-slate-400 line-clamp-1 italic">
+                                                        "{ticket.responses[ticket.responses.length - 1].text}"
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <SupportTicketModal 
+                    isOpen={showSupportModal} 
+                    onClose={() => setShowSupportModal(false)} 
+                />
             </div>
         </div>
     );

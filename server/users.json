@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "id": "123456789",
+      "email": "test_admin@example.com",
+      "name": "Test Admin",
+      "picture": "",
+      "role": "user",
+      "joinedAt": "2026-02-13T14:55:05.585Z"
+    }
+  ]
+}

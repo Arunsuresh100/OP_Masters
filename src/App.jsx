@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import MobileBottomNav from './components/MobileBottomNav';
@@ -35,6 +35,8 @@ const App = () => {
   });
   const [latestVideos, setLatestVideos] = useState([]);
   const { authModal, closeAuth } = useUser();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
     const fetchYouTubeData = async () => {
@@ -153,14 +155,16 @@ const App = () => {
         </div>
       </div>
 
-      <Navbar 
-        currency={currency} setCurrency={setCurrency} 
-        mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
-        searchQuery={searchQuery} setSearchQuery={setSearchQuery}
-        channelUrl={channelData.url}
-      />
+      {!isAdminRoute && (
+        <Navbar 
+          currency={currency} setCurrency={setCurrency} 
+          mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+          searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+          channelUrl={channelData.url}
+        />
+      )}
       
-      <div className="pb-16 md:pb-0">
+      <div className={isAdminRoute ? "" : "pb-16 md:pb-0"}>
         <Routes>
         <Route path="/" element={
           <Home 
@@ -187,8 +191,8 @@ const App = () => {
       </Routes>
       </div>
 
-      <Footer channelUrl={channelData.url} />
-      <MobileBottomNav />
+      {!isAdminRoute && <Footer channelUrl={channelData.url} />}
+      {!isAdminRoute && <MobileBottomNav />}
 
       <style>{`
         @keyframes loading-bar {

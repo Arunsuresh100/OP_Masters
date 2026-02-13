@@ -4,6 +4,7 @@ import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 import { useUser } from '../context/UserContext';
 import ListingModal from '../components/ListingModal';
+import BuyModal from '../components/BuyModal';
 
 // --- Helper Components ---
 
@@ -140,127 +141,7 @@ const MarketTicker = ({ items }) => {
   );
 };
 
-const TradeModal = ({ card, isOpen, onClose, currency }) => {
-  const { addTransaction } = useUser();
-  const [tradeType, setTradeType] = useState('buy');
-  const [price, setPrice] = useState(card?.price || 0);
-  const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && card) {
-       setPrice(card.price);
-       setQuantity(1);
-       setSuccess(false);
-       setTradeType('buy');
-    }
-  }, [isOpen, card]);
-
-  if (!isOpen || !card) return null;
-
-  const total = price * quantity;
-  const fee = total * 0.02;
-  const finalTotal = tradeType === 'buy' ? total + fee : total - fee;
-
-  const handleTrade = () => {
-    setLoading(true);
-    setTimeout(() => {
-        // Save transaction
-        if (addTransaction) {
-          addTransaction({
-            type: tradeType,
-            card: {
-              id: card.id,
-              name: card.name,
-              image: card.image,
-              rarity: card.rarity || 'R'
-            },
-            price: price,
-            quantity: quantity,
-            total: finalTotal,
-            fee: fee,
-            purchasePrice: tradeType === 'buy' ? price : null,
-            currentValue: price,
-            status: tradeType === 'buy' ? 'active' : 'completed'
-          });
-        }
-        
-        setLoading(false);
-        setSuccess(true);
-        setTimeout(() => onClose(), 2000);
-    }, 1500);
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-slate-900 w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-slate-950/50">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <ArrowRightLeft className="w-4 h-4 text-amber-500" />
-                Trade {card.name}
-            </h3>
-            <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
-                <X className="w-5 h-5" />
-            </button>
-        </div>
-
-        <div className="grid grid-cols-2 p-1 bg-slate-950/50 border-b border-white/5">
-            <button onClick={() => setTradeType('buy')} className={`py-3 text-sm font-black uppercase tracking-widest transition-all ${tradeType === 'buy' ? 'bg-emerald-500/10 text-emerald-500 border-b-2 border-emerald-500' : 'text-slate-500 hover:text-slate-300'}`}>Buy</button>
-            <button onClick={() => setTradeType('sell')} className={`py-3 text-sm font-black uppercase tracking-widest transition-all ${tradeType === 'sell' ? 'bg-red-500/10 text-red-500 border-b-2 border-red-500' : 'text-slate-500 hover:text-slate-300'}`}>Sell</button>
-        </div>
-
-        <div className="p-6 space-y-6">
-            {success ? (
-                <div className="text-center py-8 space-y-3">
-                    <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto mb-4 animate-bounce"><Wallet className="w-8 h-8" /></div>
-                    <h4 className="text-xl font-black text-white">Order Filled!</h4>
-                    <p className="text-slate-400 text-sm">Successfully {tradeType === 'buy' ? 'bought' : 'sold'} {quantity}x {card.name}.</p>
-                </div>
-            ) : (
-                <>
-                    <div className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5">
-                        <img src={card.image} alt={card.name} className="w-10 h-14 object-cover rounded bg-slate-800" />
-                        <div>
-                            <div className="text-sm font-bold text-white line-clamp-1">{card.name}</div>
-                            <div className="text-[10px] font-mono text-slate-500">{card.id} • {card.set}</div>
-                        </div>
-                        <div className="ml-auto text-right">
-                             <div className="text-[10px] text-slate-500 uppercase font-bold">Market Price</div>
-                             <div className="text-sm font-mono font-bold text-amber-500">${formatPrice(card.price, currency, USD_TO_INR)}</div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Price ({currency})</label>
-                            <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">$</span>
-                                <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-white font-mono font-bold focus:outline-none focus:border-amber-500/50 transition-all" />
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Quantity</label>
-                            <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 px-4 text-white font-mono font-bold focus:outline-none focus:border-amber-500/50 transition-all" />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2 pt-4 border-t border-white/5">
-                         <div className="flex justify-between text-xs text-slate-400"><span>Subtotal</span><span className="font-mono">${formatPrice(total, currency, USD_TO_INR)}</span></div>
-                         <div className="flex justify-between text-xs text-slate-400"><span>Fee (2%)</span><span className="font-mono">${formatPrice(fee, currency, USD_TO_INR)}</span></div>
-                         <div className="flex justify-between text-sm font-bold text-white pt-2 border-t border-white/5"><span>Total</span><span className="font-mono text-amber-400">${formatPrice(finalTotal, currency, USD_TO_INR)}</span></div>
-                    </div>
-
-                    <button onClick={handleTrade} disabled={loading} className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-xs transition-all ${tradeType === 'buy' ? 'bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)]' : 'bg-red-500 text-white hover:bg-red-400 shadow-[0_0_20px_-5px_rgba(239,68,68,0.3)]'} ${loading ? 'opacity-70 cursor-wait' : ''}`}>
-                        {loading ? 'Processing...' : `${tradeType === 'buy' ? 'Buy' : 'Sell'} ${card.name}`}
-                    </button>
-                </>
-            )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const Marketplace = ({ currency }) => {
   const [cards, setCards] = useState([]);
@@ -271,6 +152,7 @@ const Marketplace = ({ currency }) => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isListingModalOpen, setIsListingModalOpen] = useState(false);
+  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const { user, openAuth } = useUser();
   const itemsPerPage = 15;
 
@@ -313,8 +195,8 @@ const Marketplace = ({ currency }) => {
       openAuth('login');
       return;
     }
-    setSelectedCard(card); 
-    setTradeModalOpen(true); 
+    setSelectedCard(card);
+    setIsBuyModalOpen(true);
   };
   
   const handleOpenListing = () => { 
@@ -362,6 +244,7 @@ const Marketplace = ({ currency }) => {
 
   return (
     <div className="min-h-screen pt-20 pb-40 bg-slate-950 font-sans text-slate-200">
+      <BuyModal isOpen={isBuyModalOpen} onClose={() => setIsBuyModalOpen(false)} card={selectedCard} />
       <ListingModal isOpen={isListingModalOpen} onClose={() => setIsListingModalOpen(false)} card={cards[0]} />
       
       {/* Market Ticker - REMOVED for better UX */}
@@ -479,7 +362,7 @@ const Marketplace = ({ currency }) => {
                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-black uppercase tracking-wider text-[10px] md:text-[11px] flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
                >
                  <PlusCircle className="w-4 h-4" /> 
-                 <span className="hidden sm:inline">List</span>
+                 <span className="hidden sm:inline">Sell</span>
                </button>
              </div>
         </div>
@@ -530,7 +413,7 @@ const Marketplace = ({ currency }) => {
                                 </td>
                                 <td className="py-4 px-6 text-right"><div className="font-mono text-xs text-slate-300">${card.volume.toLocaleString()}K</div></td>
                                 <td className="py-4 px-6"><Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#ef4444'} /></td>
-                                <td className="py-4 px-6 text-right"><button onClick={() => openTrade(card)} className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-black uppercase tracking-widest hover:from-amber-400 hover:to-orange-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95">Trade</button></td>
+                                <td className="py-4 px-6 text-right"><button onClick={() => openTrade(card)} className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-black uppercase tracking-widest hover:from-amber-400 hover:to-orange-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95">Buy</button></td>
                             </tr>
                         ))}
                     </tbody>
@@ -596,7 +479,7 @@ const Marketplace = ({ currency }) => {
                     onClick={() => openTrade(card)} 
                     className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-black uppercase tracking-wider hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20 active:scale-[0.98] mt-2"
                   >
-                    Trade Now
+                    Buy Now
                   </button>
                 </div>
               </div>
@@ -627,7 +510,6 @@ const Marketplace = ({ currency }) => {
          </div>
       </div>
 
-      <TradeModal card={selectedCard} isOpen={tradeModalOpen} onClose={() => setTradeModalOpen(false)} currency={currency} />
     </div>
   );
 };
