@@ -5,6 +5,21 @@ import { CHANNEL_LOGO_URL } from '../constants';
 import { useUser } from '../context/UserContext';
 import AuthModals from './AuthModals';
 
+// Import character images for avatar display
+import luffyImg from '../assets/luffy.png';
+import zoroImg from '../assets/zoro.png';
+import sanjiImg from '../assets/sanji.png';
+import usoppImg from '../assets/Usopp.png';
+import brookImg from '../assets/brook.png';
+
+const CHARACTER_AVATARS = [
+    { id: 'luffy', name: 'Monkey D. Luffy', role: 'Captain', image: luffyImg },
+    { id: 'zoro', name: 'Roronoa Zoro', role: 'Swordsman', image: zoroImg },
+    { id: 'sanji', name: 'Sanji', role: 'Cook', image: sanjiImg },
+    { id: 'usopp', name: 'Usopp', role: 'Sniper', image: usoppImg },
+    { id: 'brook', name: 'Brook', role: 'Musician', image: brookImg }
+];
+
 const LOGO_PATH = '/logo.png';
 const APP_LOGO = LOGO_PATH;
 
@@ -115,11 +130,22 @@ const Navbar = ({
                         onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                         className="flex items-center gap-2 p-1.5 pr-4 rounded-full bg-white/5 border border-white/10 hover:border-amber-500/30 transition-all group"
                     >
-                        <img 
-                            src={user.avatar} 
-                            alt={user.displayName}
-                            className="w-8 h-8 rounded-full border-2 border-amber-500/30 object-cover"
-                        />
+                        {(() => {
+                            const currentAvatar = CHARACTER_AVATARS.find(a => a.id === user.selectedAvatar) || CHARACTER_AVATARS[0];
+                            return currentAvatar?.image ? (
+                                <img 
+                                    src={currentAvatar.image} 
+                                    alt={user.displayName}
+                                    className="w-8 h-8 rounded-full border-2 border-amber-500/30 object-cover"
+                                />
+                            ) : (
+                                <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 bg-slate-800 flex items-center justify-center">
+                                    <span className="text-sm font-black text-amber-500 uppercase">
+                                        {user.displayName?.charAt(0) || user.username?.charAt(0) || 'U'}
+                                    </span>
+                                </div>
+                            );
+                        })()}
                         <span className="hidden lg:block text-sm font-bold text-slate-300 truncate max-w-[120px]">{user.displayName}</span>
                         <ArrowRight className={`w-4 h-4 text-slate-400 transform transition-transform ${userDropdownOpen ? 'rotate-90' : ''}`} />
                     </button>
@@ -129,7 +155,18 @@ const Navbar = ({
                         <div className="absolute right-0 mt-2 w-64 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
                             <div className="p-4 border-b border-white/10 bg-gradient-to-br from-amber-500/10 to-transparent">
                                 <div className="flex items-center gap-3">
-                                    <img src={user.avatar} alt={user.displayName} className="w-12 h-12 rounded-full border-2 border-amber-500/50 object-cover" />
+                                    {(() => {
+                                        const currentAvatar = CHARACTER_AVATARS.find(a => a.id === user.selectedAvatar) || CHARACTER_AVATARS[0];
+                                        return currentAvatar?.image ? (
+                                            <img src={currentAvatar.image} alt={user.displayName} className="w-12 h-12 rounded-full border-2 border-amber-500/50 object-cover" />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full border-2 border-amber-500/50 bg-slate-800 flex items-center justify-center">
+                                                <span className="text-xl font-black text-amber-500 uppercase">
+                                                    {user.displayName?.charAt(0) || user.username?.charAt(0) || 'U'}
+                                                </span>
+                                            </div>
+                                        );
+                                    })()}
                                     <div className="flex-1 min-w-0">
                                         <p className="text-white font-bold truncate">{user.displayName}</p>
                                         <p className="text-xs text-slate-400 truncate">{user.email}</p>
@@ -184,7 +221,7 @@ const Navbar = ({
       </div>
 
       {/* MOBILE SEARCH OVERLAY */}
-      <div className={`absolute inset-0 px-4 flex items-center gap-3 bg-slate-950 transition-all duration-300 md:hidden ${mobileSearchActive ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10 pointer-events-none'}`}>
+      <div className={`absolute inset-0 px-4 flex items-center gap-3 bg-slate-950 transition-all duration-300 min-[1100px]:hidden ${mobileSearchActive ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10 pointer-events-none'}`}>
           <div className="relative flex-1">
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500" />
              <input 
@@ -251,27 +288,40 @@ const Navbar = ({
          <span className="text-[9px] font-black uppercase tracking-wider">Market</span>
        </Link>
 
-       {/* Profile / Login */}
-       {user ? (
-         <Link
-           to="/profile"
-           className={`flex flex-col items-center justify-center gap-1 transition-all ${
-             location.pathname === '/profile'
-               ? 'text-amber-500'
-               : 'text-slate-500 hover:text-slate-300'
-           }`}
-         >
-           <div className="relative">
-             <img
-               src={user.avatar}
-               alt="Profile"
-               className={`w-6 h-6 rounded-full border-2 ${
-                 location.pathname === '/profile' ? 'border-amber-500' : 'border-slate-600'
-               }`}
-             />
-           </div>
-           <span className="text-[9px] font-black uppercase tracking-wider">Profile</span>
-         </Link>
+        {/* Profile / Login */}
+        {user ? (
+          <Link
+            to="/profile"
+            className={`flex flex-col items-center justify-center gap-1 transition-all ${
+              location.pathname === '/profile'
+                ? 'text-amber-500'
+                : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            <div className="relative">
+              {(() => {
+                const currentAvatar = CHARACTER_AVATARS.find(a => a.id === user.selectedAvatar) || CHARACTER_AVATARS[0];
+                return currentAvatar?.image ? (
+                  <img
+                    src={currentAvatar.image}
+                    alt="Profile"
+                    className={`w-6 h-6 rounded-full border-2 object-cover ${
+                      location.pathname === '/profile' ? 'border-amber-500' : 'border-slate-600'
+                    }`}
+                  />
+                ) : (
+                  <div className={`w-6 h-6 rounded-full border-2 bg-slate-800 flex items-center justify-center ${
+                    location.pathname === '/profile' ? 'border-amber-500' : 'border-slate-600'
+                  }`}>
+                    <span className="text-xs font-black text-amber-500 uppercase">
+                      {user.displayName?.charAt(0) || user.username?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-wider">Profile</span>
+          </Link>
        ) : (
          <button
            onClick={() => openAuth('login')}

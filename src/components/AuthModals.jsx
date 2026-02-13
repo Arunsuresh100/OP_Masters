@@ -19,6 +19,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             const googleUser = {
                 id: decoded.sub,
                 username: decoded.name,
+                displayName: decoded.name,
                 email: decoded.email,
                 avatar: decoded.picture,
                 provider: 'google',

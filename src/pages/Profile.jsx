@@ -112,9 +112,8 @@ const Profile = () => {
 
     const handleAvatarChange = (avatarId) => {
         setSelectedAvatar(avatarId);
-        const newAvatar = CHARACTER_AVATARS.find(a => a.id === avatarId);
-        if (newAvatar && updateAvatar) {
-            updateAvatar(newAvatar.image, avatarId);
+        if (updateAvatar) {
+            updateAvatar(avatarId);
         }
         setShowAvatarSelector(false);
     };

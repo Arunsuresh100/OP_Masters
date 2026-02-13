@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import luffyImg from '../assets/luffy.png';
 
 const UserContext = createContext();
 
@@ -15,12 +14,9 @@ export const UserProvider = ({ children }) => {
         
         if (savedUser) {
             const userData = JSON.parse(savedUser);
-            // Ensure default avatar and avatar URL
+            // Ensure default avatar ID (not URL - that's handled in Profile.jsx)
             if (!userData.selectedAvatar) {
                 userData.selectedAvatar = 'luffy';
-            }
-            if (!userData.avatar) {
-                userData.avatar = luffyImg;
             }
             setUser(userData);
         }
@@ -33,11 +29,10 @@ export const UserProvider = ({ children }) => {
     }, []);
 
     const login = (userData) => {
-        // Ensure default avatar for new users
+        // Ensure default avatar ID for new users (not URL)
         const userWithDefaults = {
             ...userData,
             selectedAvatar: userData.selectedAvatar || 'luffy',
-            avatar: userData.avatar || luffyImg,
             joinedDate: userData.joinedDate || new Date().toISOString()
         };
         setUser(userWithDefaults);
@@ -54,8 +49,8 @@ export const UserProvider = ({ children }) => {
     const openAuth = (mode = 'login') => setAuthModal({ isOpen: true, mode });
     const closeAuth = () => setAuthModal({ ...authModal, isOpen: false });
 
-    const updateAvatar = (newAvatarUrl, avatarId) => {
-        const updatedUser = { ...user, avatar: newAvatarUrl, selectedAvatar: avatarId };
+    const updateAvatar = (avatarId) => {
+        const updatedUser = { ...user, selectedAvatar: avatarId };
         setUser(updatedUser);
         localStorage.setItem('op_user', JSON.stringify(updatedUser));
     };
