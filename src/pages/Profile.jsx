@@ -304,7 +304,7 @@ const Profile = () => {
                                 </div>
                                 <div className={`text-sm font-bold mt-1 ${
                                     portfolioStats.totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'
-                                }`}>
+                                }}`}>
                                     {portfolioStats.profitPercent >= 0 ? '+' : ''}{portfolioStats.profitPercent.toFixed(2)}%
                                 </div>
                             </div>
@@ -517,12 +517,9 @@ const Profile = () => {
                         </div>
                     )}
                 </div>
-
-                <SupportTicketModal 
-                    isOpen={showSupportModal} 
-                    onClose={() => setShowSupportModal(false)} 
-                />
             </div>
+
+            <SupportTicketModal isOpen={showSupportModal} onClose={() => setShowSupportModal(false)} />
         </div>
     );
 };
