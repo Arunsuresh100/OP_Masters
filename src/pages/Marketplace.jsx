@@ -271,27 +271,47 @@ const Marketplace = ({ currency }) => {
   return (
     <div className="min-h-screen pt-20 pb-40 bg-slate-950 font-sans text-slate-200">
       <ListingModal isOpen={isListingModalOpen} onClose={() => setIsListingModalOpen(false)} card={cards[0]} />
-      <MarketTicker items={tickerItems} />
+      
+      {/* Market Ticker - Hidden on Mobile */}
+      <div className="hidden md:block">
+        <MarketTicker items={tickerItems} />
+      </div>
 
       <div className="px-4 sm:px-6 max-w-7xl mx-auto mt-8">
-         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-900/50 border border-white/5 shadow-2xl relative overflow-hidden">
+         {/* Stats Section - Responsive Grid */}
+         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 p-4 md:p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-900/50 border border-white/5 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
-             <div className="space-y-1 relative z-10">
-                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><Activity className="w-3 h-3 text-amber-500" /> Total 24h Vol</div>
-                 <div className="text-2xl font-black text-white">${(marketStats.volume / 1000).toFixed(1)}K</div>
-                 <div className="text-[10px] text-emerald-500 font-bold">+12.5%</div>
+             
+             {/* Total 24h Volume */}
+             <div className="space-y-1 relative z-10 bg-slate-800/30 p-3 md:p-4 rounded-xl">
+                 <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1 md:gap-2">
+                   <Activity className="w-3 h-3 text-amber-500" /> 
+                   <span className="hidden sm:inline">24h Vol</span>
+                   <span className="sm:hidden">Vol</span>
+                 </div>
+                 <div className="text-lg md:text-2xl font-black text-white">${(marketStats.volume / 1000).toFixed(1)}K</div>
+                 <div className="text-[9px] md:text-[10px] text-emerald-500 font-bold">+12.5%</div>
              </div>
-             <div className="space-y-1 relative z-10">
-                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><BarChart3 className="w-3 h-3 text-blue-500" /> Market Cap</div>
-                 <div className="text-2xl font-black text-white">${(marketStats.cap / 1000000).toFixed(1)}M</div>
-                 <div className="text-[10px] text-emerald-500 font-bold">+3.2%</div>
+             
+             {/* Market Cap */}
+             <div className="space-y-1 relative z-10 bg-slate-800/30 p-3 md:p-4 rounded-xl">
+                 <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1 md:gap-2">
+                   <BarChart3 className="w-3 h-3 text-blue-500" /> 
+                   <span>Cap</span>
+                 </div>
+                 <div className="text-lg md:text-2xl font-black text-white">${(marketStats.cap / 1000000).toFixed(1)}M</div>
+                 <div className="text-[9px] md:text-[10px] text-emerald-500 font-bold">+3.2%</div>
              </div>
-             <div className="space-y-1 relative z-10">
+             
+             {/* Top Performer - Hidden on Mobile */}
+             <div className="hidden md:block space-y-1 relative z-10">
                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="w-3 h-3 text-emerald-500" /> Top Performer (1h)</div>
                  <div className="text-2xl font-black text-emerald-400">{marketStats.topGainer?.id || '---'}</div>
                  <div className="text-[10px] text-emerald-500 font-bold">+{marketStats.topGainer?.change1h}%</div>
              </div>
-             <div className="space-y-1 relative z-10">
+             
+             {/* Next Update - Hidden on Mobile */}
+             <div className="hidden md:block space-y-1 relative z-10">
                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><Clock className="w-3 h-3 text-purple-500" /> Next Listing Update</div>
                  <div className="text-2xl font-black text-white">00m:52s</div>
                  <div className="text-[10px] text-purple-400 font-bold">Frequency: 1m Intervals</div>

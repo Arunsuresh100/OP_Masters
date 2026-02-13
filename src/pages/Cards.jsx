@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Upload, X, Info } from 'lucide-react';
+import { Search, Upload, X, Info, Filter, SlidersHorizontal } from 'lucide-react';
 import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 
@@ -20,6 +20,7 @@ const Cards = ({ currency }) => {
   // Upload Logic
   const fileInputRef = React.useRef(null);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const handleImageUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -104,8 +105,8 @@ const Cards = ({ currency }) => {
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Sidebar (Search, Upload, Filters) */}
-        <div className="lg:col-span-1 space-y-6 lg:mt-[120px]">
+        {/* Desktop Sidebar (Hidden on Mobile/Tablet) */}
+        <div className="hidden lg:block lg:col-span-1 space-y-6 lg:mt-[120px]">
            <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 space-y-6 sticky top-24">
               <style>{`
                 .no-scrollbar::-webkit-scrollbar {
@@ -192,6 +193,114 @@ const Cards = ({ currency }) => {
 
            </div>
         </div>
+
+        {/* Mobile Filter Drawer */}
+        <div className={`lg:hidden fixed inset-0 z-50 transition-all duration-300 ${mobileFilterOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+          {/* Backdrop */}
+          <div 
+            className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${mobileFilterOpen ? 'opacity-100' : 'opacity-0'}`}
+            onClick={() => setMobileFilterOpen(false)}
+          />
+          
+          {/* Drawer */}
+          <div className={`absolute bottom-0 left-0 right-0 bg-slate-950 rounded-t-3xl border-t border-x border-white/10 max-h-[85vh] overflow-y-auto transition-transform duration-300 ${mobileFilterOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+            {/* Drawer Header */}
+            <div className="sticky top-0 bg-slate-950/95 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between z-10">
+              <div className="flex items-center gap-3">
+                <SlidersHorizontal className="w-5 h-5 text-amber-500" />
+                <h2 className="text-lg font-black text-white">Filters</h2>
+              </div>
+              <button 
+                onClick={() => setMobileFilterOpen(false)}
+                className="p-2 hover:bg-white/5 rounded-xl transition-all"
+              >
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Drawer Content */}
+            <div className="p-6 space-y-6">
+              {/* Search */}
+              <div>
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Find Card</h3>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input 
+                    type="text" 
+                    placeholder="Search name, ID..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Color Filter */}
+              <div className="pt-4 border-t border-white/5">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Color</h3>
+                <div className="grid grid-cols-3 gap-2">
+                    {COLORS.map(color => (
+                        <button 
+                            key={color}
+                            onClick={() => setSelectedColor(selectedColor === color ? 'all' : color)}
+                            className={`px-3 py-3 rounded-xl text-xs font-bold transition-all border ${selectedColor === color ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-lg' : 'bg-slate-900 text-slate-400 border-white/5 hover:border-amber-500/30 hover:bg-white/5'}`}
+                        >
+                            {color}
+                        </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Set Filter */}
+              <div className="pt-4 border-t border-white/5">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Set</h3>
+                <div className="grid grid-cols-3 gap-2">
+                    {SETS.map(set => (
+                        <button 
+                            key={set}
+                            onClick={() => setSelectedSet(selectedSet === set ? 'all' : set)}
+                            className={`px-3 py-3 rounded-xl text-xs font-bold transition-all border ${selectedSet === set ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-slate-900 text-slate-400 border-white/5 hover:border-white/30 hover:bg-white/5'}`}
+                        >
+                            {set}
+                        </button>
+                    ))}
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button 
+                  onClick={resetFilters}
+                  className="flex-1 py-3 rounded-xl bg-red-500/10 text-red-500 text-sm font-bold uppercase tracking-widest border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                >
+                  <X className="w-4 h-4" /> Reset
+                </button>
+                <button 
+                  onClick={() => setMobileFilterOpen(false)}
+                  className="flex-1 py-3 rounded-xl bg-amber-500 text-slate-950 text-sm font-bold uppercase tracking-widest hover:bg-amber-600 transition-all"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Filter Button (Mobile/Tablet Only) */}
+        <button
+          onClick={() => setMobileFilterOpen(true)}
+          className="lg:hidden fixed bottom-24 right-6 z-40 w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full shadow-2xl shadow-amber-500/40 flex items-center justify-center hover:scale-110 transition-transform active:scale-95"
+        >
+          <SlidersHorizontal className="w-6 h-6 text-white" />
+          {/* Active Filters Badge */}
+          {(selectedColor !== 'all' || selectedSet !== 'all' || searchTerm) && (
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-slate-950 flex items-center justify-center">
+              <span className="text-white text-[10px] font-black">
+                {[selectedColor !== 'all', selectedSet !== 'all', searchTerm].filter(Boolean).length}
+              </span>
+            </div>
+          )}
+        </button>
 
         {/* Right Content (Cards Grid) */}
         <div className="lg:col-span-3 pt-0">
