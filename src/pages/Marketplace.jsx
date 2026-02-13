@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap } from 'lucide-react';
 import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 import { useUser } from '../context/UserContext';
@@ -272,49 +272,80 @@ const Marketplace = ({ currency }) => {
     <div className="min-h-screen pt-20 pb-40 bg-slate-950 font-sans text-slate-200">
       <ListingModal isOpen={isListingModalOpen} onClose={() => setIsListingModalOpen(false)} card={cards[0]} />
       
-      {/* Market Ticker - Hidden on Mobile */}
-      <div className="hidden md:block">
-        <MarketTicker items={tickerItems} />
-      </div>
+      {/* Market Ticker - REMOVED for better UX */}
 
       <div className="px-4 sm:px-6 max-w-7xl mx-auto mt-8">
-         {/* Stats Section - Responsive Grid */}
+         {/* Stats Section - User-Friendly Redesign */}
          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 p-4 md:p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-900/50 border border-white/5 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
              
-             {/* Total 24h Volume */}
-             <div className="space-y-1 relative z-10 bg-slate-800/30 p-3 md:p-4 rounded-xl">
-                 <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1 md:gap-2">
-                   <Activity className="w-3 h-3 text-amber-500" /> 
-                   <span className="hidden sm:inline">24h Vol</span>
-                   <span className="sm:hidden">Vol</span>
+             {/* Today's Sales (was 24H VOL) */}
+             <div className="space-y-1 relative z-10 bg-slate-800/30 p-3 md:p-4 rounded-xl border-l-2 border-amber-500/30 hover:border-amber-500 transition-all group">
+                 <div className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 md:gap-2">
+                   <Activity className="w-3 h-3 md:w-4 md:h-4 text-amber-500" /> 
+                   <span className="hidden sm:inline">Today's Sales</span>
+                   <span className="sm:hidden">Sales</span>
+                   <div className="relative group/tooltip">
+                     <HelpCircle className="w-3 h-3 text-slate-500 opacity-50 hover:opacity-100 cursor-help transition-opacity" />
+                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-xl border border-white/10 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:pointer-events-auto transition-opacity z-50">
+                       Total trading value in last 24 hours
+                       <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                     </div>
+                   </div>
                  </div>
                  <div className="text-lg md:text-2xl font-black text-white">${(marketStats.volume / 1000).toFixed(1)}K</div>
-                 <div className="text-[9px] md:text-[10px] text-emerald-500 font-bold">+12.5%</div>
+                 <div className="text-[9px] md:text-[10px] text-emerald-500 font-bold flex items-center gap-1">
+                   <ArrowUpRight className="w-3 h-3" /> +12.5%
+                 </div>
              </div>
              
-             {/* Market Cap */}
-             <div className="space-y-1 relative z-10 bg-slate-800/30 p-3 md:p-4 rounded-xl">
-                 <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1 md:gap-2">
-                   <BarChart3 className="w-3 h-3 text-blue-500" /> 
-                   <span>Cap</span>
+             {/* Total Market Value (was CAP) */}
+             <div className="space-y-1 relative z-10 bg-slate-800/30 p-3 md:p-4 rounded-xl border-l-2 border-blue-500/30 hover:border-blue-500 transition-all group">
+                 <div className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 md:gap-2">
+                   <BarChart3 className="w-3 h-3 md:w-4 md:h-4 text-blue-500" /> 
+                   <span className="hidden sm:inline">Total Value</span>
+                   <span className="sm:hidden">Value</span>
+                   <div className="relative group/tooltip">
+                     <HelpCircle className="w-3 h-3 text-slate-500 opacity-50 hover:opacity-100 cursor-help transition-opacity" />
+                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-xl border border-white/10 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:pointer-events-auto transition-opacity z-50">
+                       Combined value of all listed cards
+                       <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                     </div>
+                   </div>
                  </div>
                  <div className="text-lg md:text-2xl font-black text-white">${(marketStats.cap / 1000000).toFixed(1)}M</div>
-                 <div className="text-[9px] md:text-[10px] text-emerald-500 font-bold">+3.2%</div>
+                 <div className="text-[9px] md:text-[10px] text-emerald-500 font-bold flex items-center gap-1">
+                   <ArrowUpRight className="w-3 h-3" /> +3.2%
+                 </div>
              </div>
              
-             {/* Top Performer - Hidden on Mobile */}
-             <div className="hidden md:block space-y-1 relative z-10">
-                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="w-3 h-3 text-emerald-500" /> Top Performer (1h)</div>
+             {/* Trending Now (was TOP PERFORMER) */}
+             <div className="hidden md:block space-y-1 relative z-10 bg-slate-800/30 p-4 rounded-xl border-l-2 border-emerald-500/30 hover:border-emerald-500 transition-all group">
+                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                   <Zap className="w-4 h-4 text-emerald-500" /> 
+                   🔥 Trending Now
+                   <div className="relative group/tooltip">
+                     <HelpCircle className="w-3 h-3 text-slate-500 opacity-50 hover:opacity-100 cursor-help transition-opacity" />
+                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-xl border border-white/10 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:pointer-events-auto transition-opacity z-50">
+                       Most popular card right now
+                       <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                     </div>
+                   </div>
+                 </div>
                  <div className="text-2xl font-black text-emerald-400">{marketStats.topGainer?.id || '---'}</div>
-                 <div className="text-[10px] text-emerald-500 font-bold">+{marketStats.topGainer?.change1h}%</div>
+                 <div className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
+                   <TrendingUp className="w-3 h-3" /> +{marketStats.topGainer?.change1h || 0}%
+                 </div>
              </div>
              
-             {/* Next Update - Hidden on Mobile */}
-             <div className="hidden md:block space-y-1 relative z-10">
-                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><Clock className="w-3 h-3 text-purple-500" /> Next Listing Update</div>
-                 <div className="text-2xl font-black text-white">00m:52s</div>
-                 <div className="text-[10px] text-purple-400 font-bold">Frequency: 1m Intervals</div>
+             {/* Updates Every (was NEXT LISTING UPDATE) */}
+             <div className="hidden md:block space-y-1 relative z-10 bg-slate-800/30 p-4 rounded-xl border-l-2 border-purple-500/30 hover:border-purple-500 transition-all group">
+                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                   <Clock className="w-4 h-4 text-purple-500" /> 
+                   Updates Every
+                 </div>
+                 <div className="text-2xl font-black text-white">5 min</div>
+                 <div className="text-[10px] text-purple-400 font-bold">Real-time pricing</div>
              </div>
          </div>
       </div>
@@ -340,12 +371,12 @@ const Marketplace = ({ currency }) => {
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-slate-950/30 text-[10px] uppercase font-bold tracking-widest text-slate-500 border-b border-white/5">
-                            <th className="py-5 px-6 font-bold">Market Pair</th>
+                            <th className="py-5 px-6 font-bold">Card</th>
                             <th className="py-5 px-6 text-right">Price</th>
                             <th className="py-5 px-6 text-right">1h Change</th>
                             <th className="py-5 px-6 text-right hidden lg:table-cell">1m Change</th>
-                            <th className="py-5 px-6 text-right hidden md:table-cell">24h Vol</th>
-                            <th className="py-5 px-6 hidden md:table-cell w-32">7d Trend</th>
+                            <th className="py-5 px-6 text-right hidden md:table-cell">Trading Vol</th>
+                            <th className="py-5 px-6 hidden md:table-cell w-32">Week Trend</th>
                             <th className="py-5 px-6 text-right">Action</th>
                         </tr>
                     </thead>
