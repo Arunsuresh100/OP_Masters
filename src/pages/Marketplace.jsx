@@ -78,6 +78,13 @@ const MarketTicker = ({ items }) => {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
     </div>
   );
@@ -350,42 +357,72 @@ const Marketplace = ({ currency }) => {
          </div>
       </div>
 
-      <div className="px-4 sm:px-6 max-w-7xl mx-auto mt-8 mb-6 sticky top-20 z-40">
-        <div className="flex flex-col md:flex-row gap-4 p-2 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-white/5 shadow-xl">
-             <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input type="text" placeholder="Search market pairs..." className="w-full bg-slate-950/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-amber-500/50 transition-all placeholder-slate-600" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+      {/* Search & Filter Bar - App-like Mobile Design */}
+      <div className="px-4 sm:px-6 max-w-7xl mx-auto mt-6 mb-6">
+        <div className="flex flex-col gap-3 p-3 md:p-4 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl">
+             {/* Search Input */}
+             <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search cards..." 
+                  className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3.5 md:py-3 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all placeholder-slate-500" 
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)} 
+                />
              </div>
-             <div className="flex flex-wrap gap-1 p-1 bg-slate-950/50 rounded-xl border border-white/5">
-                {['all', 'gainers', 'losers', 'high'].map((f) => (
-                    <button key={f} onClick={() => { setActiveFilter(f); setCurrentPage(1); }} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === f ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>{f === 'all' ? 'All Assets' : f === 'gainers' ? 'Top Gainers' : f === 'losers' ? 'Top Losers' : 'Highest Value'}</button>
-                ))}
+             
+             {/* Filter Pills + List Button */}
+             <div className="flex items-center gap-2">
+               <div className="flex-1 flex gap-1.5 overflow-x-auto scrollbar-hide">
+                  {['all', 'gainers', 'losers', 'high'].map((f) => (
+                      <button 
+                        key={f} 
+                        onClick={() => { setActiveFilter(f); setCurrentPage(1); }} 
+                        className={`px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                          activeFilter === f 
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30' 
+                            : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                        }`}
+                      >
+                        {f === 'all' ? '🔹 All' : f === 'gainers' ? '📈 Gainers' : f === 'losers' ? '📉 Losers' : '💎 Premium'}
+                      </button>
+                  ))}
+               </div>
+               <button 
+                 onClick={handleOpenListing} 
+                 className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-black uppercase tracking-wider text-[10px] md:text-[11px] flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
+               >
+                 <PlusCircle className="w-4 h-4" /> 
+                 <span className="hidden sm:inline">List</span>
+               </button>
              </div>
-             <button onClick={handleOpenListing} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/10"><PlusCircle className="w-4 h-4" /> List Asset</button>
         </div>
       </div>
 
+      {/* Listings - Hybrid Table/Card Layout */}
       <div className="px-4 sm:px-6 max-w-7xl mx-auto">
-         <div className="bg-slate-900 rounded-[2rem] border border-white/5 overflow-hidden shadow-2xl">
+         {/* Desktop Table View */}
+         <div className="hidden md:block bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr className="bg-slate-950/30 text-[10px] uppercase font-bold tracking-widest text-slate-500 border-b border-white/5">
+                        <tr className="bg-slate-950/50 text-[10px] uppercase font-bold tracking-widest text-slate-400 border-b border-white/10">
                             <th className="py-5 px-6 font-bold">Card</th>
                             <th className="py-5 px-6 text-right">Price</th>
                             <th className="py-5 px-6 text-right">1h Change</th>
                             <th className="py-5 px-6 text-right hidden lg:table-cell">1m Change</th>
-                            <th className="py-5 px-6 text-right hidden md:table-cell">Trading Vol</th>
-                            <th className="py-5 px-6 hidden md:table-cell w-32">Week Trend</th>
+                            <th className="py-5 px-6 text-right">Trading Vol</th>
+                            <th className="py-5 px-6 w-32">Week Trend</th>
                             <th className="py-5 px-6 text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
                         {currentListings.map((card) => (
-                            <tr key={card.id} className="hover:bg-white/[0.02] transition-colors group">
+                            <tr key={card.id} className="hover:bg-white/[0.03] transition-colors group">
                                 <td className="py-4 px-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-14 rounded bg-slate-800 overflow-hidden relative flex-shrink-0 border border-white/5 group-hover:border-amber-500/30 transition-all"><img src={card.image} alt={card.name} className="w-full h-full object-cover" /></div>
+                                        <div className="w-10 h-14 rounded-lg bg-slate-800 overflow-hidden relative flex-shrink-0 border border-white/10 group-hover:border-amber-500/40 transition-all shadow-md"><img src={card.image} alt={card.name} className="w-full h-full object-cover" /></div>
                                         <div>
                                             <div className="font-bold text-white text-sm group-hover:text-amber-400 transition-colors line-clamp-1">{card.name}</div>
                                             <div className="text-[10px] text-slate-500 font-mono uppercase mt-0.5 flex items-center gap-2"><span className="bg-white/5 px-1.5 py-0.5 rounded">{card.id}</span></div>
@@ -394,7 +431,9 @@ const Marketplace = ({ currency }) => {
                                 </td>
                                 <td className="py-4 px-6 text-right"><div className="font-bold text-white font-mono text-sm">{formatPrice(card.price, currency, USD_TO_INR)}</div></td>
                                 <td className="py-4 px-6 text-right">
-                                    <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black tracking-tighter ${card.change1h >= 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                    <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black ${
+                                      card.change1h >= 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                    }`}>
                                         {card.change1h >= 0 ? '+' : ''}{card.change1h}%
                                         {card.change1h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                                     </div>
@@ -404,21 +443,101 @@ const Marketplace = ({ currency }) => {
                                         {card.change1m >= 0 ? '+' : ''}{card.change1m}%
                                     </div>
                                 </td>
-                                <td className="py-4 px-6 text-right hidden md:table-cell"><div className="font-mono text-xs text-slate-300">${card.volume.toLocaleString()}K</div></td>
-                                <td className="py-4 px-6 hidden md:table-cell"><Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#ef4444'} /></td>
-                                <td className="py-4 px-6 text-right"><button onClick={() => openTrade(card)} className="px-5 py-2 rounded-xl bg-amber-500 text-slate-900 text-[10px] font-black uppercase tracking-widest hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/20 transition-all">Trade</button></td>
+                                <td className="py-4 px-6 text-right"><div className="font-mono text-xs text-slate-300">${card.volume.toLocaleString()}K</div></td>
+                                <td className="py-4 px-6"><Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#ef4444'} /></td>
+                                <td className="py-4 px-6 text-right"><button onClick={() => openTrade(card)} className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-black uppercase tracking-widest hover:from-amber-400 hover:to-orange-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95">Trade</button></td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-
+            
+            {/* Table Pagination */}
             {totalPages > 1 && (
-                <div className="px-6 py-6 border-t border-white/5 flex items-center justify-between bg-slate-950/30">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Page {currentPage} of {totalPages}</span>
+                <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between bg-slate-950/50">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Page {currentPage} of {totalPages}</span>
                     <div className="flex gap-2">
-                        <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="p-2 rounded-lg bg-slate-800 text-white disabled:opacity-50 hover:bg-slate-700 transition-colors"><ArrowRightLeft className="w-4 h-4 rotate-180" /></button>
-                        <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="p-2 rounded-lg bg-slate-800 text-white disabled:opacity-50 hover:bg-slate-700 transition-colors"><ArrowRightLeft className="w-4 h-4" /></button>
+                        <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-lg bg-slate-800 text-white disabled:opacity-30 hover:bg-slate-700 transition-all text-xs font-bold">← Prev</button>
+                        <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-lg bg-slate-800 text-white disabled:opacity-30 hover:bg-slate-700 transition-all text-xs font-bold">Next →</button>
+                    </div>
+                </div>
+            )}
+         </div>
+         
+         {/* Mobile Card View */}
+         <div className="md:hidden space-y-3">
+            {currentListings.map((card) => (
+              <div key={card.id} className="bg-slate-900/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-amber-500/30 transition-all">
+                {/* Card Header */}
+                <div className="p-4 flex items-start gap-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                  <div className="w-16 h-22 rounded-xl bg-slate-800 overflow-hidden border border-white/10 shadow-md flex-shrink-0">
+                    <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-white text-base line-clamp-1 mb-1">{card.name}</div>
+                    <div className="text-[10px] text-slate-400 font-mono uppercase bg-white/5 px-2 py-0.5 rounded inline-block">{card.id}</div>
+                  </div>
+                  <div className={`px-3 py-1.5 rounded-lg text-xs font-black shrink-0 ${
+                    card.change1h >= 0 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                  }`}>
+                    {card.change1h >= 0 ? '+' : ''}{card.change1h}%
+                  </div>
+                </div>
+                
+                {/* Card Body */}
+                <div className="p-4 space-y-3">
+                  {/* Price */}
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Price</span>
+                    <span className="text-xl font-black text-white font-mono">{formatPrice(card.price, currency, USD_TO_INR)}</span>
+                  </div>
+                  
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/5">
+                    <div>
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Volume</div>
+                      <div className="text-sm font-bold text-slate-200 font-mono">${card.volume.toLocaleString()}K</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Trend</div>
+                      <div className="flex items-center">
+                        <Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#ef4444'} />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Trade Button */}
+                  <button 
+                    onClick={() => openTrade(card)} 
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-black uppercase tracking-wider hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20 active:scale-[0.98] mt-2"
+                  >
+                    Trade Now
+                  </button>
+                </div>
+              </div>
+            ))}
+            
+            {/* Mobile Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 pb-2">
+                    <span className="text-xs font-bold text-slate-400">Page {currentPage}/{totalPages}</span>
+                    <div className="flex gap-2">
+                        <button 
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} 
+                          disabled={currentPage === 1} 
+                          className="px-5 py-2.5 rounded-xl bg-slate-800 text-white disabled:opacity-30 hover:bg-slate-700 transition-all text-sm font-bold active:scale-95"
+                        >
+                          ←
+                        </button>
+                        <button 
+                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} 
+                          disabled={currentPage === totalPages} 
+                          className="px-5 py-2.5 rounded-xl bg-slate-800 text-white disabled:opacity-30 hover:bg-slate-700 transition-all text-sm font-bold active:scale-95"
+                        >
+                          →
+                        </button>
                     </div>
                 </div>
             )}
