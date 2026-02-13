@@ -62,7 +62,7 @@ const SupportTicketModal = ({ isOpen, onClose }) => {
                 });
                 setStatus({ type: '', message: '' });
                 onClose();
-            }, 1500);
+            }, 3500);
         } catch (error) {
             setStatus({ type: 'error', message: 'Failed to submit ticket. Please try again.' });
         } finally {

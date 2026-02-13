@@ -83,14 +83,34 @@ const ListingModal = ({ isOpen, onClose, card }) => {
         );
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        // Mock Listing Logic
-        setTimeout(() => {
+        
+        try {
+            const response = await fetch('http://localhost:3001/api/trade/transaction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'sell',
+                    card: selectedCard,
+                    price: parseFloat(price),
+                    currency: currency,
+                    userEmail: user.email,
+                    status: 'listed'
+                })
+            });
+
+            if (response.ok) {
+                setStep(2);
+            } else {
+                console.error('Listing failed');
+            }
+        } catch (error) {
+            console.error('Error submitting listing:', error);
+        } finally {
             setLoading(false);
-            setStep(2);
-        }, 1500);
+        }
     };
 
     const marketDiff = price && marketPriceDisplay > 0 ? ((parseFloat(price) - marketPriceDisplay) / marketPriceDisplay) * 100 : 0;

@@ -6,6 +6,19 @@ import { Camera, Mail, Calendar, ShoppingBag, TrendingUp, TrendingDown, Shield, 
 import { formatPrice } from '../utils';
 import { USD_TO_INR } from '../constants';
 
+// Helper for deterministic pseudo-random values (0.8 to 1.5)
+const getDeterministicChange = (cardId, userEmail) => {
+    const seed = `${cardId}-${userEmail}`;
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+        hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+        hash |= 0;
+    }
+    // Convert hash to 0.8 - 1.5 range
+    const absHash = Math.abs(hash);
+    return 0.8 + ((absHash % 70) / 100);
+};
+
 // Import character images
 import luffyImg from '../assets/luffy.png';
 import zoroImg from '../assets/zoro.png';
@@ -85,10 +98,9 @@ const Profile = () => {
         
         const totalInvested = activePurchases.reduce((sum, p) => sum + (p.total || 0), 0);
         
-        // Simulate market value changes (in real app, would fetch from API)
+        // Deterministic market value changes based on card ID and user email
         const currentValue = activePurchases.reduce((sum, p) => {
-            // Random market change for demo (-20% to +50%)
-            const marketChange = 0.8 + (Math.random() * 0.7);
+            const marketChange = getDeterministicChange(p.card.id, user.email);
             return sum + (p.total * marketChange);
         }, 0);
         
@@ -346,8 +358,7 @@ const Profile = () => {
                         ) : (
                             <div className="space-y-3 max-h-[500px] overflow-y-auto">
                                 {purchases.map((purchase) => {
-                                    // Simulate market change
-                                    const marketChange = 0.8 + (Math.random() * 0.7);
+                                    const marketChange = getDeterministicChange(purchase.card.id, user.email);
                                     const currentValue = purchase.total * marketChange;
                                     const profit = currentValue - purchase.total;
                                     const profitPercent = ((profit / purchase.total) * 100);

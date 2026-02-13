@@ -10,17 +10,19 @@ const BuyModal = ({ isOpen, onClose, card }) => {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1); // 1: Details, 2: Success
     const [paymentMethod, setPaymentMethod] = useState('wallet');
+    const [currency, setCurrency] = useState('inr');
     
     // Calculate Market Price in INR
     const marketPriceINR = card?.price ? card.price * USD_TO_INR : 0;
 
     useEffect(() => {
         if (isOpen && card) {
-            setPrice(marketPriceINR.toFixed(2));
+            const initialPrice = currency === 'inr' ? marketPriceINR : card.price || 0;
+            setPrice(initialPrice.toFixed(2));
             setQuantity(1);
             setStep(1);
         }
-    }, [card, isOpen, marketPriceINR]);
+    }, [card, isOpen, marketPriceINR, currency]);
 
     if (!isOpen) return null;
 
@@ -51,21 +53,48 @@ const BuyModal = ({ isOpen, onClose, card }) => {
         );
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        // Mock Buy Logic
-        setTimeout(() => {
+        
+        try {
+            const response = await fetch('http://localhost:3001/api/trade/transaction', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'buy',
+                    card: card,
+                    price: parseFloat(price),
+                    quantity: quantity,
+                    total: finalTotal,
+                    currency: currency,
+                    userEmail: user.email,
+                    status: 'active'
+                })
+            });
+
+            if (response.ok) {
+                setStep(2);
+            } else {
+                console.error('Purchase failed');
+            }
+        } catch (error) {
+            console.error('Error submitting purchase:', error);
+        } finally {
             setLoading(false);
-            setStep(2);
-        }, 1500);
+        }
     };
 
     const totalCost = (Number(price) * quantity);
     const fee = totalCost * 0.02; // 2% Fee
     const finalTotal = totalCost + fee;
 
-    const marketDiff = price && marketPriceINR > 0 ? ((price - marketPriceINR) / marketPriceINR) * 100 : 0;
+    const marketDiff = price && (currency === 'inr' ? marketPriceINR : card.price) > 0 
+        ? ((price - (currency === 'inr' ? marketPriceINR : card.price)) / (currency === 'inr' ? marketPriceINR : card.price)) * 100 
+        : 0;
+    
+    const currencySymbol = currency === 'inr' ? '₹' : '$';
+    const currencyCode = currency === 'inr' ? 'INR' : 'USD';
 
     return (
         <div className="fixed inset-0 z-[160] flex items-center justify-center p-3 md:p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
@@ -113,21 +142,40 @@ const BuyModal = ({ isOpen, onClose, card }) => {
                             </button>
 
                             <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight mb-1">Buy Asset</h2>
-                            <p className="text-slate-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest mb-4 md:mb-5 flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                Instant Execution Available
+                            <p className="text-slate-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest mb-4 md:mb-5 flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Instant Execution Available
+                                </span>
+                                <div className="flex bg-slate-950 rounded-lg p-0.5 border border-white/5">
+                                    {['inr', 'usd'].map((c) => (
+                                        <button
+                                            key={c}
+                                            type="button"
+                                            onClick={() => setCurrency(c)}
+                                            className={`px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all ${
+                                                currency === c 
+                                                    ? 'bg-amber-500 text-slate-950 shadow-lg' 
+                                                    : 'text-slate-500 hover:text-slate-300'
+                                            }`}
+                                        >
+                                            {c}
+                                        </button>
+                                    ))}
+                                </div>
                             </p>
 
                             <form onSubmit={handleSubmit} className="space-y-3 md:space-y-5">
                                 {/* Price & Quantity Row */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Buy Price (INR)</label>
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Buy Price ({currencyCode})</label>
                                         <div className="relative group">
                                             <input 
                                                 type="number" 
                                                 required
                                                 min="0"
+                                                step="0.01"
                                                 value={price}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
@@ -142,7 +190,12 @@ const BuyModal = ({ isOpen, onClose, card }) => {
                                                 }`}
                                                 placeholder="0.00"
                                             />
-                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600">INR</span>
+                                            <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black transition-colors ${
+                                                marketDiff > 5 ? 'text-red-500/50' : 
+                                                marketDiff < -5 ? 'text-emerald-500/50' : 
+                                                'text-slate-600'
+                                            }`}>{currencySymbol}</span>
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600">{currencyCode}</span>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -171,19 +224,19 @@ const BuyModal = ({ isOpen, onClose, card }) => {
                                 </div>
 
                                 {/* Order Summary */}
-                                <div className="bg-slate-950/50 rounded-2xl p-6 space-y-3 border border-white/5">
+                                 <div className="bg-slate-950/50 rounded-2xl p-6 space-y-3 border border-white/5">
                                     <div className="flex justify-between items-center text-xs">
                                         <span className="text-slate-500 font-bold uppercase tracking-wide">Subtotal</span>
-                                        <span className="text-slate-300 font-mono font-bold">₹{(Number(price) * quantity).toFixed(2)}</span>
+                                        <span className="text-slate-300 font-mono font-bold">{currencySymbol}{(Number(price) * quantity).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-xs">
                                         <span className="text-slate-500 font-bold uppercase tracking-wide">Platform Fee (2%)</span>
-                                        <span className="text-slate-300 font-mono font-bold">₹{fee.toFixed(2)}</span>
+                                        <span className="text-slate-300 font-mono font-bold">{currencySymbol}{fee.toFixed(2)}</span>
                                     </div>
                                     <div className="h-px bg-white/10 my-2"></div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-white font-black uppercase tracking-widest text-xs">Total Cost</span>
-                                        <span className="text-xl font-black text-emerald-400 font-mono">₹{finalTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                                        <span className="text-xl font-black text-emerald-400 font-mono">{currencySymbol}{finalTotal.toLocaleString(currency === 'inr' ? 'en-IN' : 'en-US', { maximumFractionDigits: 2 })}</span>
                                     </div>
                                 </div>
 

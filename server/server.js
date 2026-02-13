@@ -73,8 +73,12 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YOUTUBE_API_KEY;
 const CHANNEL_ID = process.env.CHANNEL_ID;
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'op-masters-secret-2026'; // In production, this fallback must be removed!
-const JWT_SECRET = process.env.JWT_SECRET || 'op-jwt-super-secret-key-change-me'; // Use a strong secret in .env
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!ADMIN_SECRET || !JWT_SECRET) {
+    console.warn('⚠️ WARNING: ADMIN_SECRET or JWT_SECRET is missing in .env! Security is COMPROMISED.');
+}
 
 // --- SECURITY MIDDLEWARE ---
 
@@ -265,10 +269,46 @@ const writeUsers = (users) => {
 // Helper to read/write transactions
 const readTransactions = () => {
     try {
+        if (!fs.existsSync(TRANSACTIONS_FILE)) return [];
         const data = fs.readFileSync(TRANSACTIONS_FILE, 'utf8');
         return JSON.parse(data).transactions || [];
     } catch (err) { return []; }
 };
+
+const writeTransactions = (transactions) => {
+    try { 
+        fs.writeFileSync(TRANSACTIONS_FILE, JSON.stringify({ transactions }, null, 2)); 
+    } catch (err) { console.error('Error writing transactions:', err); }
+};
+
+// --- TRADE ENDPOINTS ---
+app.post('/api/trade/transaction', (req, res) => {
+    const { type, card, price, quantity, total, currency, userEmail, status } = req.body;
+    
+    if (!type || !card || !price || !userEmail) {
+        return res.status(400).json({ error: 'Missing required trade data' });
+    }
+
+    const transactions = readTransactions();
+    const newTransaction = {
+        id: `TX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type, // 'buy' or 'sell'
+        card,
+        price,
+        quantity: quantity || 1,
+        total,
+        currency: currency || 'inr',
+        userEmail,
+        status: status || 'pending',
+        timestamp: new Date().toISOString()
+    };
+
+    transactions.push(newTransaction);
+    writeTransactions(transactions);
+
+    console.log(`[TRADE] ${type.toUpperCase()} recorded for ${userEmail}: ${card.name}`);
+    res.status(201).json({ success: true, transaction: newTransaction });
+});
 
 // --- AUTH ENDPOINTS ---
 
