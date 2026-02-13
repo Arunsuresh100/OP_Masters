@@ -22,6 +22,18 @@ const Cards = ({ currency }) => {
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
+  // Prevent background scroll when drawer is open
+  useEffect(() => {
+    if (mobileFilterOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileFilterOpen]);
+
   const handleImageUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
         // In a real app, we would upload functionality here
@@ -202,13 +214,41 @@ const Cards = ({ currency }) => {
             onClick={() => setMobileFilterOpen(false)}
           />
           
-          {/* Drawer */}
-          <div className={`absolute bottom-0 left-0 right-0 bg-slate-950 rounded-t-3xl border-t border-x border-white/10 max-h-[85vh] overflow-y-auto transition-transform duration-300 ${mobileFilterOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+          {/* Drawer - Full width on mobile, right-aligned on tablet */}
+          <div className={`absolute bottom-0 left-0 sm:left-auto sm:right-0 w-full sm:max-w-[480px] mb-20 sm:mb-4 sm:mr-4 bg-slate-950 rounded-t-3xl sm:rounded-2xl border-t border-x sm:border border-white/10 transition-transform duration-300 flex flex-col ${mobileFilterOpen ? 'translate-y-0' : 'translate-y-full'}`} style={{maxHeight: '60vh', overflow: 'hidden'}}>
+            <style>{`
+              .drawer-scrollbar::-webkit-scrollbar {
+                width: 0 !important;
+                height: 0 !important;
+                display: none !important;
+              }
+              .drawer-scrollbar::-webkit-scrollbar-track {
+                display: none !important;
+              }
+              .drawer-scrollbar::-webkit-scrollbar-thumb {
+                display: none !important;
+              }
+              .drawer-scrollbar {
+                -ms-overflow-style: none !important;
+                scrollbar-width: none !important;
+                overflow-y: auto !important;
+              }
+              @supports selector(::-webkit-scrollbar) {
+                .drawer-scrollbar {
+                  scrollbar-width: none !important;
+                }
+              }
+            `}</style>
             {/* Drawer Header */}
-            <div className="sticky top-0 bg-slate-950/95 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between z-10">
+            <div className="flex-shrink-0 bg-slate-950 border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-3xl">
               <div className="flex items-center gap-3">
                 <SlidersHorizontal className="w-5 h-5 text-amber-500" />
                 <h2 className="text-lg font-black text-white">Filters</h2>
+                {(selectedColor !== 'all' || selectedSet !== 'all' || searchTerm) && (
+                  <div className="ml-2 px-2 py-1 bg-amber-500/20 text-amber-500 text-xs font-bold rounded-full">
+                    {[selectedColor !== 'all', selectedSet !== 'all', searchTerm].filter(Boolean).length} active
+                  </div>
+                )}
               </div>
               <button 
                 onClick={() => setMobileFilterOpen(false)}
@@ -218,11 +258,11 @@ const Cards = ({ currency }) => {
               </button>
             </div>
 
-            {/* Drawer Content */}
-            <div className="p-6 space-y-6">
+            {/* Drawer Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto drawer-scrollbar p-4 space-y-4">
               {/* Search */}
               <div>
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Find Card</h3>
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Find Card</h3>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input 
@@ -230,36 +270,54 @@ const Cards = ({ currency }) => {
                     placeholder="Search name, ID..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all"
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all"
                   />
                 </div>
               </div>
 
               {/* Color Filter */}
-              <div className="pt-4 border-t border-white/5">
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Color</h3>
-                <div className="grid grid-cols-3 gap-2">
-                    {COLORS.map(color => (
+              <div className="pt-2 border-t border-white/5">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Color</h3>
+                <div className="flex items-center gap-3 flex-wrap justify-center">
+                    {COLORS.map(color => {
+                      const colorMap = {
+                        'Red': 'bg-red-500',
+                        'Blue': 'bg-blue-500',
+                        'Green': 'bg-green-500',
+                        'Purple': 'bg-purple-500',
+                        'Black': 'bg-slate-900',
+                        'Yellow': 'bg-yellow-500'
+                      };
+                      return (
                         <button 
                             key={color}
                             onClick={() => setSelectedColor(selectedColor === color ? 'all' : color)}
-                            className={`px-3 py-3 rounded-xl text-xs font-bold transition-all border ${selectedColor === color ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-lg' : 'bg-slate-900 text-slate-400 border-white/5 hover:border-amber-500/30 hover:bg-white/5'}`}
+                            className={`w-12 h-12 rounded-full transition-all border-2 flex items-center justify-center relative ${selectedColor === color ? 'border-amber-500 ring-4 ring-amber-500/30 scale-110' : 'border-white/20 hover:border-amber-500/50 hover:scale-105'}`}
+                            title={color}
                         >
-                            {color}
+                            <div className={`w-9 h-9 rounded-full ${colorMap[color]} ${color === 'Black' ? 'border border-white/20' : ''}`}></div>
+                            {selectedColor === color && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
                         </button>
-                    ))}
+                      );
+                    })}
                 </div>
               </div>
 
               {/* Set Filter */}
-              <div className="pt-4 border-t border-white/5">
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Set</h3>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="pt-2 border-t border-white/5">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Set</h3>
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
                     {SETS.map(set => (
                         <button 
                             key={set}
                             onClick={() => setSelectedSet(selectedSet === set ? 'all' : set)}
-                            className={`px-3 py-3 rounded-xl text-xs font-bold transition-all border ${selectedSet === set ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-slate-900 text-slate-400 border-white/5 hover:border-white/30 hover:bg-white/5'}`}
+                            className={`px-2 py-2 rounded-lg text-xs font-bold transition-all border ${selectedSet === set ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-slate-900 text-slate-400 border-white/5 hover:border-white/30 hover:bg-white/5'}`}
                         >
                             {set}
                         </button>
@@ -267,40 +325,28 @@ const Cards = ({ currency }) => {
                 </div>
               </div>
               
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
-                <button 
-                  onClick={resetFilters}
-                  className="flex-1 py-3 rounded-xl bg-red-500/10 text-red-500 text-sm font-bold uppercase tracking-widest border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2"
-                >
-                  <X className="w-4 h-4" /> Reset
-                </button>
-                <button 
-                  onClick={() => setMobileFilterOpen(false)}
-                  className="flex-1 py-3 rounded-xl bg-amber-500 text-slate-950 text-sm font-bold uppercase tracking-widest hover:bg-amber-600 transition-all"
-                >
-                  Apply
-                </button>
+              {/* Action Buttons - Inline after filters */}
+              <div className="pt-3 border-t border-white/10">
+                <div className="flex gap-2">
+                  <button 
+                    onClick={resetFilters}
+                    className="flex-1 py-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold uppercase tracking-widest border border-white/10 hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <X className="w-4 h-4" /> Reset
+                  </button>
+                  <button 
+                    onClick={() => setMobileFilterOpen(false)}
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold uppercase tracking-widest hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg shadow-amber-500/30 active:scale-95"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Floating Filter Button (Mobile/Tablet Only) */}
-        <button
-          onClick={() => setMobileFilterOpen(true)}
-          className="lg:hidden fixed bottom-24 right-6 z-40 w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full shadow-2xl shadow-amber-500/40 flex items-center justify-center hover:scale-110 transition-transform active:scale-95"
-        >
-          <SlidersHorizontal className="w-6 h-6 text-white" />
-          {/* Active Filters Badge */}
-          {(selectedColor !== 'all' || selectedSet !== 'all' || searchTerm) && (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-slate-950 flex items-center justify-center">
-              <span className="text-white text-[10px] font-black">
-                {[selectedColor !== 'all', selectedSet !== 'all', searchTerm].filter(Boolean).length}
-              </span>
-            </div>
-          )}
-        </button>
+
 
         {/* Right Content (Cards Grid) */}
         <div className="lg:col-span-3 pt-0">
@@ -330,6 +376,23 @@ const Cards = ({ currency }) => {
               <h2 className="text-xl font-bold text-white">
                  Card Library <span className="text-slate-500 text-sm font-normal ml-2">({filteredCards.length} results)</span>
               </h2>
+              
+              {/* Filter Button - Mobile/Tablet Only */}
+              <button
+                onClick={() => setMobileFilterOpen(true)}
+                className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95"
+              >
+                <SlidersHorizontal className="w-5 h-5 text-white" />
+                <span className="text-white font-bold text-sm hidden sm:inline">Filters</span>
+                {/* Active Filters Badge */}
+                {(selectedColor !== 'all' || selectedSet !== 'all' || searchTerm) && (
+                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-[10px] font-black">
+                      {[selectedColor !== 'all', selectedSet !== 'all', searchTerm].filter(Boolean).length}
+                    </span>
+                  </div>
+                )}
+              </button>
            </div>
 
            {loading ? (
