@@ -124,6 +124,10 @@ const MarketTicker = ({ items }) => {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
+        @keyframes shimmer {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(100%); }
+        }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
@@ -137,6 +141,7 @@ const MarketTicker = ({ items }) => {
 };
 
 const TradeModal = ({ card, isOpen, onClose, currency }) => {
+  const { addTransaction } = useUser();
   const [tradeType, setTradeType] = useState('buy');
   const [price, setPrice] = useState(card?.price || 0);
   const [quantity, setQuantity] = useState(1);
@@ -161,6 +166,26 @@ const TradeModal = ({ card, isOpen, onClose, currency }) => {
   const handleTrade = () => {
     setLoading(true);
     setTimeout(() => {
+        // Save transaction
+        if (addTransaction) {
+          addTransaction({
+            type: tradeType,
+            card: {
+              id: card.id,
+              name: card.name,
+              image: card.image,
+              rarity: card.rarity || 'R'
+            },
+            price: price,
+            quantity: quantity,
+            total: finalTotal,
+            fee: fee,
+            purchasePrice: tradeType === 'buy' ? price : null,
+            currentValue: price,
+            status: tradeType === 'buy' ? 'active' : 'completed'
+          });
+        }
+        
         setLoading(false);
         setSuccess(true);
         setTimeout(() => onClose(), 2000);
