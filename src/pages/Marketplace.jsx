@@ -7,6 +7,52 @@ import ListingModal from '../components/ListingModal';
 
 // --- Helper Components ---
 
+// Card Image with Loading State
+const CardImage = ({ src, alt, className }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+    setError(false);
+    const img = new Image();
+    img.src = src;
+    img.onload = () => setLoaded(true);
+    img.onerror = () => setError(true);
+  }, [src]);
+
+  if (error) {
+    return (
+      <div className={className}>
+        <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-500 text-xs">
+          <AlertCircle className="w-4 h-4" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      {/* Loading Skeleton */}
+      {!loaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 animate-pulse">
+          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
+        </div>
+      )}
+      {/* Actual Image */}
+      <img 
+        src={src} 
+        alt={alt} 
+        className={`w-full h-full object-cover transition-opacity duration-300 ${
+          loaded ? 'opacity-100' : 'opacity-0'
+        }`}
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+      />
+    </div>
+  );
+};
+
 const Sparkline = ({ data, color }) => {
   const min = Math.min(...data);
   const max = Math.max(...data);
@@ -237,8 +283,22 @@ const Marketplace = ({ currency }) => {
     fetchCards();
   }, []);
 
-  const openTrade = (card) => { setSelectedCard(card); setTradeModalOpen(true); };
-  const handleOpenListing = () => { if (!user) openAuth('login'); else setIsListingModalOpen(true); };
+  const openTrade = (card) => { 
+    if (!user) {
+      openAuth('login');
+      return;
+    }
+    setSelectedCard(card); 
+    setTradeModalOpen(true); 
+  };
+  
+  const handleOpenListing = () => { 
+    if (!user) {
+      openAuth('login'); 
+    } else {
+      setIsListingModalOpen(true); 
+    }
+  };
 
   const filteredCards = useMemo(() => {
     let result = cards.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.id.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -422,7 +482,7 @@ const Marketplace = ({ currency }) => {
                             <tr key={card.id} className="hover:bg-white/[0.03] transition-colors group">
                                 <td className="py-4 px-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-14 rounded-lg bg-slate-800 overflow-hidden relative flex-shrink-0 border border-white/10 group-hover:border-amber-500/40 transition-all shadow-md"><img src={card.image} alt={card.name} className="w-full h-full object-cover" /></div>
+                                        <CardImage src={card.image} alt={card.name} className="w-10 h-14 rounded-lg bg-slate-800 overflow-hidden relative flex-shrink-0 border border-white/10 group-hover:border-amber-500/40 transition-all shadow-md" />
                                         <div>
                                             <div className="font-bold text-white text-sm group-hover:text-amber-400 transition-colors line-clamp-1">{card.name}</div>
                                             <div className="text-[10px] text-slate-500 font-mono uppercase mt-0.5 flex items-center gap-2"><span className="bg-white/5 px-1.5 py-0.5 rounded">{card.id}</span></div>
@@ -470,9 +530,7 @@ const Marketplace = ({ currency }) => {
               <div key={card.id} className="bg-slate-900/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-amber-500/30 transition-all">
                 {/* Card Header */}
                 <div className="p-4 flex items-start gap-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
-                  <div className="w-16 h-22 rounded-xl bg-slate-800 overflow-hidden border border-white/10 shadow-md flex-shrink-0">
-                    <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
-                  </div>
+                  <CardImage src={card.image} alt={card.name} className="w-16 h-22 rounded-xl bg-slate-800 overflow-hidden border border-white/10 shadow-md flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-white text-base line-clamp-1 mb-1">{card.name}</div>
                     <div className="text-[10px] text-slate-400 font-mono uppercase bg-white/5 px-2 py-0.5 rounded inline-block">{card.id}</div>
