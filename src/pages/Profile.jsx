@@ -134,11 +134,19 @@ const Profile = () => {
                         {/* Avatar Section */}
                         <div className="relative">
                             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 p-1 shadow-2xl shadow-amber-500/20">
-                                <img 
-                                    src={currentAvatar.image} 
-                                    alt={user.username} 
-                                    className="w-full h-full rounded-full bg-slate-800 border-4 border-slate-900"
-                                />
+                                {currentAvatar.image ? (
+                                    <img 
+                                        src={currentAvatar.image} 
+                                        alt={user.username} 
+                                        className="w-full h-full rounded-full bg-slate-800 border-4 border-slate-900 object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full rounded-full bg-slate-800 border-4 border-slate-900 flex items-center justify-center">
+                                        <span className="text-5xl font-black text-amber-500 uppercase">
+                                            {user.username.charAt(0)}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             <button 
                                 onClick={() => setShowAvatarSelector(!showAvatarSelector)}
