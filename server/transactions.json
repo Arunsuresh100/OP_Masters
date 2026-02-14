@@ -1,3 +1,301 @@
 {
-  "transactions": []
+  "transactions": [
+    {
+      "id": "TX-1771044093775-vg6fj8h5v",
+      "type": "sell",
+      "card": {
+        "id": "OP01-024_p3",
+        "name": "Monkey.D.Luffy",
+        "rarity": "SR",
+        "set": "OP01",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP01-024_p3.png?251017",
+        "price": 11.41,
+        "character": "Monkey.D.Luffy",
+        "description": "[DON!! x2] This Character cannot be K.O.'d in battle by &lt;Strike&gt; attribute Characters.<br>[Activate: Main] [Once Per Turn] Give this Character up to 2 rested DON!! cards.",
+        "colors": [
+          "Red"
+        ],
+        "cost": 2,
+        "type": "Character",
+        "percentChange": -1.87,
+        "marketTrend": "down",
+        "volume": 314,
+        "lastSoldPrice": 12.44
+      },
+      "price": 12,
+      "quantity": 1,
+      "currency": "INR",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "listed",
+      "timestamp": "2026-02-14T04:41:33.775Z"
+    },
+    {
+      "id": "TX-1771051068526-limwxr894",
+      "type": "sell",
+      "card": {
+        "id": "OP13-118_p2",
+        "name": "Monkey.D.Luffy",
+        "rarity": "Manga",
+        "set": "OP13",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p2.png?251017",
+        "price": 2275.73,
+        "character": "Monkey.D.Luffy",
+        "description": "[Double Attack]<br>[On Play] If your Leader is multicolored, set up to 4 of your DON!! cards as active. Then, you cannot play Character cards with a base cost of 5 or more during this turn.",
+        "colors": [
+          "Green"
+        ],
+        "cost": 6,
+        "type": "Character",
+        "percentChange": -9.35,
+        "marketTrend": "down",
+        "volume": 485,
+        "lastSoldPrice": 2123.54,
+        "change24h": -9.35,
+        "change1h": -0.38,
+        "change1m": -0.022,
+        "marketCap": 1103729050,
+        "trendData": [
+          2275.3158711988967,
+          2233.4774897006705,
+          2229.3531154395578,
+          2203.6763402141987,
+          2144.0718592580406,
+          2130.4202522772857,
+          2099.4161328924047
+        ]
+      },
+      "price": 1452005555,
+      "quantity": 1,
+      "currency": "INR",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "listed",
+      "timestamp": "2026-02-14T06:37:48.527Z"
+    },
+    {
+      "id": "TX-1771051399190-p3b6q0ral",
+      "type": "sell",
+      "card": {
+        "id": "OP13-118_p2",
+        "name": "Monkey.D.Luffy",
+        "rarity": "Manga",
+        "set": "OP13",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p2.png?251017",
+        "price": 2275.73,
+        "character": "Monkey.D.Luffy",
+        "description": "[Double Attack]<br>[On Play] If your Leader is multicolored, set up to 4 of your DON!! cards as active. Then, you cannot play Character cards with a base cost of 5 or more during this turn.",
+        "colors": [
+          "Green"
+        ],
+        "cost": 6,
+        "type": "Character",
+        "percentChange": -9.35,
+        "marketTrend": "down",
+        "volume": 485,
+        "lastSoldPrice": 2123.54,
+        "change24h": -9.35,
+        "change1h": -0.38,
+        "change1m": -0.022,
+        "marketCap": 1103729050,
+        "trendData": [
+          2275.3158711988967,
+          2233.4774897006705,
+          2229.3531154395578,
+          2203.6763402141987,
+          2144.0718592580406,
+          2130.4202522772857,
+          2099.4161328924047
+        ]
+      },
+      "price": 120500,
+      "quantity": 1,
+      "currency": "INR",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "listed",
+      "timestamp": "2026-02-14T06:43:19.190Z"
+    },
+    {
+      "id": "TX-1771051502239-fkeo7uuwc",
+      "type": "sell",
+      "card": {
+        "id": "OP13-118_p2",
+        "name": "Monkey.D.Luffy",
+        "rarity": "Manga",
+        "set": "OP13",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p2.png?251017",
+        "price": 2275.73,
+        "character": "Monkey.D.Luffy",
+        "description": "[Double Attack]<br>[On Play] If your Leader is multicolored, set up to 4 of your DON!! cards as active. Then, you cannot play Character cards with a base cost of 5 or more during this turn.",
+        "colors": [
+          "Green"
+        ],
+        "cost": 6,
+        "type": "Character",
+        "percentChange": -9.35,
+        "marketTrend": "down",
+        "volume": 485,
+        "lastSoldPrice": 2123.54,
+        "change24h": -9.35,
+        "change1h": -0.38,
+        "change1m": -0.022,
+        "marketCap": 1103729050,
+        "trendData": [
+          2275.3158711988967,
+          2233.4774897006705,
+          2229.3531154395578,
+          2203.6763402141987,
+          2144.0718592580406,
+          2130.4202522772857,
+          2099.4161328924047
+        ]
+      },
+      "price": 120,
+      "quantity": 1,
+      "currency": "INR",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "listed",
+      "timestamp": "2026-02-14T06:45:02.239Z"
+    },
+    {
+      "id": "TX-1771051594053-yhhud1dyd",
+      "type": "sell",
+      "card": {
+        "id": "OP13-118_p2",
+        "name": "Monkey.D.Luffy",
+        "rarity": "Manga",
+        "set": "OP13",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p2.png?251017",
+        "price": 2275.73,
+        "character": "Monkey.D.Luffy",
+        "description": "[Double Attack]<br>[On Play] If your Leader is multicolored, set up to 4 of your DON!! cards as active. Then, you cannot play Character cards with a base cost of 5 or more during this turn.",
+        "colors": [
+          "Green"
+        ],
+        "cost": 6,
+        "type": "Character",
+        "percentChange": -9.35,
+        "marketTrend": "down",
+        "volume": 485,
+        "lastSoldPrice": 2123.54,
+        "change24h": -9.35,
+        "change1h": -0.38,
+        "change1m": -0.022,
+        "marketCap": 1103729050,
+        "trendData": [
+          2275.3158711988967,
+          2233.4774897006705,
+          2229.3531154395578,
+          2203.6763402141987,
+          2144.0718592580406,
+          2130.4202522772857,
+          2099.4161328924047
+        ]
+      },
+      "price": 1200,
+      "quantity": 1,
+      "currency": "INR",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "listed",
+      "timestamp": "2026-02-14T06:46:34.053Z"
+    },
+    {
+      "id": "TX-1771051622770-i7x0e54sc",
+      "type": "sell",
+      "card": {
+        "id": "OP13-118_p2",
+        "name": "Monkey.D.Luffy",
+        "rarity": "Manga",
+        "set": "OP13",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p2.png?251017",
+        "price": 2275.73,
+        "character": "Monkey.D.Luffy",
+        "description": "[Double Attack]<br>[On Play] If your Leader is multicolored, set up to 4 of your DON!! cards as active. Then, you cannot play Character cards with a base cost of 5 or more during this turn.",
+        "colors": [
+          "Green"
+        ],
+        "cost": 6,
+        "type": "Character",
+        "percentChange": -9.35,
+        "marketTrend": "down",
+        "volume": 485,
+        "lastSoldPrice": 2123.54,
+        "change24h": -9.35,
+        "change1h": -0.38,
+        "change1m": -0.022,
+        "marketCap": 1103729050,
+        "trendData": [
+          2275.3158711988967,
+          2233.4774897006705,
+          2229.3531154395578,
+          2203.6763402141987,
+          2144.0718592580406,
+          2130.4202522772857,
+          2099.4161328924047
+        ]
+      },
+      "price": 120,
+      "quantity": 1,
+      "currency": "INR",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "listed",
+      "timestamp": "2026-02-14T06:47:02.770Z"
+    },
+    {
+      "id": "TX-1771053197834-rg2yq8qxa",
+      "type": "sell",
+      "card": {
+        "id": "OP02-005_r1",
+        "name": "Curly.Dadan",
+        "rarity": "UC",
+        "set": "OP02",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP02-005_r1.png?251017",
+        "price": 1.4,
+        "character": "Curly.Dadan",
+        "description": "[On Play] Look at up to 5 cards from the top of your deck; reveal up to 1 red Character with a cost of 1 and add it to your hand. Then, place the rest at the bottom of your deck in any order.",
+        "colors": [
+          "Red"
+        ],
+        "cost": 2,
+        "type": "Character",
+        "percentChange": 4.16,
+        "marketTrend": "up",
+        "volume": 122,
+        "lastSoldPrice": 1.33
+      },
+      "price": 5,
+      "quantity": 1,
+      "currency": "USD",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "listed",
+      "timestamp": "2026-02-14T07:13:17.834Z"
+    },
+    {
+      "id": "TX-1771053235357-he45hxoe6",
+      "type": "sell",
+      "card": {
+        "id": "OP02-068_r1",
+        "name": "Gum-Gum Rain",
+        "rarity": "R",
+        "set": "OP02",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP02-068_r1.png?251017",
+        "price": 1.69,
+        "character": "Gum-Gum Rain",
+        "description": "[Counter] You may trash 1 card from your hand: Up to 1 of your Leader or Character cards gains +3000 power during this battle.",
+        "colors": [
+          "Blue"
+        ],
+        "cost": null,
+        "type": "Event",
+        "percentChange": 12.67,
+        "marketTrend": "up",
+        "volume": 34,
+        "lastSoldPrice": 1.8
+      },
+      "price": 120,
+      "quantity": 1,
+      "currency": "INR",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "listed",
+      "timestamp": "2026-02-14T07:13:55.357Z"
+    }
+  ]
 }

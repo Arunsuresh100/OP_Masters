@@ -66,6 +66,15 @@ process.on('unhandledRejection', (reason, p) => {
   console.error('Unhandled Rejection at:', p, 'reason:', reason);
 });
 
+process.on('exit', (code) => {
+    console.log(`[DEBUG] Process exiting with code: ${code}`);
+});
+
+// Keep-alive to prevent premature exit if event loop drains
+setInterval(() => {
+    // Heartbeat
+}, 60000);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -89,7 +98,9 @@ app.use(helmet());
 const allowedOrigins = [
   'http://localhost:5173', 
   'http://localhost:3000', 
-  'http://127.0.0.1:5173'
+  'http://127.0.0.1:5173',
+  'http://localhost:5174', // Added for fallback port
+  'http://127.0.0.1:5174'
 ];
 
 app.use(cors({
@@ -282,12 +293,69 @@ const writeTransactions = (transactions) => {
 };
 
 // --- TRADE ENDPOINTS ---
+// Security: Trade Validation Schema
+const tradeSchema = Joi.object({
+    type: Joi.string().valid('buy', 'sell').required(),
+    card: Joi.object({
+        id: Joi.string().required(),
+        name: Joi.string().required(),
+        price: Joi.number().optional() // Allow price in card object, but we verify against DB
+    }).unknown(true).required(),
+    price: Joi.number().positive().required(),
+    quantity: Joi.number().integer().positive().default(1),
+    total: Joi.number().positive().required(),
+    currency: Joi.string().valid('inr', 'usd', 'INR', 'USD').default('inr'),
+    userEmail: Joi.string().email().required(),
+    status: Joi.string().valid('pending', 'completed', 'cancelled').default('pending')
+});
+
 app.post('/api/trade/transaction', (req, res) => {
-    const { type, card, price, quantity, total, currency, userEmail, status } = req.body;
-    
-    if (!type || !card || !price || !userEmail) {
-        return res.status(400).json({ error: 'Missing required trade data' });
+    // 1. Validate Input Structure & Types
+    const { error, value } = tradeSchema.validate(req.body);
+    if (error) {
+        console.warn(`[SECURITY] Blocked Invalid Trade Request: ${error.details[0].message}`);
+        return res.status(400).json({ error: error.details[0].message });
     }
+
+    const { type, card, price, quantity, total, currency, userEmail, status } = value;
+
+    // 2. Validate Price Logic (Backend Enforcement)
+    // We must fetch the REAL market price to prevent manipulation
+    const allCards = readCards();
+    const dbCard = allCards.find(c => c.id === card.id);
+
+    if (!dbCard) {
+        return res.status(404).json({ error: 'Card not found in database. Cannot verify market price.' });
+    }
+
+    // Logic: Limit price to 5x Market Price (approx)
+    // dbCard.price is in USD usually. If transaction is in INR, we need to convert or check consistency.
+    // Assuming dbCard.price is the base "Market Price".
+    // 1 USD approx 83-85 INR. Let's use a safe conversion or just check relative deviation if currency matches.
+    
+    // For simplicity and safety, we will just use the provided Price and ensure it's not absurdly high 
+    // compared to the DB price converted to the target currency.
+    // Let's assume the frontend sends 'price' in the currency specified.
+    
+    let marketPriceInTradeCurrency = dbCard.price; 
+    if (currency.toLowerCase() === 'inr') {
+        marketPriceInTradeCurrency = dbCard.price * 84; // Approx fixed rate for validation
+    }
+
+    const MAX_PRICE_MULTIPLIER = 5.0;
+    const MIN_PRICE_MULTIPLIER = 0.5;
+
+    if (type === 'sell') {
+        if (price > marketPriceInTradeCurrency * MAX_PRICE_MULTIPLIER) {
+            console.warn(`[SECURITY] Blocked Price Manipulation: ${price} vs Max ${marketPriceInTradeCurrency * MAX_PRICE_MULTIPLIER}`);
+            return res.status(400).json({ error: 'Security Alert: Price exceeds 500% of detected market value.' });
+        }
+        if (price < marketPriceInTradeCurrency * MIN_PRICE_MULTIPLIER) {
+             console.warn(`[SECURITY] Blocked Suspicious Low Price: ${price} vs Min ${marketPriceInTradeCurrency * MIN_PRICE_MULTIPLIER}`);
+             return res.status(400).json({ error: 'Security Alert: Price is too low (under 50% market value).' });
+        }
+    }
+
 
     const transactions = readTransactions();
     const newTransaction = {
