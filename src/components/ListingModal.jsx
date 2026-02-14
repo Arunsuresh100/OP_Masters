@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, ShieldCheck, ArrowRight, Camera, Search, Loader2, RotateCcw, ChevronLeft, ChevronRight, TrendingUp, DollarSign } from 'lucide-react';
+import { X, ShieldCheck, ArrowRight, Camera, Search, Loader2, RotateCcw, ChevronLeft, ChevronRight, TrendingUp, DollarSign, AlertTriangle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { USD_TO_INR } from '../constants';
 
@@ -43,6 +43,7 @@ const ListingModal = ({ isOpen, onClose, card }) => {
     const [currency, setCurrency] = useState('INR');
     const [condition, setCondition] = useState('Near Mint');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [step, setStep] = useState(1);
     
     // --- Data & Search State ---
@@ -183,12 +184,28 @@ const ListingModal = ({ isOpen, onClose, card }) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    type: 'sell', card: selectedCard, price: parseFloat(price),
-                    currency, userEmail: user.email, status: 'listed'
+                    type: 'sell', 
+                    card: selectedCard, 
+                    price: parseFloat(price),
+                    quantity: 1, 
+                    total: parseFloat(price), 
+                    currency, 
+                    userEmail: user.email, 
+                    status: 'pending' 
                 })
             });
-            if (response.ok) setStep(2);
-        } catch (error) { console.error('Error:', error); } finally { setLoading(false); }
+            const data = await response.json();
+            if (response.ok) {
+                setStep(2);
+            } else {
+                setError(data.error || 'Failed to list asset. Please try again.');
+            }
+        } catch (error) { 
+            console.error('Error:', error);
+            setError('Network error. Please check your connection.');
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     return (
@@ -218,7 +235,7 @@ const ListingModal = ({ isOpen, onClose, card }) => {
                                         
                                         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3 justify-center">
                                             <div className="relative group w-full max-w-lg">
-                                                <div className="absolute inset-0 bg-amber-500/5 blur-xl group-focus-within:bg-amber-500/10 transition-colors rounded-3xl" />
+                                                <div className="absolute inset-0 bg-amber-500/5 blur-xl group-focus-within:bg-amber-500/10 transition-colors rounded-3xl pointer-events-none" />
                                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600 group-focus-within:text-amber-500 transition-colors" />
                                                 <input 
                                                     type="text" 
@@ -458,6 +475,13 @@ const ListingModal = ({ isOpen, onClose, card }) => {
                                                     })}
                                                 </div>
                                             </div>
+
+                                            {error && (
+                                                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-3 animate-in shake">
+                                                    <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                                                    <p className="text-[10px] font-bold text-rose-400">{error}</p>
+                                                </div>
+                                            )}
 
                                             <button 
                                                 type="submit" 

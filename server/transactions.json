@@ -296,6 +296,79 @@
       "userEmail": "arunforgame100@gmail.com",
       "status": "listed",
       "timestamp": "2026-02-14T07:13:55.357Z"
+    },
+    {
+      "id": "TX-1771091814660-87pzn8g2v",
+      "type": "sell",
+      "card": {
+        "id": "OP03-072_r1",
+        "name": "Gum-Gum Jet Gatling",
+        "rarity": "R",
+        "set": "OP03",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP03-072_r1.png?251017",
+        "price": 4.82,
+        "character": "Gum-Gum Jet Gatling",
+        "description": "[Counter] You may trash 1 card from your hand: Up to 1 of your Leader or Character cards gains +3000 power during this battle.",
+        "colors": [
+          "Purple"
+        ],
+        "cost": null,
+        "type": "Event",
+        "percentChange": -7.83,
+        "marketTrend": "down",
+        "volume": 154,
+        "lastSoldPrice": 4.78
+      },
+      "price": 400,
+      "quantity": 1,
+      "total": 400,
+      "currency": "INR",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "pending",
+      "timestamp": "2026-02-14T17:56:54.660Z"
+    },
+    {
+      "id": "TX-1771092242207-0c9p47gk2",
+      "type": "sell",
+      "card": {
+        "id": "OP13-118_p2",
+        "name": "Monkey.D.Luffy",
+        "rarity": "Manga",
+        "set": "OP13",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p2.png?251017",
+        "price": 2275.73,
+        "character": "Monkey.D.Luffy",
+        "description": "[Double Attack]<br>[On Play] If your Leader is multicolored, set up to 4 of your DON!! cards as active. Then, you cannot play Character cards with a base cost of 5 or more during this turn.",
+        "colors": [
+          "Green"
+        ],
+        "cost": 6,
+        "type": "Character",
+        "percentChange": -9.35,
+        "marketTrend": "down",
+        "volume": 485,
+        "lastSoldPrice": 2123.54,
+        "change24h": -9.35,
+        "change1h": -0.44,
+        "change1m": -0.009,
+        "marketCap": 1103729050,
+        "trendData": [
+          2274.4708847148872,
+          2235.3386166177206,
+          2201.5975535010825,
+          2164.9053078451784,
+          2156.25177192522,
+          2101.976655930229,
+          2090.5601767497087
+        ]
+      },
+      "price": 150000,
+      "quantity": 1,
+      "total": 150000,
+      "currency": "INR",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "pending",
+      "timestamp": "2026-02-14T18:04:02.220Z"
     }
   ]
 }

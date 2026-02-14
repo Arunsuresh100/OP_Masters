@@ -341,13 +341,13 @@ const Marketplace = ({ currency }) => {
              </div>
              
              {/* Filter Pills + List Button */}
-             <div className="flex items-center gap-2">
-               <div className="flex-1 flex gap-1.5 overflow-x-auto scrollbar-hide">
+             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+               <div className="w-full grid grid-cols-2 gap-2 sm:flex sm:flex-1 sm:overflow-x-auto sm:scrollbar-hide">
                   {['all', 'gainers', 'losers', 'high'].map((f) => (
                       <button 
                         key={f} 
                         onClick={() => { setActiveFilter(f); setCurrentPage(1); }} 
-                        className={`px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                        className={`w-full sm:w-auto px-1 py-3 sm:px-4 sm:py-2.5 rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center justify-center gap-1.5 ${
                           activeFilter === f 
                             ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30' 
                             : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
@@ -359,10 +359,10 @@ const Marketplace = ({ currency }) => {
                </div>
                <button 
                  onClick={handleOpenListing} 
-                 className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-black uppercase tracking-wider text-[10px] md:text-[11px] flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
+                 className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-4 md:px-6 py-3 md:py-3 rounded-xl font-black uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
                >
                  <PlusCircle className="w-4 h-4" /> 
-                 <span className="hidden sm:inline">Sell</span>
+                 <span>Sell Asset</span>
                </button>
              </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, Info, ShieldCheck, ArrowRight, Wallet, CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
+import { X, DollarSign, Info, ShieldCheck, ArrowRight, Wallet, CreditCard, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { USD_TO_INR } from '../constants';
 
@@ -9,6 +9,7 @@ const BuyModal = ({ isOpen, onClose, card }) => {
     const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1); // 1: Details, 2: Success
+    const [error, setError] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('wallet');
     const [currency, setCurrency] = useState('inr');
     
@@ -57,6 +58,16 @@ const BuyModal = ({ isOpen, onClose, card }) => {
         e.preventDefault();
         setLoading(true);
         
+        // MOCK: Feature Coming Soon Mode
+        // The user requested this feature to be "Coming Soon" for now.
+        setLoading(true);
+        setTimeout(() => {
+            setStep(2); // Jump straight to "Coming Soon" screen
+            setLoading(false);
+        }, 800);
+
+        /* 
+        // Backend Logic (Disabled for Beta)
         try {
             const response = await fetch('http://localhost:3001/api/trade/transaction', {
                 method: 'POST',
@@ -69,20 +80,23 @@ const BuyModal = ({ isOpen, onClose, card }) => {
                     total: finalTotal,
                     currency: currency,
                     userEmail: user.email,
-                    status: 'active'
+                    status: 'pending'
                 })
             });
 
+            const data = await response.json();
             if (response.ok) {
                 setStep(2);
             } else {
-                console.error('Purchase failed');
+                setError(data.error || 'Purchase failed. Please try again.');
             }
         } catch (error) {
             console.error('Error submitting purchase:', error);
+            setError('Network error. Please check your connection.');
         } finally {
             setLoading(false);
         }
+        */
     };
 
     const totalCost = (Number(price) * quantity);
@@ -276,6 +290,13 @@ const BuyModal = ({ isOpen, onClose, card }) => {
                                         </button>
                                     </div>
                                 </div>
+
+                                {error && (
+                                    <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-3 animate-in shake">
+                                        <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                                        <p className="text-[10px] font-bold text-rose-400">{error}</p>
+                                    </div>
+                                )}
 
                                 <button 
                                     type="submit"
