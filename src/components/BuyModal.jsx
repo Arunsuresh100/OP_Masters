@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, Info, ShieldCheck, ArrowRight, Wallet, CreditCard, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { X, DollarSign, Info, ShieldCheck, ArrowRight, Wallet, CreditCard, TrendingUp, TrendingDown, AlertTriangle, Loader2 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { USD_TO_INR } from '../constants';
 
@@ -115,199 +115,129 @@ const BuyModal = ({ isOpen, onClose, card }) => {
             <div className={`bg-transparent w-full max-w-4xl max-h-[95vh] shadow-2xl relative transition-all ${step === 2 ? 'max-w-lg' : ''}`}>
                 
                 {step === 1 ? (
-                    <div className="flex flex-col md:flex-row h-full max-h-[95vh] rounded-[1.5rem] md:rounded-[2rem] bg-slate-900 border border-white/10 overflow-hidden">
-                        {/* Left Panel: Card Preview & Stats */}
-                        <div className="w-full md:w-5/12 bg-slate-950 p-4 md:p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/5 relative shrink-0">
-                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 md:mb-4 text-center w-full">Asset Details</h3>
+                    <div className="flex flex-col w-full bg-slate-950 rounded-[1.5rem] md:rounded-[2rem] border border-white/5 overflow-hidden shadow-2xl w-full max-w-sm md:max-w-lg mx-auto h-auto transition-all duration-300">
+                        
+                        {/* 1. TOP HEADER: Image (Left) + Details (Right) - COMPACT */}
+                        <div className="w-full relative p-5 md:p-6 flex flex-col md:flex-row items-center md:items-start gap-5 bg-gradient-to-b from-slate-900/60 to-transparent border-b border-white/5 shrink-0">
                             
-                            <div className="flex-1 flex flex-col items-center justify-center relative w-full my-2 md:my-0">
-                                <div className="relative group w-24 md:w-40 aspect-[2.5/3.5] mx-auto">
-                                    <img 
-                                        src={card?.image || '/placeholder-card.png'} 
-                                        className="w-full h-full object-cover rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.4)] md:shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/10 group-hover:border-emerald-500/30 transition-all duration-500" 
-                                        alt={card?.name}
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 p-3 md:p-4 bg-gradient-to-t from-slate-950 to-transparent rounded-b-xl">
-                                         <div className="text-[8px] md:text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">{card?.id}</div>
-                                         <div className="text-[10px] md:text-xs font-black text-white uppercase tracking-tight truncate">{card?.name}</div>
-                                    </div>
-                                </div>
+                            {/* Close Button */}
+                            <button onClick={onClose} className="absolute top-3 right-3 md:top-4 md:right-4 z-20 p-1.5 md:p-2 rounded-full bg-black/40 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all hover:rotate-90 backdrop-blur-sm">
+                                <X className="w-4 h-4" />
+                            </button>
+
+                            {/* Image Section */}
+                            <div className="relative w-28 md:w-24 aspect-[2.5/3.5] shrink-0 group/card">
+                                <div className="absolute inset-0 bg-emerald-500/20 blur-[30px] rounded-full opacity-40 group-hover/card:opacity-60 transition-opacity animate-pulse pointer-events-none" />
+                                <img 
+                                    src={card?.image || '/placeholder-card.png'} 
+                                    className="w-full h-full object-cover rounded-xl shadow-2xl relative z-10 border border-white/10 group-hover/card:scale-105 transition-transform duration-500" 
+                                    alt={card?.name}
+                                />
                             </div>
 
-                            <div className="mt-2 md:mt-4 grid grid-cols-2 gap-2 w-full">
-                                <div className="p-2 md:p-3 bg-slate-900/50 rounded-lg md:rounded-xl border border-white/5 text-center md:text-left">
-                                    <div className="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Market Price</div>
-                                    <div className="text-xs md:text-sm font-black text-white">₹{marketPriceINR.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-                                </div>
-                                <div className="p-2 md:p-3 bg-slate-900/50 rounded-lg md:rounded-xl border border-white/5 text-center md:text-left">
-                                    <div className="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">24h Trend</div>
-                                    <div className={`text-xs md:text-sm font-black flex items-center justify-center md:justify-start gap-1 ${card?.change24h >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                        {Math.abs(card?.change24h || 0)}%
-                                        {card?.change24h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            {/* Details Section */}
+                            <div className="flex-1 text-center md:text-left z-10 w-full pt-0.5">
+                                <div className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">{card?.id}</div>
+                                <h4 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-none mb-2 md:mb-3 drop-shadow-md">{card?.name}</h4>
+                                
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                     <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-900/80 rounded-lg border border-white/5">
+                                        <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Market</div>
+                                        <div className="text-[10px] md:text-xs font-black text-white">₹{marketPriceINR.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+                                    </div>
+                                    <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-900/80 rounded-lg border border-white/5">
+                                        <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Trend</div>
+                                        <div className={`text-[10px] md:text-xs font-black ${card?.change24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card?.change24h}%</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right Panel: Buy Form */}
-                        <div className="w-full md:w-7/12 p-4 md:p-6 relative bg-slate-900 flex flex-col justify-center overflow-y-auto">
-                            <button onClick={onClose} className="absolute top-3 right-3 md:top-4 md:right-4 p-1.5 rounded-full hover:bg-white/5 text-slate-500 hover:text-white transition-all z-10">
-                                <X className="w-4 h-4 md:w-5 md:h-5" />
-                            </button>
-
-                            <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight mb-1">Buy Asset</h2>
-                            <p className="text-slate-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest mb-4 md:mb-5 flex items-center justify-between">
-                                <span className="flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    Instant Execution Available
-                                </span>
-                                <div className="flex bg-slate-950 rounded-lg p-0.5 border border-white/5">
+                        {/* 2. BOTTOM BODY: Buy Form - COMPACT */}
+                        <div className="w-full p-5 md:p-6 md:pt-4 relative flex flex-col bg-slate-950">
+                            
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Instant Buy
+                                </div>
+                                <div className="flex bg-slate-900 rounded-lg p-0.5 border border-white/5">
                                     {['inr', 'usd'].map((c) => (
                                         <button
-                                            key={c}
-                                            type="button"
-                                            onClick={() => setCurrency(c)}
-                                            className={`px-3 py-1 rounded-md text-[9px] font-black uppercase transition-all ${
-                                                currency === c 
-                                                    ? 'bg-amber-500 text-slate-950 shadow-lg' 
-                                                    : 'text-slate-500 hover:text-slate-300'
-                                            }`}
-                                        >
-                                            {c}
-                                        </button>
+                                            key={c} type="button" onClick={() => setCurrency(c)}
+                                            className={`px-2 py-0.5 rounded md:rounded-md text-[8px] md:text-[9px] font-black uppercase transition-all ${currency === c ? 'bg-amber-500 text-slate-950 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                                        > {c} </button>
                                     ))}
                                 </div>
-                            </p>
+                            </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-3 md:space-y-5">
-                                {/* Price & Quantity Row */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Buy Price ({currencyCode})</label>
+                            <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+                                {/* Compact Row: Price & Quantity */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                                    {/* Price Input */}
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Price</label>
                                         <div className="relative group">
                                             <input 
-                                                type="number" 
-                                                required
-                                                min="0"
-                                                step="0.01"
-                                                value={price}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    if (val === '' || parseFloat(val) >= 0) {
-                                                        setPrice(val);
-                                                    }
-                                                }}
-                                                className={`w-full bg-slate-950 border-2 rounded-xl py-3 md:py-4 pl-8 pr-4 text-base md:text-lg font-black text-white focus:outline-none transition-all placeholder-slate-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                                                    marketDiff > 5 ? 'border-red-500/50 focus:border-red-500' : 
-                                                    marketDiff < -5 ? 'border-emerald-500/50 focus:border-emerald-500' : 
-                                                    'border-white/5 focus:border-white/20'
-                                                }`}
+                                                type="number" required min="0" step="0.01" value={price}
+                                                onChange={(e) => { const val = e.target.value; if (val === '' || parseFloat(val) >= 0) setPrice(val); }}
+                                                className={`w-full bg-slate-900/40 border rounded-lg md:rounded-xl py-2.5 md:py-3 pl-7 pr-3 text-base md:text-lg font-black text-white focus:outline-none transition-all placeholder-slate-800 ${marketDiff > 5 ? 'border-rose-500/50 focus:border-rose-500' : marketDiff < -5 ? 'border-emerald-500/50 focus:border-emerald-500' : 'border-white/10 focus:border-amber-500/30'}`}
                                                 placeholder="0.00"
                                             />
-                                            <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black transition-colors ${
-                                                marketDiff > 5 ? 'text-red-500/50' : 
-                                                marketDiff < -5 ? 'text-emerald-500/50' : 
-                                                'text-slate-600'
-                                            }`}>{currencySymbol}</span>
-                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600">{currencyCode}</span>
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs md:text-sm font-black text-slate-600">{currencySymbol}</span>
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Quantity</label>
-                                        <div className="relative group">
-                                             <button 
-                                                type="button"
-                                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                                className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center font-bold transition-colors"
-                                             >-</button>
+                                    
+                                    {/* Quantity Input */}
+                                    <div className="space-y-1">
+                                        <label className="text-[8px] md:text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Quantity</label>
+                                        <div className="relative group flex items-center">
+                                             <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="absolute left-1 top-1/2 -translate-y-1/2 w-7 h-full text-slate-500 hover:text-white font-black z-10 transition-colors text-sm">-</button>
                                             <input 
-                                                type="number" 
-                                                required
-                                                min="1"
-                                                value={quantity}
+                                                type="number" required min="1" value={quantity}
                                                 onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                                className="w-full bg-slate-950 border-2 border-white/5 rounded-xl py-3 md:py-4 px-12 text-center text-base md:text-lg font-black text-white focus:outline-none focus:border-white/20 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="w-full bg-slate-900/40 border border-white/10 rounded-lg md:rounded-xl py-2.5 md:py-3 px-8 text-center text-base md:text-lg font-black text-white focus:outline-none focus:border-amber-500/30 transition-all"
                                             />
-                                            <button 
-                                                type="button"
-                                                onClick={() => setQuantity(quantity + 1)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center font-bold transition-colors"
-                                             >+</button>
+                                            <button type="button" onClick={() => setQuantity(quantity + 1)} className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-full text-slate-500 hover:text-white font-black z-10 transition-colors text-sm">+</button>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Order Summary */}
-                                 <div className="bg-slate-950/50 rounded-2xl p-6 space-y-3 border border-white/5">
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-slate-500 font-bold uppercase tracking-wide">Subtotal</span>
-                                        <span className="text-slate-300 font-mono font-bold">{currencySymbol}{(Number(price) * quantity).toFixed(2)}</span>
+                                {/* Total & Payment Row - Compact */}
+                                <div className="flex flex-col md:flex-row gap-3 items-stretch">
+                                    <div className="flex-1 bg-slate-900/30 rounded-lg md:rounded-xl p-2.5 md:p-3 border border-white/5 flex flex-col justify-center">
+                                         <div className="flex justify-between items-center mb-0.5">
+                                            <span className="text-[8px] md:text-[9px] text-slate-500 font-bold uppercase">Total ({quantity}x)</span>
+                                            <span className="text-[9px] md:text-[10px] text-slate-400 font-mono">{currencySymbol}{fee.toFixed(2)} Fee</span>
+                                        </div>
+                                        <div className="text-lg md:text-xl font-black text-emerald-400 font-mono">{currencySymbol}{finalTotal.toLocaleString(currency === 'inr' ? 'en-IN' : 'en-US', { maximumFractionDigits: 2 })}</div>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-slate-500 font-bold uppercase tracking-wide">Platform Fee (2%)</span>
-                                        <span className="text-slate-300 font-mono font-bold">{currencySymbol}{fee.toFixed(2)}</span>
-                                    </div>
-                                    <div className="h-px bg-white/10 my-2"></div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-white font-black uppercase tracking-widest text-xs">Total Cost</span>
-                                        <span className="text-xl font-black text-emerald-400 font-mono">{currencySymbol}{finalTotal.toLocaleString(currency === 'inr' ? 'en-IN' : 'en-US', { maximumFractionDigits: 2 })}</span>
-                                    </div>
-                                </div>
-
-                                {/* Payment Method (Mock) */}
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Payment Method</label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button 
-                                            type="button"
-                                            onClick={() => setPaymentMethod('wallet')}
-                                            className={`p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden group ${
-                                                paymentMethod === 'wallet' 
-                                                ? 'bg-emerald-500/10 border-emerald-500 text-white' 
-                                                : 'bg-slate-950 border-white/5 text-slate-400 hover:border-white/20'
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <Wallet className={`w-5 h-5 ${paymentMethod === 'wallet' ? 'text-emerald-500' : 'text-slate-500'}`} />
-                                                <span className="text-xs font-black uppercase tracking-wide">Wallet</span>
-                                            </div>
-                                            <div className="text-[10px] font-mono opacity-80 pl-8">Bal: ₹24,500.00</div>
-                                        </button>
-                                        <button 
-                                            type="button"
-                                            onClick={() => setPaymentMethod('card')}
-                                            className={`p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden group ${
-                                                paymentMethod === 'card' 
-                                                ? 'bg-emerald-500/10 border-emerald-500 text-white' 
-                                                : 'bg-slate-950 border-white/5 text-slate-400 hover:border-white/20'
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <CreditCard className={`w-5 h-5 ${paymentMethod === 'card' ? 'text-emerald-500' : 'text-slate-500'}`} />
-                                                <span className="text-xs font-black uppercase tracking-wide">Card</span>
-                                            </div>
-                                            <div className="text-[10px] font-mono opacity-80 pl-8">**** 4242</div>
-                                        </button>
+                                    
+                                    <div className="flex-1 grid grid-cols-2 gap-2">
+                                        {['wallet', 'card'].map(method => (
+                                            <button 
+                                                key={method} type="button" onClick={() => setPaymentMethod(method)}
+                                                className={`px-1.5 py-2.5 rounded-lg md:rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 ${paymentMethod === method ? 'bg-emerald-500/10 border-emerald-500/50' : 'bg-slate-900/40 border-white/5 hover:bg-slate-900'}`}
+                                            >
+                                                {method === 'wallet' ? <Wallet className={`w-3.5 h-3.5 ${paymentMethod === 'wallet' ? 'text-emerald-500' : 'text-slate-500'}`} /> : <CreditCard className={`w-3.5 h-3.5 ${paymentMethod === 'card' ? 'text-emerald-500' : 'text-slate-500'}`} />}
+                                                <span className={`text-[8px] font-black uppercase tracking-wide ${paymentMethod === method ? 'text-white' : 'text-slate-500'}`}>{method}</span>
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
                                 {error && (
-                                    <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-3 animate-in shake">
-                                        <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
-                                        <p className="text-[10px] font-bold text-rose-400">{error}</p>
+                                    <div className="p-2 bg-rose-500/10 border border-rose-500/20 rounded-lg flex items-center gap-2 animate-in shake">
+                                        <AlertTriangle className="w-3 h-3 text-rose-500 shrink-0" />
+                                        <p className="text-[8px] md:text-[9px] font-bold text-rose-400">{error}</p>
                                     </div>
                                 )}
 
                                 <button 
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full py-3 md:py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black uppercase tracking-[0.2em] text-[10px] md:text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden group/btn"
+                                    type="submit" disabled={loading}
+                                    className="w-full py-3 md:py-3.5 rounded-lg md:rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black uppercase tracking-[0.2em] text-[10px] md:text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-[1.01] active:scale-[0.99]"
                                 >
-                                    {loading ? (
-                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    ) : (
-                                        <>Confirm Purchase <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" /></>
-                                    )}
+                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Confirm Order <ArrowRight className="w-3.5 h-3.5" /></>}
                                 </button>
                             </form>
                         </div>

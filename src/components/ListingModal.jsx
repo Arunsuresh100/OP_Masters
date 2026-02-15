@@ -4,7 +4,7 @@ import { useUser } from '../context/UserContext';
 import { USD_TO_INR } from '../constants';
 
 // --- CardImage Component with Optimized Loading & Premium Hover ---
-const CardImage = ({ src, alt, className, priority = false }) => {
+const CardImage = ({ src, alt, className, imageClassName = "object-cover", priority = false }) => {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
@@ -30,7 +30,7 @@ const CardImage = ({ src, alt, className, priority = false }) => {
                 alt={alt} 
                 loading={priority ? "eager" : "lazy"}
                 onLoad={() => setIsLoaded(true)}
-                className={`w-full h-full object-cover transition-all duration-700 ease-out ${isLoaded ? 'opacity-100 scale-100 group-hover/img:scale-105' : 'opacity-0 scale-105 blur-sm'}`} 
+                className={`w-full h-full ${imageClassName} transition-all duration-700 ease-out ${isLoaded ? 'opacity-100 scale-100 group-hover/img:scale-105' : 'opacity-0 scale-105 blur-sm'}`} 
             />
             {isLoaded && <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500" />}
         </div>
@@ -78,6 +78,8 @@ const ListingModal = ({ isOpen, onClose, card }) => {
         if (isOpen && !allCards.length) fetchCards();
     }, [isOpen, allCards.length]);
 
+    const [showConfirm, setShowConfirm] = useState(false);
+
     // --- Reset State ---
     useEffect(() => {
         if (isOpen) {
@@ -85,6 +87,8 @@ const ListingModal = ({ isOpen, onClose, card }) => {
             setPrice('');
             setLoading(false);
             setCurrency('INR');
+            setShowConfirm(false);
+            setError(null);
             if (card) setSelectedCard(card);
             document.body.style.overflow = 'hidden';
         } else {
@@ -175,8 +179,25 @@ const ListingModal = ({ isOpen, onClose, card }) => {
         );
     }
 
-    const handleSubmit = async (e) => {
+    const handleConfirm = (e) => {
         e.preventDefault();
+        setError(null);
+        
+        if (!price || parseFloat(price) <= 0) {
+           setError("Please enter a valid price.");
+           return;
+        }
+
+        // High Price Validation (Explicit Error instead of disabled button)
+        if (marketPriceDisplay > 0 && parseFloat(price) > marketPriceDisplay * 5) {
+            setError("Price is significantly above market value. Please adjust to continue.");
+            return;
+        }
+
+        setShowConfirm(true);
+    };
+
+    const handleFinalConfirm = async () => {
         if (!selectedCard) return;
         setLoading(true);
         try {
@@ -199,6 +220,7 @@ const ListingModal = ({ isOpen, onClose, card }) => {
                 setStep(2);
             } else {
                 setError(data.error || 'Failed to list asset. Please try again.');
+                setShowConfirm(false); // Go back to edit on error
             }
         } catch (error) { 
             console.error('Error:', error);
@@ -218,7 +240,7 @@ const ListingModal = ({ isOpen, onClose, card }) => {
                         
                         {!selectedCard ? (
                             // STAGE 1: IMMERSIVE EXPLORER
-                            <div className="flex-1 p-4 md:p-8 flex flex-col items-center animate-in zoom-in-95 duration-700 overflow-hidden relative">
+                            <div className="flex-1 p-4 md:p-8 flex flex-col items-center overflow-hidden relative">
                                 <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-amber-500/[0.03] to-transparent pointer-events-none" />
                                 
                                 <button onClick={onClose} className="absolute top-6 right-6 p-2.5 rounded-full hover:bg-white/5 text-slate-600 hover:text-white transition-all z-30 group">
@@ -274,13 +296,8 @@ const ListingModal = ({ isOpen, onClose, card }) => {
                                     </div>
 
                                     {/* Breathable Grid */}
-                                    <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 py-6 pr-2">
-                                        <style>{`
-                                            .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                                            .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 10px; }
-                                            .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.2); border-radius: 10px; transition: all 0.3s; }
-                                            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.4); }
-                                        `}</style>
+                                    <div className="flex-1 overflow-y-auto no-scrollbar min-h-0 py-6 pr-2">
+
                                         
                                         {isFetchingCards ? (
                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 max-w-full mx-auto px-2">
@@ -355,12 +372,11 @@ const ListingModal = ({ isOpen, onClose, card }) => {
                                 </div>
                             </div>
                         ) : (
-                            // STAGE 2: PREMIUM APP CARD (SELL) - UNIFIED MOBILE / SPLIT TABLET & DESKTOP
-                            <div className="flex flex-col md:flex-row w-full bg-slate-950 rounded-[2rem] lg:rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl h-fit max-h-[90vh] md:h-auto animate-in zoom-in-95 duration-500">
+                            // STAGE 2: PREMIUM APP CARD (SELL) - UNIFIED CENTERED LAYOUT
+                            <div className="flex flex-col md:flex-row w-full bg-slate-950 rounded-[2rem] border border-white/5 overflow-hidden shadow-2xl w-full max-w-sm md:max-w-4xl mx-auto h-auto md:h-[500px] lg:h-[550px]">
                                 
-                                {/* Top Hero Section (Mobile) / Left Panel (Tablet/Desktop) */}
-                                <div className="w-full md:w-[42%] lg:w-[45%] bg-gradient-to-b from-slate-900 to-slate-950 relative p-6 md:p-6 lg:p-8 flex flex-col items-center justify-center border-b md:border-b-0 border-white/5 md:border-r shrink-0">
-                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-500/[0.08] via-transparent to-transparent pointer-events-none" />
+                                {/* Top Hero Section (Unified styling, Centered Content) */}
+                                <div className="w-full md:w-[40%] relative p-6 flex flex-col items-center justify-center gap-4 shrink-0 bg-gradient-to-b from-slate-900/40 to-transparent">
                                     
                                     <button 
                                         onClick={() => setSelectedCard(null)}
@@ -370,19 +386,26 @@ const ListingModal = ({ isOpen, onClose, card }) => {
                                         <RotateCcw className="w-4 h-4" />
                                     </button>
 
-                                    {/* Hero Image - Optimized for Tablet Split */}
-                                    <div className="relative w-full h-48 md:h-56 lg:h-full lg:max-h-[400px] flex items-center justify-center py-2 md:py-4 lg:py-6">
-                                        <div className="absolute inset-0 bg-amber-500/20 blur-[80px] rounded-full opacity-60 animate-pulse pointer-events-none" />
-                                        <CardImage src={selectedCard.image} alt={selectedCard.name} className="h-full w-auto object-contain max-w-full rounded-xl shadow-2xl relative z-10 border border-white/10 transform transition-transform hover:scale-105 duration-500" priority />
+                                    {/* Centered Image Container */}
+                                    <div className="relative w-32 h-44 md:w-full md:h-full md:max-h-[300px] shrink-0 flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-amber-500/20 blur-[40px] md:blur-[60px] rounded-full opacity-60 animate-pulse pointer-events-none" />
+                                        <CardImage 
+                                            src={selectedCard.image} 
+                                            alt={selectedCard.name} 
+                                            className="h-full aspect-[2.5/3.5] w-auto rounded-xl shadow-2xl relative z-10 border border-white/10" 
+                                            imageClassName="object-cover md:object-contain"
+                                            priority 
+                                        />
                                     </div>
 
-                                    <div className="mt-4 md:mt-4 lg:mt-6 text-center z-10 w-full relative">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full mb-3 backdrop-blur-sm">
+                                    {/* Centered Info (Unified) */}
+                                    <div className="flex-1 md:flex-none text-center z-10 min-w-0 w-full">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full mb-2">
                                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"/>
                                             <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">{selectedCard.id}</span>
                                         </div>
-                                        <h4 className="text-2xl md:text-2xl lg:text-3xl font-black text-white uppercase tracking-tight leading-none drop-shadow-lg mb-2">{selectedCard.name}</h4>
-                                        <div className="flex items-center justify-center gap-3 text-[10px] md:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-slate-400">
+                                        <h4 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-tight mb-2 drop-shadow-md">{selectedCard.name}</h4>
+                                        <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                             <span>Market: <span className="text-white">{marketPriceLabel}</span></span>
                                             <span className="w-1 h-3 bg-white/10 rounded-full" />
                                             <span className={dailyDemand === 'High' ? 'text-emerald-500' : 'text-amber-500'}>{dailyDemand} Demand</span>
@@ -390,114 +413,177 @@ const ListingModal = ({ isOpen, onClose, card }) => {
                                     </div>
                                 </div>
 
-                                {/* Bottom Action Section (Mobile) / Right Panel (Tablet/Desktop) */}
-                                <div className="w-full md:w-[58%] lg:w-[55%] bg-slate-950 p-6 md:p-5 lg:p-10 relative flex flex-col justify-center overflow-y-auto custom-scrollbar">
+                                {/* Right Panel (Form) - Unified Background */}
+                                <div className="w-full md:w-[60%] bg-transparent p-5 md:p-8 md:pr-10 relative flex flex-col justify-center overflow-y-auto no-scrollbar">
                                     <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/5 text-slate-600 hover:text-white transition-all z-30">
                                         <X className="w-5 h-5" />
                                     </button>
 
-                                    <div className="w-full max-w-md mx-auto space-y-6 md:space-y-4 lg:space-y-6">
-                                        <div className="text-center md:text-left space-y-1 hidden md:block">
-                                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic">Set Value</h2>
-                                            <div className="flex items-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                Live Confirmation
-                                            </div>
-                                        </div>
+                                    <div className="w-full max-w-sm mx-auto space-y-4 md:space-y-6">
+                                        {showConfirm ? (
+                                            // CONFIRMATION VIEW
+                                            <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                                                <div className="text-center space-y-1 md:space-y-2">
+                                                    <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter">Verify Listing</h2>
+                                                    <p className="text-slate-500 text-[10px] md:text-xs font-bold">Please review your transaction details.</p>
+                                                </div>
 
-                                        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
-                                            {/* App-Style Price Input */}
-                                            <div className="space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Listing Price</label>
-                                                    <div className="flex bg-slate-900 rounded-lg p-1 border border-white/5">
-                                                        {['USD', 'INR'].map(c => (
-                                                            <button 
-                                                                key={c} type="button" onClick={() => { setCurrency(c); setPrice(''); }}
-                                                                className={`px-3 py-1.5 rounded-md text-[10px] font-black transition-all ${currency === c ? 'bg-amber-500 text-slate-950' : 'text-slate-600 hover:text-slate-400'}`}
-                                                            >{c}</button>
-                                                        ))}
+
+                                                    <div className="bg-slate-900/50 rounded-2xl p-6 border border-white/5 space-y-4">
+                                                        <div className="flex justify-between items-center text-sm font-bold border-b border-white/5 pb-3">
+                                                            <span className="text-slate-500 uppercase tracking-wider text-[10px]">Listing Price</span>
+                                                            <span className="text-white font-mono text-lg">{currency === 'INR' ? '₹' : '$'}{parseFloat(price || 0).toLocaleString()}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center text-xs font-bold text-slate-500">
+                                                            <span className="uppercase tracking-wider text-[10px]">Platform Fee (3%)</span>
+                                                            <span className="font-mono text-rose-400">-{currency === 'INR' ? '₹' : '$'}{Math.ceil((parseFloat(price || 0) * 0.03)).toLocaleString()}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center pt-3 border-t border-white/5">
+                                                            <span className="text-slate-400 uppercase tracking-wider text-[10px] font-black">Net Payout</span>
+                                                            <span className="text-emerald-400 font-mono text-xl font-black">{currency === 'INR' ? '₹' : '$'}{Math.floor((parseFloat(price || 0) * 0.97)).toLocaleString()}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Low Price Warning */}
+                                                    {price && marketPriceDisplay > 0 && parseFloat(price) < marketPriceDisplay * 0.5 && (
+                                                        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
+                                                            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                                                            <div className="space-y-1">
+                                                                <h4 className="text-amber-500 font-black text-xs uppercase tracking-wide">Low Price Warning</h4>
+                                                                <p className="text-amber-500/80 text-[10px] font-bold leading-relaxed">
+                                                                    Your price is significantly below the estimated market value ({marketPriceLabel}). Are you sure?
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {error && (
+                                                        <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-3 animate-in shake">
+                                                            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                                                            <p className="text-[10px] font-bold text-rose-400">{error}</p>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="space-y-3 pt-2">
+                                                        <button 
+                                                            onClick={handleFinalConfirm}
+                                                            className="w-full py-4 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-slate-900 border border-emerald-500/20 font-black uppercase tracking-[0.2em] text-xs transition-all flex items-center justify-center gap-2 group shadow-lg shadow-emerald-500/10"
+                                                        >
+                                                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Confirm & List <ShieldCheck className="w-4 h-4" /></>}
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setShowConfirm(false)}
+                                                            disabled={loading}
+                                                            className="w-full py-3 rounded-xl text-slate-500 hover:bg-slate-900 hover:text-white font-bold uppercase tracking-widest text-[10px] transition-all"
+                                                        >
+                                                            Back to Edit
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                
-                                                <div className="relative group">
-                                                    <div className="absolute inset-0 bg-amber-500/0 group-focus-within:bg-amber-500/[0.02] blur-xl transition-all pointer-events-none" />
-                                                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-4xl font-black text-slate-700 group-focus-within:text-emerald-500/50 transition-colors pointer-events-none"> {currency === 'INR' ? '₹' : '$'} </span>
-                                                    <input 
-                                                        type="number" required min="1" value={price} onChange={(e) => setPrice(e.target.value)}
-                                                        className={`w-full bg-slate-900/40 border rounded-2xl py-6 md:py-4 lg:py-6 pl-14 pr-12 text-5xl md:text-4xl lg:text-5xl font-black text-white focus:outline-none placeholder-slate-800 transition-all font-mono tracking-tight relative z-10 ${
-                                                            price && marketPriceDisplay > 0 && parseFloat(price) > marketPriceDisplay * 5 ? 'border-rose-500/50 focus:border-rose-500' :
-                                                            price && marketPriceDisplay > 0 && parseFloat(price) < marketPriceDisplay * 0.5 ? 'border-amber-500/50 focus:border-amber-500' :
-                                                            'border-white/10 group-focus-within:border-amber-500/30'
-                                                        }`}
-                                                        placeholder="0"
-                                                    />
-                                                    <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-700 tracking-widest pointer-events-none">{currency}</span>
-                                                </div>
+                                            ) : (
+                                                // EDIT FORM VIEW
+                                                <>
+                                                    <div className="text-center md:text-left space-y-1 hidden md:block">
+                                                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic">Set Value</h2>
+                                                        <div className="flex items-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                            Live Confirmation
+                                                        </div>
+                                                    </div>
 
-                                                {/* App-Style Validation Feedback */}
-                                                {price && marketPriceDisplay > 0 && (
-                                                    <div className="min-h-[1.5em]">
-                                                        {parseFloat(price) > marketPriceDisplay * 5 ? (
-                                                            <p className="text-[10px] font-bold text-rose-500 flex items-center gap-1.5 animate-in slide-in-from-top-1 bg-rose-500/5 p-2 rounded-lg border border-rose-500/10">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                                                                Price likely too high for market.
-                                                            </p>
-                                                        ) : parseFloat(price) < marketPriceDisplay * 0.5 ? (
-                                                            <p className="text-[10px] font-bold text-amber-500 flex items-center gap-1.5 animate-in slide-in-from-top-1 bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                                                Price is below 50% of market value.
-                                                            </p>
-                                                        ) : (
-                                                            <div className="flex justify-between items-center px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                                                                <span>Platform Fee: 3%</span>
-                                                                <span>Net: <span className="text-emerald-400">₹{price ? Math.floor(price * 0.97).toLocaleString() : 0}</span></span>
+                                                    <form onSubmit={handleConfirm} className="space-y-4 md:space-y-6">
+                                                        {/* App-Style Price Input */}
+                                                        <div className="space-y-2 md:space-y-3">
+                                                            <div className="flex items-center justify-between">
+                                                                <label className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">Listing Price</label>
+                                                                <div className="flex bg-slate-900 rounded-lg p-0.5 border border-white/5">
+                                                                    {['USD', 'INR'].map(c => (
+                                                                        <button 
+                                                                            key={c} type="button" onClick={() => { setCurrency(c); setPrice(''); }}
+                                                                            className={`px-2 py-1 md:px-3 md:py-1.5 rounded-md text-[9px] md:text-[10px] font-black transition-all ${currency === c ? 'bg-amber-500 text-slate-950' : 'text-slate-600 hover:text-slate-400'}`}
+                                                                        >{c}</button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div className="relative group">
+                                                                <div className="absolute inset-0 bg-amber-500/0 group-focus-within:bg-amber-500/[0.02] blur-xl transition-all pointer-events-none" />
+                                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl md:text-3xl font-black text-slate-700 group-focus-within:text-emerald-500/50 transition-colors pointer-events-none"> {currency === 'INR' ? '₹' : '$'} </span>
+                                                                <input 
+                                                                    type="number" required min="1" value={price} onChange={(e) => setPrice(e.target.value)}
+                                                                    className={`w-full bg-slate-900/40 border rounded-xl py-3 md:py-4 pl-10 pr-10 text-3xl md:text-4xl font-black text-white focus:outline-none placeholder-slate-800 transition-all font-mono tracking-tight relative z-10 ${
+                                                                        price && marketPriceDisplay > 0 && parseFloat(price) > marketPriceDisplay * 5 ? 'border-rose-500/50 focus:border-rose-500' :
+                                                                        price && marketPriceDisplay > 0 && parseFloat(price) < marketPriceDisplay * 0.5 ? 'border-amber-500/50 focus:border-amber-500' :
+                                                                        'border-white/10 group-focus-within:border-amber-500/30'
+                                                                    }`}
+                                                                    placeholder="0"
+                                                                />
+                                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] md:text-[10px] font-black text-slate-700 tracking-widest pointer-events-none">{currency}</span>
+                                                            </div>
+
+                                                            {/* App-Style Validation Feedback */}
+                                                            {price && marketPriceDisplay > 0 && (
+                                                                <div className="min-h-[1.5em]">
+                                                                    {parseFloat(price) > marketPriceDisplay * 5 ? (
+                                                                        <p className="text-[10px] font-bold text-rose-500 flex items-center gap-1.5 animate-in slide-in-from-top-1 bg-rose-500/5 p-2 rounded-lg border border-rose-500/10">
+                                                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                                                            Price is very high. (You can still list, but check carefully)
+                                                                        </p>
+                                                                    ) : parseFloat(price) < marketPriceDisplay * 0.5 ? (
+                                                                        <p className="text-[10px] font-bold text-amber-500 flex items-center gap-1.5 animate-in slide-in-from-top-1 bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
+                                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                                                            Price is below 50% of market value.
+                                                                        </p>
+                                                                    ) : (
+                                                                        <div className="flex justify-between items-center px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                                                            <span>Platform Fee: 3%</span>
+                                                                            <span>Net: <span className="text-emerald-400">₹{price ? Math.floor(price * 0.97).toLocaleString() : 0}</span></span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* App-Style Condition Selector (Compact) */}
+                                                        <div className="space-y-2 md:space-y-3">
+                                                            <label className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest block">Condition</label>
+                                                            <div className="grid grid-cols-3 gap-2 md:gap-3">
+                                                                {['Mint', 'Near Mint', 'Played'].map((c) => {
+                                                                    const active = condition === c;
+                                                                    return (
+                                                                        <button
+                                                                            key={c} type="button" onClick={() => setCondition(c)}
+                                                                            className={`py-3 md:py-3 rounded-lg text-[9px] md:text-[10px] font-black uppercase border transition-all ${active ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-lg shadow-amber-500/20 scale-[1.02]' : 'bg-slate-900/50 border-white/5 text-slate-500 hover:bg-slate-800 hover:text-white'}`}
+                                                                        >
+                                                                            {c === 'Near Mint' ? 'Excellent' : c}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+
+                                                        {error && (
+                                                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-3 animate-in shake">
+                                                                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                                                                <p className="text-[10px] font-bold text-rose-400">{error}</p>
                                                             </div>
                                                         )}
-                                                    </div>
-                                                )}
-                                            </div>
 
-                                            {/* App-Style Condition Selector */}
-                                            <div className="space-y-3 md:space-y-2 lg:space-y-3">
-                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Condition</label>
-                                                <div className="grid grid-cols-3 gap-3 md:gap-2 lg:gap-3">
-                                                    {['Mint', 'Near Mint', 'Played'].map((c) => {
-                                                        const active = condition === c;
-                                                        return (
-                                                            <button
-                                                                key={c} type="button" onClick={() => setCondition(c)}
-                                                                className={`py-4 md:py-3 lg:py-4 rounded-xl text-[10px] font-black uppercase border transition-all ${active ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-lg shadow-amber-500/20 scale-[1.02]' : 'bg-slate-900/50 border-white/5 text-slate-500 hover:bg-slate-800 hover:text-white'}`}
-                                                            >
-                                                                {c === 'Near Mint' ? 'Excellent' : c}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-
-                                            {error && (
-                                                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-3 animate-in shake">
-                                                    <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
-                                                    <p className="text-[10px] font-bold text-rose-400">{error}</p>
-                                                </div>
+                                                        <button 
+                                                            type="submit" 
+                                                            disabled={loading || !price}
+                                                            className="w-full py-4 md:py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-black uppercase tracking-[0.2em] text-[10px] md:text-xs shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 mt-4"
+                                                        >
+                                                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continue <ArrowRight className="w-4 h-4" /></>}
+                                                        </button>
+                                                    </form>
+                                                </>
                                             )}
-
-                                            <button 
-                                                type="submit" 
-                                                disabled={loading || !price || (marketPriceDisplay > 0 && parseFloat(price) > marketPriceDisplay * 5)}
-                                                className="w-full py-5 md:py-4 lg:py-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 mt-4"
-                                            >
-                                                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Sell Asset <ArrowRight className="w-4 h-4" /></>}
-                                            </button>
-                                        </form>
-                                    </div>
+                                        </div>
                                 </div>
                             </div>
                         )}
-                        <style>{`
-                            @keyframes fadeInUp { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
-                        `}</style>
+
                     </div>
                 ) : (
                     // STEP 2: PROFESSIONAL SUCCESS

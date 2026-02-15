@@ -251,7 +251,7 @@ const Marketplace = ({ currency }) => {
 
       <div className="px-4 sm:px-6 max-w-7xl mx-auto mt-8">
          {/* Stats Section - User-Friendly Redesign */}
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 p-4 md:p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-900/50 border border-white/5 shadow-2xl relative overflow-hidden">
+         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 p-4 md:p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-900/50 border border-white/5 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
              
              {/* Today's Sales (was 24H VOL) */}
@@ -386,8 +386,12 @@ const Marketplace = ({ currency }) => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {currentListings.map((card) => (
-                            <tr key={card.id} className="hover:bg-white/[0.03] transition-colors group">
+                        {currentListings.map((card, index) => (
+                            <tr 
+                                key={card.id} 
+                                className="hover:bg-white/[0.03] transition-colors group opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]"
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
                                 <td className="py-4 px-6">
                                     <div className="flex items-center gap-4">
                                         <CardImage src={card.image} alt={card.name} className="w-10 h-14 rounded-lg bg-slate-800 overflow-hidden relative flex-shrink-0 border border-white/10 group-hover:border-amber-500/40 transition-all shadow-md" />
@@ -434,8 +438,12 @@ const Marketplace = ({ currency }) => {
          
          {/* Mobile Card View */}
          <div className="md:hidden space-y-3">
-            {currentListings.map((card) => (
-              <div key={card.id} className="bg-slate-900/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-amber-500/30 transition-all">
+            {currentListings.map((card, index) => (
+              <div 
+                key={card.id} 
+                className="bg-slate-900/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-amber-500/30 transition-all opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
                 {/* Card Header */}
                 <div className="p-4 flex items-start gap-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
                   <CardImage src={card.image} alt={card.name} className="w-16 h-22 rounded-xl bg-slate-800 overflow-hidden border border-white/10 shadow-md flex-shrink-0" />

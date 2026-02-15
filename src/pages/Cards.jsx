@@ -405,11 +405,12 @@ const Cards = ({ currency }) => {
             <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {paginatedCards.length > 0 ? (
-                    paginatedCards.map(card => (
+                    paginatedCards.map((card, index) => (
                         <div 
                         key={card.id} 
                         onClick={() => setSelectedCard(card)}
-                        className="cursor-pointer group relative bg-slate-900 rounded-xl overflow-hidden border border-white/5 hover:border-amber-500/50 transition-all hover:shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)] hover:-translate-y-2"
+                        className="cursor-pointer group relative bg-slate-900 rounded-xl overflow-hidden border border-white/5 hover:border-amber-500/50 transition-all hover:shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)] hover:-translate-y-2 opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]"
+                        style={{ animationDelay: `${index * 50}ms` }}
                         >
                         <div className="aspect-[2.5/3.5] overflow-hidden bg-slate-950 relative">
                             <ImageWithLoader 
