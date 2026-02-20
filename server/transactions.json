@@ -442,6 +442,36 @@
       "userEmail": "arunforgame100@gmail.com",
       "status": "pending",
       "timestamp": "2026-02-15T05:44:58.256Z"
+    },
+    {
+      "id": "TX-1771147683726-kwxqsfaim",
+      "type": "sell",
+      "card": {
+        "id": "OP02-121_p3",
+        "name": "Kuzan",
+        "rarity": "Manga",
+        "set": "OP02",
+        "image": "https://en.onepiece-cardgame.com/images/cardlist/card/OP02-121_p3.png?251017",
+        "price": 2091.41,
+        "character": "Kuzan",
+        "description": "[Your Turn] Give all of your opponent's Characters −5 cost.<br>[On Play] K.O. up to 1 of your opponent's Characters with a cost of 0.",
+        "colors": [
+          "Black"
+        ],
+        "cost": 10,
+        "type": "Character",
+        "percentChange": 11.78,
+        "marketTrend": "up",
+        "volume": 407,
+        "lastSoldPrice": 1950.84
+      },
+      "price": 2091,
+      "quantity": 1,
+      "total": 2091,
+      "currency": "USD",
+      "userEmail": "arunforgame100@gmail.com",
+      "status": "pending",
+      "timestamp": "2026-02-15T09:28:03.726Z"
     }
   ]
 }
