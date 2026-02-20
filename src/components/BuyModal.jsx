@@ -69,7 +69,7 @@ const BuyModal = ({ isOpen, onClose, card }) => {
         /* 
         // Backend Logic (Disabled for Beta)
         try {
-            const response = await fetch('http://localhost:3001/api/trade/transaction', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/trade/transaction`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -159,7 +159,7 @@ const Marketplace = ({ currency }) => {
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/cards');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
         const data = await res.json();
         let rawCards = data?.cards || (Array.isArray(data) ? data : []);
         const augmentedCards = rawCards.map(card => {

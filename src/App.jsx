@@ -42,7 +42,7 @@ const App = () => {
     const fetchYouTubeData = async () => {
       const startTime = Date.now();
       try {
-        const backendUrl = 'http://localhost:3001/api/youtube';
+        const backendUrl = `${import.meta.env.VITE_API_URL}/api/youtube`;
         
         // 1. Fetch channel info from proxy
         const channelResponse = await fetch(`${backendUrl}/channel`);

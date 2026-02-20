@@ -63,7 +63,7 @@ const ListingModal = ({ isOpen, onClose, card }) => {
         const fetchCards = async () => {
             setIsFetchingCards(true);
             try {
-                const response = await fetch('http://localhost:3001/api/cards');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
                 if (response.ok) {
                     const data = await response.json();
                     setAllCards(data || []);
@@ -201,7 +201,7 @@ const ListingModal = ({ isOpen, onClose, card }) => {
         if (!selectedCard) return;
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:3001/api/trade/transaction', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/trade/transaction`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

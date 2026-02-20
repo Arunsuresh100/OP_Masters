@@ -19,7 +19,7 @@ const AdminDashboard = ({ activeTab = 'overview' }) => {
     React.useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch('http://localhost:3001/api/stats', {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/stats`, {
                     credentials: 'include' // Important for admin_token cookie
                 });
                 if (res.ok) {
@@ -64,7 +64,7 @@ const AdminDashboard = ({ activeTab = 'overview' }) => {
         if (activeTab === 'users') {
             const fetchUsers = async () => {
                 try {
-                    const res = await fetch('http://localhost:3001/api/users', {
+                    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
                         credentials: 'include'
                     });
                     if (res.ok) {

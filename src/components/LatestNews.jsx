@@ -53,7 +53,7 @@ const LatestNews = () => {
     React.useEffect(() => {
         const fetchNews = async () => {
             try {
-                const res = await fetch('http://localhost:3001/api/news');
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/news`);
                 const data = await res.json();
                 setNews(data);
             } catch (err) {

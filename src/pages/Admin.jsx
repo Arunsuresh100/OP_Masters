@@ -25,7 +25,7 @@ const Admin = () => {
   React.useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/auth/check', { credentials: 'include' });
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, { credentials: 'include' });
         if (res.ok) {
           setAuthorized(true);
         }
@@ -40,7 +40,7 @@ const Admin = () => {
 
   const handleAuth = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/auth/login', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
@@ -60,7 +60,7 @@ const Admin = () => {
 
   const handleLogout = async () => {
     try {
-        await fetch('http://localhost:3001/api/auth/logout', { method: 'POST', credentials: 'include' });
+        await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' });
     } catch (e) { console.error(e); }
     setAuthorized(false);
     setPassword('');
@@ -69,7 +69,7 @@ const Admin = () => {
   const handleCardSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:3001/api/cards', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

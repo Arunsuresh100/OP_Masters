@@ -45,7 +45,7 @@ const Cards = ({ currency }) => {
   };
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/cards')
+    fetch(`${import.meta.env.VITE_API_URL}/api/cards`)
       .then(res => res.json())
       .then(data => {
         setCards(data);
