@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+dotenv.config();
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
@@ -56,7 +57,7 @@ const verifyGoogleToken = async (token) => {
     }
 };
 
-dotenv.config();
+
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
