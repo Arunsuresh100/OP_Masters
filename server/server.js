@@ -131,6 +131,10 @@ app.use(limiter);
 app.use(express.json());
 app.use(cookieParser());
 
+app.get('/', (req, res) => {
+    res.send('One Piece Trade Server is Live! Go to /api/cards to see data.');
+});
+
 // --- AUTH MIDDLEWARE ---
 const authenticateAdmin = (req, res, next) => {
     const token = req.cookies.admin_token;
