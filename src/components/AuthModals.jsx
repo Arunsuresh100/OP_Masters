@@ -80,8 +80,8 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
 
                     {/* Google Sign In Button */}
                     <div className="space-y-4">
-                        <div className="flex justify-center">
-                            <div className="overflow-hidden rounded-xl">
+                        <div className="flex justify-center w-full">
+                            <div className="overflow-hidden rounded-xl max-w-full">
                                 <GoogleLogin
                                     onSuccess={handleGoogleSuccess}
                                     onError={handleGoogleError}
@@ -89,7 +89,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     size="large"
                                     text="continue_with"
                                     shape="rectangular"
-                                    width="350"
+                                    width="100%"
                                 />
                             </div>
                         </div>
