@@ -3,6 +3,21 @@ import { Link, useLocation } from 'react-router-dom';
 import { User } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
+// Import character images for avatar display
+import luffyImg from '../assets/luffy.png';
+import zoroImg from '../assets/zoro.png';
+import sanjiImg from '../assets/sanji.png';
+import usoppImg from '../assets/Usopp.png';
+import brookImg from '../assets/brook.png';
+
+const CHARACTER_AVATARS = [
+    { id: 'luffy', name: 'Monkey D. Luffy', role: 'Captain', image: luffyImg },
+    { id: 'zoro', name: 'Roronoa Zoro', role: 'Swordsman', image: zoroImg },
+    { id: 'sanji', name: 'Sanji', role: 'Cook', image: sanjiImg },
+    { id: 'usopp', name: 'Usopp', role: 'Sniper', image: usoppImg },
+    { id: 'brook', name: 'Brook', role: 'Musician', image: brookImg }
+];
+
 const MobileBottomNav = () => {
   const location = useLocation();
   const { user, openAuth } = useUser();
@@ -66,13 +81,26 @@ const MobileBottomNav = () => {
             }`}
           >
             <div className="relative">
-              <img 
-                src={user.avatar} 
-                alt="Profile" 
-                className={`w-6 h-6 rounded-full border-2 ${
-                  location.pathname === '/profile' ? 'border-amber-500' : 'border-slate-600'
-                }`}
-              />
+              {(() => {
+                const currentAvatar = CHARACTER_AVATARS.find(a => a.id === user.selectedAvatar) || CHARACTER_AVATARS[0];
+                return currentAvatar?.image ? (
+                  <img
+                    src={currentAvatar.image}
+                    alt="Profile"
+                    className={`w-6 h-6 rounded-full border-2 object-cover ${
+                      location.pathname === '/profile' ? 'border-amber-500' : 'border-slate-600'
+                    }`}
+                  />
+                ) : (
+                  <div className={`w-6 h-6 rounded-full border-2 bg-slate-800 flex items-center justify-center ${
+                    location.pathname === '/profile' ? 'border-amber-500' : 'border-slate-600'
+                  }`}>
+                    <span className="text-xs font-black text-amber-500 uppercase">
+                      {user.displayName?.charAt(0) || user.username?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
             <span className="text-[9px] font-black uppercase tracking-wider">Profile</span>
           </Link>
