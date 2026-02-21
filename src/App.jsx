@@ -144,7 +144,11 @@ const App = () => {
           <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-t-2 border-amber-500 animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
             <img src={APP_LOGO} alt="Loading" className="w-14 h-14 md:w-20 md:h-20 rounded-full animate-pulse shadow-2xl" 
-                 onError={(e) => e.target.src = CHANNEL_LOGO_URL} />
+                 onError={(e) => {
+                    if (e.target.src !== CHANNEL_LOGO_URL) {
+                        e.target.src = CHANNEL_LOGO_URL;
+                    }
+                 }} />
           </div>
         </div>
         <div className="mt-12 flex flex-col items-center gap-3">

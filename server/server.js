@@ -111,13 +111,23 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+        // Dynamic matching for Vercel and Render domains
+        const isAllowed = allowedOrigins.some(allowed => {
+            if (allowed.includes('*')) {
+                const regex = new RegExp('^' + allowed.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
+                return regex.test(origin);
+            }
+            return allowed === origin;
+        }) || origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com');
+
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.warn(`[SECURITY] Blocked CORS Origin: ${origin}`);
+            callback(null, false); // Don't throw error, just block
         }
-        return callback(null, true);
     },
-    credentials: true // Allow cookies
+    credentials: true
 }));
 
 // 3. Rate Limiting (Prevent Brute Force)
@@ -566,6 +576,15 @@ app.get('/api/youtube/stats', async (req, res) => {
         console.error('Error fetching video stats:', error.message);
         res.status(500).json({ error: 'Failed to fetch video stats' });
     }
+});
+
+// --- ERROR HANDLER ---
+app.use((err, req, res, next) => {
+    console.error('[SERVER ERROR]:', err);
+    res.status(500).json({ 
+        error: 'Internal Server Error',
+        message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message
+    });
 });
 
 app.listen(PORT, () => {
