@@ -459,54 +459,48 @@ const Marketplace = ({ currency, searchQuery }) => {
                 className="bg-slate-900/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-amber-500/30 transition-all opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                {/* Card Header */}
-                <div className="p-4 flex items-start gap-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
-                  <CardImage src={card.image} alt={card.name} className="w-16 h-22 rounded-xl bg-slate-800 overflow-hidden border border-white/10 shadow-md flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-white text-base line-clamp-1 mb-1">{card.name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono uppercase bg-white/5 px-2 py-0.5 rounded inline-block">{card.id}</div>
+                {/* Redesigned Card Header - App-style UI/UX */}
+                <div className="p-3 flex items-start gap-4 bg-gradient-to-br from-slate-900 to-slate-950">
+                  <CardImage src={card.image} alt={card.name} className="w-14 h-20 rounded-xl bg-slate-800 overflow-hidden border border-white/10 shadow-lg flex-shrink-0" />
+                  
+                  <div className="flex-1 min-w-0 flex flex-col h-20 py-0.5">
+                    <div>
+                      <div className="font-bold text-white text-sm line-clamp-1 mb-0.5">{card.name}</div>
+                      <div className="text-[9px] text-slate-500 font-mono uppercase bg-white/5 px-2 py-0.5 rounded inline-block">{card.id}</div>
+                    </div>
+                    {/* Price strategically placed with added top-spacing and refined size */}
+                    <div className="text-base font-bold text-white font-mono tracking-tighter mt-auto">
+                      {formatPrice(card.price, currency, USD_TO_INR)}
+                    </div>
                   </div>
-                  <div className={`px-3 py-1.5 rounded-lg text-xs font-black shrink-0 ${
-                    card.change1h >= 0 
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  }`}>
-                    {card.change1h >= 0 ? '+' : ''}{card.change1h}%
+
+                  <div className="h-20 flex flex-col items-end py-1">
+                    <div className={`px-2 py-1 rounded-lg text-[10px] font-black ${
+                      card.change1h >= 0 
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                        : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                    }`}>
+                      {card.change1h >= 0 ? '+' : ''}{card.change1h}%
+                    </div>
+                    
+                    {/* Trend Sparkline with added top-spacing */}
+                    <div className="opacity-70 scale-90 origin-right pr-1 mt-auto">
+                      <Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#ef4444'} />
+                    </div>
                   </div>
                 </div>
-                
-                {/* Card Body */}
-                <div className="p-4 space-y-3">
-                  {/* Price */}
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Price</span>
-                    <span className="text-xl font-black text-white font-mono">{formatPrice(card.price, currency, USD_TO_INR)}</span>
-                  </div>
-                  
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/5">
-                    <div>
-                      <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Volume</div>
-                      <div className="text-sm font-bold text-slate-200 font-mono">${card.volume.toLocaleString()}K</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-1">Trend</div>
-                      <div className="flex items-center">
-                        <Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#ef4444'} />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Trade Button */}
-                  {SHOW_TRADE_FEATURES && (
+
+                {/* Simplified Trade Action */}
+                {SHOW_TRADE_FEATURES && (
+                  <div className="px-3 pb-3">
                     <button 
                       onClick={() => openTrade(card)} 
-                      className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] sm:text-sm font-black uppercase tracking-wider hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20 active:scale-[0.98] mt-2"
+                      className="w-full py-2.5 rounded-xl bg-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-amber-500/10"
                     >
                       Buy Now
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
             
