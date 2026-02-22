@@ -6,7 +6,7 @@ const NewsWireItem = ({ category, title, date, link, tagColor, index, isVisible 
     href={link} 
     target="_blank" 
     rel="noopener noreferrer" 
-    className={`group relative flex flex-col md:flex-row md:items-center justify-between p-6 md:p-8 bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-700 rounded-3xl overflow-hidden ${
+    className={`group relative flex flex-col p-6 md:p-8 bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-700 rounded-3xl overflow-hidden ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
     }`}
     style={{ transitionDelay: `${index * 100}ms` }}
@@ -14,32 +14,36 @@ const NewsWireItem = ({ category, title, date, link, tagColor, index, isVisible 
     {/* Dynamic Background Highlight */}
     <div className={`absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b ${tagColor} scale-y-0 group-hover:scale-y-100 transition-transform duration-500`}></div>
     
-    <div className="flex flex-col gap-3 md:gap-6 md:flex-row md:items-center flex-1">
-      {/* Metadata Column */}
-      <div className="flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-1 min-w-[120px]">
-         <span className={`text-[10px] font-black uppercase tracking-[0.2em] border px-2 py-0.5 rounded-md ${tagColor.includes('amber') ? 'text-amber-500 border-amber-500/20 bg-amber-500/5' : 'text-blue-500 border-blue-500/20 bg-blue-500/5'}`}>
-            {category}
-         </span>
-         <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1.5">
-            <Calendar className="w-3 h-3" /> {date}
-         </span>
-      </div>
+    <div className="flex flex-row items-start justify-between gap-4 w-full">
+      <div className="flex-1 space-y-3">
+        {/* Metadata */}
+        <div className="flex items-center gap-3">
+           <span className={`text-[9px] font-black uppercase tracking-[0.2em] border px-2 py-0.5 rounded-md ${tagColor.includes('amber') ? 'text-amber-500 border-amber-500/20 bg-amber-500/5' : 'text-blue-500 border-blue-500/20 bg-blue-500/5'}`}>
+              {category}
+           </span>
+           <span className="text-[9px] font-mono text-slate-500 flex items-center gap-1.5 uppercase tracking-wider">
+              <Calendar className="w-3 h-3" /> {date}
+           </span>
+        </div>
 
-      {/* Main Title */}
-      <div className="flex-1">
-         <h4 className="text-xl md:text-2xl font-bold text-white tracking-tight group-hover:text-amber-400 transition-colors duration-500 leading-tight">
+        {/* Title & Redirection Icon */}
+        <div className="relative flex items-start justify-between gap-4">
+          <h4 className="text-xl md:text-2xl font-black text-white tracking-tight group-hover:text-amber-400 transition-colors duration-500 leading-tight">
             {title}
-         </h4>
+          </h4>
+          <div className="shrink-0 pt-1">
+             <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-amber-500 group-hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all duration-500 transform group-hover:rotate-12">
+                <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-slate-500 group-hover:text-slate-950 transition-colors" />
+             </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    {/* CTA / Icon */}
-    <div className="mt-4 md:mt-0 flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 border-white/5 pt-4 md:pt-0">
-       <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500 hidden md:flex">
-          <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Read Official Press</span>
-       </div>
-       <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-amber-500 transition-all duration-500">
-          <ArrowUpRight className="w-5 h-5 text-slate-500 group-hover:text-slate-950 transition-colors" />
+    {/* CTA / Footer Area */}
+    <div className="mt-4 md:mt-6 flex items-center justify-between border-t border-white/5 pt-4">
+       <div className="flex items-center gap-4 group-hover:translate-x-1 transition-all duration-500">
+          <span className="text-[8px] md:text-[9px] font-black text-slate-500 group-hover:text-amber-500/50 uppercase tracking-[0.3em]">Read Official Press</span>
        </div>
     </div>
   </a>

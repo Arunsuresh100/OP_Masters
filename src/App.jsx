@@ -181,10 +181,10 @@ const App = () => {
           />
         } />
         <Route path="/cards" element={
-          <Cards currency={currency} />
+          <Cards currency={currency} searchQuery={searchQuery} />
         } />
         <Route path="/marketplace" element={
-          <Marketplace currency={currency} />
+          <Marketplace currency={currency} searchQuery={searchQuery} />
         } />
         <Route path="/profile" element={
           <Profile />

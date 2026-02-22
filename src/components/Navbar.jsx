@@ -230,7 +230,13 @@ const Navbar = ({
                onChange={(e) => setSearchQuery(e.target.value)}
              />
           </div>
-          <button onClick={() => setMobileSearchActive(false)} className="p-2 text-slate-400 hover:text-white transition-colors">
+          <button 
+            onClick={() => {
+              setMobileSearchActive(false);
+              setSearchQuery('');
+            }} 
+            className="p-2 text-slate-400 hover:text-white transition-colors"
+          >
              <X className="w-6 h-6" />
           </button>
       </div>

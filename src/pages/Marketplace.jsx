@@ -143,10 +143,14 @@ const MarketTicker = ({ items }) => {
 
 
 
-const Marketplace = ({ currency }) => {
+const Marketplace = ({ currency, searchQuery }) => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchQuery || '');
+
+  useEffect(() => {
+    setSearchTerm(searchQuery || '');
+  }, [searchQuery]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [tradeModalOpen, setTradeModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);

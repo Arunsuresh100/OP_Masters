@@ -1,18 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Upload, X, Info, Filter, SlidersHorizontal } from 'lucide-react';
+import { Search, Upload, X, Info, Filter, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 
-const Cards = ({ currency }) => {
+const Cards = ({ currency, searchQuery }) => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchQuery || '');
+  
+  useEffect(() => {
+    setSearchTerm(searchQuery || '');
+  }, [searchQuery]);
   const [selectedCard, setSelectedCard] = useState(null);
   
   // Filters
   const [selectedRarity, setSelectedRarity] = useState('all');
   const [selectedColor, setSelectedColor] = useState('all');
   const [selectedSet, setSelectedSet] = useState('all');
+
+  // Scroll Indicators Logic
+  const filterScrollRef = React.useRef(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  const checkScroll = () => {
+    if (filterScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = filterScrollRef.current;
+      setShowLeftArrow(scrollLeft > 10);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    const el = filterScrollRef.current;
+    if (el) {
+      checkScroll();
+      window.addEventListener('resize', checkScroll);
+      return () => window.removeEventListener('resize', checkScroll);
+    }
+  }, [cards]); // Re-check when cards (or filter buttons) are rendered
 
   const COLORS = ['Red', 'Blue', 'Green', 'Purple', 'Black', 'Yellow'];
   const SETS = ['OP01', 'OP02', 'OP03', 'OP04', 'OP05', 'OP06', 'OP07', 'OP08', 'OP09', 'OP10', 'OP11', 'OP12', 'OP13'];
@@ -351,25 +377,69 @@ const Cards = ({ currency }) => {
         {/* Right Content (Cards Grid) */}
         <div className="lg:col-span-3 pt-0">
            
-           {/* Top Rarity Filter (Centered) */}
-           <div className="mb-8 flex justify-center">
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar max-w-full px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                  <button 
-                    onClick={() => setSelectedRarity('all')}
-                    className={`flex-shrink-0 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border ${selectedRarity === 'all' ? 'bg-white text-slate-950 shadow-lg shadow-white/10' : 'bg-slate-800/50 text-slate-400 border-white/5 hover:bg-white/5'}`}
-                  >
-                    All
-                  </button>
-                  {RARITIES.map(r => (
+           {/* Top Rarity Filter (Centered with Scroll Indicators) */}
+           <div className="mb-8 relative group/filters">
+                {/* Desktop Scroll Indicators */}
+                <div className="flex items-center gap-2">
                     <button 
-                        key={r.id}
-                        onClick={() => setSelectedRarity(r.code)}
-                        className={`flex-shrink-0 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent shadow-lg` : 'bg-slate-800/50 text-slate-400 border-white/5 hover:bg-white/5'}`}
+                      onClick={() => filterScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
+                      className={`hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-slate-900/80 backdrop-blur-md border border-white/10 text-white transition-all opacity-0 group-hover/filters:opacity-100 shadow-xl hover:bg-amber-500 hover:text-slate-950`}
                     >
-                        {r.code}
+                      <ChevronLeft className="w-4 h-4" />
                     </button>
-                  ))}
-              </div>
+
+                    <div 
+                      ref={filterScrollRef}
+                      onScroll={checkScroll}
+                      className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar max-w-full px-2 snap-x" 
+                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                        <button 
+                          onClick={() => setSelectedRarity('all')}
+                          className={`flex-shrink-0 px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border snap-start ${selectedRarity === 'all' ? 'bg-white text-slate-950 shadow-lg shadow-white/10 border-white' : 'bg-slate-800/50 text-slate-400 border-white/5 hover:bg-white/5'}`}
+                        >
+                          All
+                        </button>
+                        {RARITIES.map(r => (
+                          <button 
+                              key={r.id}
+                              onClick={() => setSelectedRarity(r.code)}
+                              className={`flex-shrink-0 px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border snap-start ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent shadow-lg` : 'bg-slate-800/50 text-slate-400 border-white/5 hover:bg-white/5'}`}
+                          >
+                              {r.code}
+                          </button>
+                        ))}
+                    </div>
+
+                    <button 
+                      onClick={() => filterScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+                      className={`hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-slate-900/80 backdrop-blur-md border border-white/10 text-white transition-all opacity-0 group-hover/filters:opacity-100 shadow-xl hover:bg-amber-500 hover:text-slate-950`}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                </div>
+                
+                {/* Mobile Scroll Buttons */}
+                {showRightArrow && (
+                  <button 
+                    onClick={() => filterScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })}
+                    className="md:hidden absolute right-0 top-1/2 -translate-y-[calc(50%+8px)] z-30 p-1.5 bg-slate-900/60 backdrop-blur-md border border-white/20 rounded-full text-white shadow-[0_0_15px_rgba(255,255,255,0.1)] animate-pulse active:scale-95 transition-all"
+                  >
+                    <ChevronRight className="w-5 h-5" strokeWidth={3} />
+                  </button>
+                )}
+                {showLeftArrow && (
+                  <button 
+                    onClick={() => filterScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
+                    className="md:hidden absolute left-0 top-1/2 -translate-y-[calc(50%+8px)] z-30 p-1.5 bg-slate-900/60 backdrop-blur-md border border-white/20 rounded-full text-white shadow-[0_0_15px_rgba(255,255,255,0.1)] animate-pulse active:scale-95 transition-all"
+                  >
+                    <ChevronLeft className="w-5 h-5" strokeWidth={3} />
+                  </button>
+                )}
+
+                {/* Fading Gradients */}
+                <div className={`md:hidden absolute right-0 top-0 bottom-4 w-16 bg-gradient-to-l from-slate-950 via-slate-950/40 to-transparent pointer-events-none transition-opacity duration-300 ${showRightArrow ? 'opacity-100' : 'opacity-0'}`}></div>
+                <div className={`md:hidden absolute left-0 top-0 bottom-4 w-16 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent pointer-events-none transition-opacity duration-300 ${showLeftArrow ? 'opacity-100' : 'opacity-0'}`}></div>
            </div>
 
            <div className="mb-6 flex items-center justify-between">
