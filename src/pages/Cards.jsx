@@ -492,7 +492,7 @@ const Cards = ({ currency, searchQuery }) => {
                         <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-10">
                             <div className="text-xs font-bold text-white truncate">{card.name}</div>
                             <div className="text-[10px] text-amber-400 font-mono mt-0.5">
-                            ~${formatPrice(card.price, currency, USD_TO_INR)}
+                            ~{formatPrice(card.price, currency, USD_TO_INR)}
                             </div>
                         </div>
                         </div>
@@ -582,7 +582,7 @@ const Cards = ({ currency, searchQuery }) => {
                  <div className="bg-white/5 rounded-lg p-3 border border-white/5">
                     <div className="text-[10px] text-slate-400 uppercase font-bold text-center mb-1">Approximate Value</div>
                     <div className="text-xl font-mono font-bold text-emerald-400 text-center">
-                      ${formatPrice(selectedCard.price, currency, USD_TO_INR)}
+                      {formatPrice(selectedCard.price, currency, USD_TO_INR)}
                     </div>
                  </div>
 
