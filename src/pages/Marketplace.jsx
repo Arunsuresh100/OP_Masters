@@ -143,6 +143,9 @@ const MarketTicker = ({ items }) => {
 
 
 
+// Feature flag to temporarily hide trade functionality
+const SHOW_TRADE_FEATURES = false;
+
 const Marketplace = ({ currency, searchQuery }) => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -344,30 +347,36 @@ const Marketplace = ({ currency, searchQuery }) => {
                 />
              </div>
              
-             {/* Filter Pills + List Button */}
-             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-               <div className="w-full grid grid-cols-2 gap-2 sm:flex sm:flex-1 sm:overflow-x-auto sm:scrollbar-hide">
-                  {['all', 'gainers', 'losers', 'high'].map((f) => (
-                      <button 
-                        key={f} 
-                        onClick={() => { setActiveFilter(f); setCurrentPage(1); }} 
-                        className={`w-full sm:w-auto px-1 py-3 sm:px-4 sm:py-2.5 rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center justify-center gap-1.5 ${
-                          activeFilter === f 
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30' 
-                            : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
-                        }`}
-                      >
-                        {f === 'all' ? '🔹 All' : f === 'gainers' ? '📈 Gainers' : f === 'losers' ? '📉 Losers' : '💎 Premium'}
-                      </button>
-                  ))}
-               </div>
-               <button 
-                 onClick={handleOpenListing} 
-                 className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-4 md:px-6 py-3 md:py-3 rounded-xl font-black uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
-               >
-                 <PlusCircle className="w-4 h-4" /> 
-                 <span>Sell Asset</span>
-               </button>
+             {/* Filter Pills - App-Style Horizontal Scroll */}
+             <div className="flex items-center">
+                <div className="flex-1 flex overflow-x-auto scrollbar-hide gap-2 pb-1 sm:pb-0">
+                   {['all', 'gainers', 'losers', 'high'].map((f) => {
+                       const isActive = activeFilter === f;
+
+                       return (
+                         <button 
+                           key={f} 
+                           onClick={() => { setActiveFilter(f); setCurrentPage(1); }} 
+                           className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-tighter transition-all whitespace-nowrap flex items-center justify-center gap-1 sm:gap-1.5 border ${
+                             isActive 
+                               ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)]' 
+                               : 'bg-slate-800/40 text-slate-400 border-white/5 hover:text-white hover:bg-slate-700/40'
+                           }`}
+                         >
+                           {f === 'all' ? '🔍 All' : f === 'gainers' ? '🚀 Gainers' : f === 'losers' ? '🔻 Losers' : '💎 Premium'}
+                         </button>
+                       );
+                   })}
+                </div>
+               {SHOW_TRADE_FEATURES && (
+                 <button 
+                   onClick={handleOpenListing} 
+                   className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-4 md:px-6 py-3 md:py-3 rounded-xl font-black uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
+                 >
+                   <PlusCircle className="w-4 h-4" /> 
+                   <span>Sell Asset</span>
+                 </button>
+               )}
              </div>
         </div>
       </div>
@@ -386,7 +395,7 @@ const Marketplace = ({ currency, searchQuery }) => {
                             <th className="py-5 px-6 text-right hidden lg:table-cell">1m Change</th>
                             <th className="py-5 px-6 text-right">Trading Vol</th>
                             <th className="py-5 px-6 w-32">Week Trend</th>
-                            <th className="py-5 px-6 text-right">Action</th>
+                            {SHOW_TRADE_FEATURES && <th className="py-5 px-6 text-right">Action</th>}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -421,7 +430,9 @@ const Marketplace = ({ currency, searchQuery }) => {
                                 </td>
                                 <td className="py-4 px-6 text-right"><div className="font-mono text-xs text-slate-300">${card.volume.toLocaleString()}K</div></td>
                                 <td className="py-4 px-6"><Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#ef4444'} /></td>
-                                <td className="py-4 px-6 text-right"><button onClick={() => openTrade(card)} className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-black uppercase tracking-widest hover:from-amber-400 hover:to-orange-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95">Buy</button></td>
+                                {SHOW_TRADE_FEATURES && (
+                                  <td className="py-4 px-6 text-right"><button onClick={() => openTrade(card)} className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-black uppercase tracking-widest hover:from-amber-400 hover:to-orange-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95">Buy</button></td>
+                                )}
                             </tr>
                         ))}
                     </tbody>
@@ -487,12 +498,14 @@ const Marketplace = ({ currency, searchQuery }) => {
                   </div>
                   
                   {/* Trade Button */}
-                  <button 
-                    onClick={() => openTrade(card)} 
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-black uppercase tracking-wider hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20 active:scale-[0.98] mt-2"
-                  >
-                    Buy Now
-                  </button>
+                  {SHOW_TRADE_FEATURES && (
+                    <button 
+                      onClick={() => openTrade(card)} 
+                      className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] sm:text-sm font-black uppercase tracking-wider hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20 active:scale-[0.98] mt-2"
+                    >
+                      Buy Now
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
