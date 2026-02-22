@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap, Info } from 'lucide-react';
 import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 import { useUser } from '../context/UserContext';
@@ -141,6 +141,180 @@ const MarketTicker = ({ items }) => {
   );
 };
 
+const MarketplaceDetailModal = ({ isOpen, onClose, card, currency }) => {
+  if (!card) return null;
+
+  return (
+    <div 
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-500 ${
+        isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+    >
+      {/* Backdrop with extreme blur and dark tint */}
+      <div 
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl"
+        onClick={onClose}
+      />
+
+      {/* Modal Container */}
+      <div 
+        className={`relative w-full max-w-4xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] transition-all duration-500 ease-out transform ${
+          isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-12'
+        }`}
+      >
+        {/* Animated Glow Background */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] -mr-32 -mt-32 animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] -ml-32 -mb-32 animate-pulse [animation-duration:4s]"></div>
+
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="absolute top-6 right-6 z-50 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-slate-400 hover:text-white transition-all hover:rotate-90 active:scale-95 shadow-xl"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        <div className="flex flex-col md:flex-row min-h-[500px]">
+          {/* Left Side: Immersive Artwork */}
+          <div className="md:w-5/12 bg-black/40 p-8 md:p-12 flex flex-col items-center justify-center relative border-r border-white/5">
+             {/* Highlight Behind Image */}
+             <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-0`}></div>
+             
+             <div className="relative group perspective-1000">
+                <div className="absolute -inset-4 bg-amber-500/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-full"></div>
+                <CardImage 
+                  src={card.image} 
+                  alt={card.name} 
+                  className="w-full max-w-[280px] aspect-[1/1.4] rounded-2xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] group-hover:scale-105 transition-all duration-700 ease-out" 
+                />
+             </div>
+             
+             {/* Rarity & Set Badge */}
+             <div className="mt-10 flex flex-wrap justify-center gap-3 relative z-10">
+                <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                   {card.set}
+                </div>
+                <div className="px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">
+                   {card.rarity}
+                </div>
+             </div>
+          </div>
+
+          {/* Right Side: Market Intelligence */}
+          <div className="md:w-7/12 p-8 md:p-12 flex flex-col relative z-10">
+             {/* Header */}
+             <div className="mb-8">
+                <div className="flex items-center gap-2 mb-2">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Live Market Data</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black text-white leading-none tracking-tighter mb-2">
+                   {card.name}
+                </h2>
+                <div className="font-mono text-xs text-slate-500 uppercase tracking-[0.3em]">{card.id}</div>
+             </div>
+
+             {/* Price Overview */}
+             <div className="grid grid-cols-2 gap-8 mb-10 pb-10 border-b border-white/5">
+                <div>
+                   <div className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Current Value</div>
+                   <div className="text-4xl font-black text-white font-mono tracking-tighter">
+                      {formatPrice(card.price, currency, USD_TO_INR)}
+                   </div>
+                </div>
+                <div>
+                   <div className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 text-right">24h Change</div>
+                   <div className="flex flex-col items-end">
+                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-black ${
+                         card.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                      }`}>
+                         {card.change24h >= 0 ? '+' : ''}{card.change24h}%
+                         {card.change24h >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                      </div>
+                      <div className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mt-2 font-mono">
+                         Last update: 2 mins ago
+                      </div>
+                   </div>
+                </div>
+             </div>
+
+             {/* Detailed Metrics Grid */}
+             <div className="grid grid-cols-3 gap-6 mb-10">
+                <div className="space-y-1">
+                   <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">1H Change</div>
+                   <div className={`text-sm font-black font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {card.change1h >= 0 ? '+' : ''}{card.change1h}%
+                   </div>
+                </div>
+                <div className="space-y-1">
+                   <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">1M Change</div>
+                   <div className={`text-sm font-black font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {card.change1m >= 0 ? '+' : ''}{card.change1m}%
+                   </div>
+                </div>
+                <div className="space-y-1">
+                   <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Volume (24h)</div>
+                   <div className="text-sm font-black text-white font-mono">${(card.volume || 0).toLocaleString()}K</div>
+                </div>
+             </div>
+
+             {/* Trend Visualization */}
+             <div className="mb-10 bg-white/[0.02] border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4">
+                   <Activity className="w-5 h-5 text-slate-800" />
+                </div>
+                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-6">7D Price Performance Trajectory</div>
+                <div className="h-20 w-full">
+                   <svg width="100%" height="80" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <defs>
+                         <linearGradient id="gradient-line" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={card.change24h >= 0 ? '#10b981' : '#ef4444'} stopOpacity="0.3" />
+                            <stop offset="100%" stopColor={card.change24h >= 0 ? '#10b981' : '#ef4444'} stopOpacity="0" />
+                         </linearGradient>
+                      </defs>
+                      <path 
+                         d={`M ${card.trendData.map((v, i) => `${(i / (card.trendData.length - 1)) * 100},${30 - ((v - Math.min(...card.trendData)) / (Math.max(...card.trendData) - Math.min(...card.trendData) || 1)) * 30}`).join(' L ')}`} 
+                         fill="none" 
+                         stroke={card.change24h >= 0 ? '#10b981' : '#ef4444'} 
+                         strokeWidth="1.5"
+                         strokeLinecap="round"
+                         strokeLinejoin="round"
+                      />
+                      <path 
+                         d={`M ${card.trendData.map((v, i) => `${(i / (card.trendData.length - 1)) * 100},${30 - ((v - Math.min(...card.trendData)) / (Math.max(...card.trendData) - Math.min(...card.trendData) || 1)) * 30}`).join(' L ')} L 100,30 L 0,30 Z`} 
+                         fill="url(#gradient-line)" 
+                      />
+                   </svg>
+                </div>
+                <div className="flex justify-between mt-4">
+                   <div className="text-[8px] font-black text-slate-700 uppercase tracking-tighter">7 Days Ago</div>
+                   <div className="text-[8px] font-black text-slate-700 uppercase tracking-tighter">Current Point</div>
+                </div>
+             </div>
+
+             {/* Footer Control */}
+             <div className="mt-auto flex items-center justify-between gap-6 pt-6">
+                <div className="flex items-center gap-3">
+                   <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                      <Info className="w-4 h-4 text-blue-500" />
+                   </div>
+                   <p className="text-[10px] text-slate-500 leading-tight font-medium max-w-[180px]">
+                      This asset is verified and trading in real-time on Global Node Exchanges.
+                   </p>
+                </div>
+                {SHOW_TRADE_FEATURES && (
+                   <button className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-black rounded-2xl hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all uppercase tracking-widest text-xs active:scale-95">
+                      Open Trade Terminal
+                   </button>
+                )}
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 
 // Feature flag to temporarily hide trade functionality
@@ -160,6 +334,7 @@ const Marketplace = ({ currency, searchQuery }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isListingModalOpen, setIsListingModalOpen] = useState(false);
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const { user, openAuth } = useUser();
   const itemsPerPage = 15;
 
@@ -250,9 +425,10 @@ const Marketplace = ({ currency, searchQuery }) => {
   );
 
   return (
-    <div className="min-h-screen pt-20 pb-40 bg-slate-950 font-sans text-slate-200">
+    <div className="min-h-screen pt-20 pb-12 bg-slate-950 font-sans text-slate-200">
       <BuyModal isOpen={isBuyModalOpen} onClose={() => setIsBuyModalOpen(false)} card={selectedCard} />
       <ListingModal isOpen={isListingModalOpen} onClose={() => setIsListingModalOpen(false)} card={cards[0]} />
+      <MarketplaceDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} card={selectedCard} currency={currency} />
       
       {/* Market Ticker - REMOVED for better UX */}
 
@@ -402,7 +578,8 @@ const Marketplace = ({ currency, searchQuery }) => {
                         {currentListings.map((card, index) => (
                             <tr 
                                 key={card.id} 
-                                className="hover:bg-white/[0.03] transition-colors group opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]"
+                                onClick={() => { setSelectedCard(card); setIsDetailModalOpen(true); }}
+                                className="hover:bg-white/[0.03] transition-colors group opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards] cursor-pointer"
                                 style={{ animationDelay: `${index * 50}ms` }}
                             >
                                 <td className="py-4 px-6">
@@ -456,7 +633,8 @@ const Marketplace = ({ currency, searchQuery }) => {
             {currentListings.map((card, index) => (
               <div 
                 key={card.id} 
-                className="bg-slate-900/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-amber-500/30 transition-all opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]"
+                onClick={() => { setSelectedCard(card); setIsDetailModalOpen(true); }}
+                className="bg-slate-900/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-amber-500/30 transition-all opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards] cursor-pointer"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Redesigned Card Header - App-style UI/UX */}
@@ -494,7 +672,7 @@ const Marketplace = ({ currency, searchQuery }) => {
                 {SHOW_TRADE_FEATURES && (
                   <div className="px-3 pb-3">
                     <button 
-                      onClick={() => openTrade(card)} 
+                      onClick={(e) => { e.stopPropagation(); openTrade(card); }} 
                       className="w-full py-2.5 rounded-xl bg-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-amber-500/10"
                     >
                       Buy Now

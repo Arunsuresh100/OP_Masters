@@ -71,7 +71,7 @@ const LatestNews = () => {
     }, []);
 
     return (
-        <section className="relative py-32 px-4 sm:px-6 overflow-hidden">
+        <section className="relative pt-32 pb-12 px-4 sm:px-6 overflow-hidden">
         {/* Editorial Ambient Light */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl aspect-square bg-amber-500/[0.02] blur-[160px] rounded-full pointer-events-none"></div>
         
