@@ -468,8 +468,8 @@ const Marketplace = ({ currency, searchQuery }) => {
                       <div className="font-bold text-white text-sm line-clamp-1 mb-0.5">{card.name}</div>
                       <div className="text-[9px] text-slate-500 font-mono uppercase bg-white/5 px-2 py-0.5 rounded inline-block">{card.id}</div>
                     </div>
-                    {/* Price strategically placed with added top-spacing and refined size */}
-                    <div className="text-base font-bold text-white font-mono tracking-tighter mt-auto">
+                    {/* Price strategically placed with refined size for mobile */}
+                    <div className="text-sm font-bold text-white font-mono tracking-tight mt-auto">
                       {formatPrice(card.price, currency, USD_TO_INR)}
                     </div>
                   </div>
