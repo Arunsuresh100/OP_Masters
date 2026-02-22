@@ -142,6 +142,17 @@ const MarketTicker = ({ items }) => {
 };
 
 const MarketplaceDetailModal = ({ isOpen, onClose, card, currency }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!card) return null;
 
   return (
@@ -150,124 +161,116 @@ const MarketplaceDetailModal = ({ isOpen, onClose, card, currency }) => {
         isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
-      {/* Backdrop with extreme blur and dark tint */}
+      {/* Backdrop - darker on mobile for focus */}
       <div 
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl"
+        className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
         onClick={onClose}
       />
 
-      {/* Modal Container */}
+      {/* Modal Container: Centered Horizontal Card on all devices */}
       <div 
-        className={`relative w-full max-w-4xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] transition-all duration-500 ease-out transform ${
-          isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-12'
+        className={`relative w-full max-w-[95%] sm:max-w-2xl md:max-w-3xl bg-slate-900 border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.9)] transition-all duration-500 ease-out transform ${
+          isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
       >
-        {/* Animated Glow Background */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] -mr-32 -mt-32 animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] -ml-32 -mb-32 animate-pulse [animation-duration:4s]"></div>
+        {/* Animated Glow Backgrounds */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] -mr-32 -mt-32 animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] -ml-32 -mb-32 animate-pulse [animation-duration:4s]"></div>
 
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-6 right-6 z-50 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-slate-400 hover:text-white transition-all hover:rotate-90 active:scale-95 shadow-xl"
+          className="absolute top-4 right-4 z-50 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-slate-400 hover:text-white transition-all active:scale-95 shadow-xl"
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5" />
         </button>
 
-        <div className="flex flex-col md:flex-row min-h-[500px]">
+        <div className="flex flex-row h-full">
           {/* Left Side: Immersive Artwork */}
-          <div className="md:w-5/12 bg-black/40 p-8 md:p-12 flex flex-col items-center justify-center relative border-r border-white/5">
-             {/* Highlight Behind Image */}
-             <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-0`}></div>
+          <div className="w-[40%] sm:w-[35%] bg-black/20 p-3 sm:p-6 flex flex-col items-center justify-center relative border-r border-white/5">
+             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-0"></div>
              
-             <div className="relative group perspective-1000">
-                <div className="absolute -inset-4 bg-amber-500/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-full"></div>
+             <div className="relative group">
+                <div className="absolute -inset-4 bg-amber-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-full"></div>
                 <CardImage 
                   src={card.image} 
                   alt={card.name} 
-                  className="w-full max-w-[280px] aspect-[1/1.4] rounded-2xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] group-hover:scale-105 transition-all duration-700 ease-out" 
+                  className="w-full max-w-[120px] sm:max-w-[180px] aspect-[1/1.4] rounded-xl shadow-[0_15px_30px_rgba(0,0,0,0.5)] transition-all duration-700 ease-out" 
                 />
              </div>
              
-             {/* Rarity & Set Badge */}
-             <div className="mt-10 flex flex-wrap justify-center gap-3 relative z-10">
-                <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+             <div className="mt-3 flex flex-wrap justify-center gap-1.5 relative z-10">
+                <div className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-full text-[6px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
                    {card.set}
                 </div>
-                <div className="px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">
+                <div className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-[6px] sm:text-[8px] font-black text-amber-500 uppercase tracking-widest whitespace-nowrap">
                    {card.rarity}
                 </div>
              </div>
           </div>
 
           {/* Right Side: Market Intelligence */}
-          <div className="md:w-7/12 p-8 md:p-12 flex flex-col relative z-10">
+          <div className="w-[60%] sm:w-[65%] p-4 sm:p-8 flex flex-col relative z-10">
              {/* Header */}
-             <div className="mb-8">
-                <div className="flex items-center gap-2 mb-2">
-                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Live Market Data</span>
+             <div className="mb-3">
+                <div className="flex items-center gap-1.5 mb-1 text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-widest">
+                   <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
+                   <span>Live Market</span>
                 </div>
-                <h2 className="text-3xl md:text-5xl font-black text-white leading-none tracking-tighter mb-2">
+                <h2 className="text-sm sm:text-2xl font-black text-white leading-tight tracking-tighter mb-0.5 truncate">
                    {card.name}
                 </h2>
-                <div className="font-mono text-xs text-slate-500 uppercase tracking-[0.3em]">{card.id}</div>
+                <div className="font-mono text-[7px] sm:text-[10px] text-slate-500 uppercase">{card.id}</div>
              </div>
 
              {/* Price Overview */}
-             <div className="grid grid-cols-2 gap-8 mb-10 pb-10 border-b border-white/5">
+             <div className="grid grid-cols-2 gap-3 mb-3 pb-3 border-b border-white/5">
                 <div>
-                   <div className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Current Value</div>
-                   <div className="text-4xl font-black text-white font-mono tracking-tighter">
+                   <div className="text-[7px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Value</div>
+                   <div className="text-xs sm:text-xl font-black text-white font-mono tracking-tighter">
                       {formatPrice(card.price, currency, USD_TO_INR)}
                    </div>
                 </div>
                 <div>
-                   <div className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 text-right">24h Change</div>
+                   <div className="text-[7px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 text-right">Trend</div>
                    <div className="flex flex-col items-end">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-black ${
-                         card.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                      <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[8px] sm:text-[10px] font-black ${
+                         card.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
                       }`}>
                          {card.change24h >= 0 ? '+' : ''}{card.change24h}%
-                         {card.change24h >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                      </div>
-                      <div className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mt-2 font-mono">
-                         Last update: 2 mins ago
+                         {card.change24h >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
                       </div>
                    </div>
                 </div>
              </div>
 
              {/* Detailed Metrics Grid */}
-             <div className="grid grid-cols-3 gap-6 mb-10">
-                <div className="space-y-1">
-                   <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">1H Change</div>
-                   <div className={`text-sm font-black font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+             <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="space-y-0.5">
+                   <div className="text-[6px] sm:text-[8px] font-bold text-slate-600 uppercase tracking-widest">1H</div>
+                   <div className={`text-[8px] sm:text-xs font-black font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                       {card.change1h >= 0 ? '+' : ''}{card.change1h}%
                    </div>
                 </div>
-                <div className="space-y-1">
-                   <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">1M Change</div>
-                   <div className={`text-sm font-black font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <div className="space-y-0.5">
+                   <div className="text-[6px] sm:text-[8px] font-bold text-slate-600 uppercase tracking-widest">1M</div>
+                   <div className={`text-[8px] sm:text-xs font-black font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                       {card.change1m >= 0 ? '+' : ''}{card.change1m}%
                    </div>
                 </div>
-                <div className="space-y-1">
-                   <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Volume (24h)</div>
-                   <div className="text-sm font-black text-white font-mono">${(card.volume || 0).toLocaleString()}K</div>
+                <div className="space-y-0.5">
+                   <div className="text-[6px] sm:text-[8px] font-bold text-slate-600 uppercase tracking-widest">Vol</div>
+                   <div className="text-[8px] sm:text-xs font-black text-white font-mono">${(card.volume || 0)}K</div>
                 </div>
              </div>
 
              {/* Trend Visualization */}
-             <div className="mb-10 bg-white/[0.02] border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4">
-                   <Activity className="w-5 h-5 text-slate-800" />
-                </div>
-                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-6">7D Price Performance Trajectory</div>
-                <div className="h-20 w-full">
-                   <svg width="100%" height="80" viewBox="0 0 100 30" preserveAspectRatio="none">
+             <div className="mb-3 bg-white/[0.02] border border-white/5 rounded-xl p-2.5 relative overflow-hidden">
+                <div className="text-[6px] font-bold text-slate-500 uppercase tracking-widest mb-2">Performance</div>
+                <div className="h-10 w-full">
+                   <svg width="100%" height="100%" viewBox="0 0 100 30" preserveAspectRatio="none">
                       <defs>
-                         <linearGradient id="gradient-line" x1="0" y1="0" x2="0" y2="1">
+                         <linearGradient id="gradient-line-detail" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor={card.change24h >= 0 ? '#10b981' : '#ef4444'} stopOpacity="0.3" />
                             <stop offset="100%" stopColor={card.change24h >= 0 ? '#10b981' : '#ef4444'} stopOpacity="0" />
                          </linearGradient>
@@ -282,35 +285,25 @@ const MarketplaceDetailModal = ({ isOpen, onClose, card, currency }) => {
                       />
                       <path 
                          d={`M ${card.trendData.map((v, i) => `${(i / (card.trendData.length - 1)) * 100},${30 - ((v - Math.min(...card.trendData)) / (Math.max(...card.trendData) - Math.min(...card.trendData) || 1)) * 30}`).join(' L ')} L 100,30 L 0,30 Z`} 
-                         fill="url(#gradient-line)" 
+                         fill="url(#gradient-line-detail)" 
                       />
                    </svg>
                 </div>
-                <div className="flex justify-between mt-4">
-                   <div className="text-[8px] font-black text-slate-700 uppercase tracking-tighter">7 Days Ago</div>
-                   <div className="text-[8px] font-black text-slate-700 uppercase tracking-tighter">Current Point</div>
-                </div>
              </div>
 
-             {/* Footer Control */}
-             <div className="mt-auto flex items-center justify-between gap-6 pt-6">
-                <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                      <Info className="w-4 h-4 text-blue-500" />
-                   </div>
-                   <p className="text-[10px] text-slate-500 leading-tight font-medium max-w-[180px]">
-                      This asset is verified and trading in real-time on Global Node Exchanges.
-                   </p>
-                </div>
-                {SHOW_TRADE_FEATURES && (
-                   <button className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-black rounded-2xl hover:shadow-[0_0_30px_rgba(245,158,11,0.3)] transition-all uppercase tracking-widest text-xs active:scale-95">
-                      Open Trade Terminal
-                   </button>
-                )}
-             </div>
+             {/* Footer Control - REMOVED for streamlined design */}
           </div>
         </div>
       </div>
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };
