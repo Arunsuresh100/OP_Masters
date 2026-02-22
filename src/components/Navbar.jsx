@@ -214,10 +214,6 @@ const Navbar = ({
                 </button>
             )}
             
-            {/* Desktop-only Hamburger Menu (if needed) or hidden on mobile */}
-            <button className="hidden md:flex p-2 text-slate-400 hover:text-white transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
           </div>
       </div>
 
