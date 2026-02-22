@@ -122,6 +122,22 @@ const Navbar = ({
               <button onClick={() => setCurrency('USD')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition-all ${currency === 'USD' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/10' : 'text-slate-500 hover:text-slate-200'}`}>USD</button>
               <button onClick={() => setCurrency('INR')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition-all ${currency === 'INR' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/10' : 'text-slate-500 hover:text-slate-200'}`}>INR</button>
             </div>
+
+            {/* Mobile Currency Toggle - Premium Pill Control */}
+            <div className="md:hidden flex items-center bg-black/40 border border-white/10 p-0.5 rounded-full mr-1 scale-90 backdrop-blur-lg">
+                <button 
+                  onClick={() => setCurrency('USD')}
+                  className={`px-2.5 py-1 rounded-full text-[7px] font-black tracking-tighter transition-all duration-300 ${currency === 'USD' ? 'bg-amber-400 text-slate-950 shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  USD
+                </button>
+                <button 
+                  onClick={() => setCurrency('INR')}
+                  className={`px-2.5 py-1 rounded-full text-[7px] font-black tracking-tighter transition-all duration-300 ${currency === 'INR' ? 'bg-amber-400 text-slate-950 shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  INR
+                </button>
+            </div>
             
             {/* User Auth Section */}
             {user ? (

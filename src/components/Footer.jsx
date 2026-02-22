@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const Footer = ({ channelUrl }) => {
     return (
         <>
-            <footer className="relative py-12 border-t border-white/10 text-center space-y-4">
+            <footer className="relative pt-24 pb-12 border-t border-white/10 text-center space-y-4">
                 <p className="text-slate-600 text-sm">© 2026 One Piece Masters. Unofficial Fan Site. <br/>One Piece is a trademark of Eiichiro Oda / Shueisha / Toei Animation.</p>
                 <div className="flex justify-center gap-4">
                   <Link to="/admin" className="text-[10px] text-slate-800 hover:text-slate-600 transition-colors uppercase tracking-widest font-black">Terminal Access</Link>
