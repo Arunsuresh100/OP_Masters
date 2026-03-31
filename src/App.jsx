@@ -20,6 +20,14 @@ const APP_LOGO = LOGO_PATH; // Fallback to CHANNEL_LOGO_URL if you prefer: LOGO_
 const App = () => {
   // Deployment Sync: v1.1.0 - Integrated Marketplace and One Piece Master branding
   const [currency, setCurrency] = useState('INR');
+  const [marketLocale, setMarketLocale] = useState(() => {
+    return localStorage.getItem('marketLocale') || 'EN';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('marketLocale', marketLocale);
+  }, [marketLocale]);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [appReady, setAppReady] = useState(false);
@@ -181,10 +189,10 @@ const App = () => {
           />
         } />
         <Route path="/cards" element={
-          <Cards currency={currency} searchQuery={searchQuery} />
+          <Cards currency={currency} setCurrency={setCurrency} searchQuery={searchQuery} marketLocale={marketLocale} setMarketLocale={setMarketLocale} />
         } />
         <Route path="/marketplace" element={
-          <Marketplace currency={currency} searchQuery={searchQuery} />
+          <Marketplace currency={currency} setCurrency={setCurrency} searchQuery={searchQuery} marketLocale={marketLocale} setMarketLocale={setMarketLocale} />
         } />
         <Route path="/profile" element={
           <Profile />

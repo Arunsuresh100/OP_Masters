@@ -79,66 +79,26 @@ const Navbar = ({
                </div>
              </Link>
           
-          {/* SMART SEARCH - Near Logo */}
-          <div className="flex items-center ml-4 lg:ml-6">
-            {/* Desktop: Full Search Input (≥1100px) */}
-            <div className="hidden min-[1100px]:block w-64 relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-slate-500 group-focus-within:text-amber-400 transition-colors" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search cards..."
-                className="block w-full pl-10 pr-3 py-2 border border-slate-700/50 rounded-full leading-5 bg-slate-900/50 text-slate-300 placeholder-slate-500 focus:outline-none focus:bg-slate-900 focus:border-amber-500 transition-all text-xs"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            {/* Tablet/Mobile: Compact Icon (<1100px) */}
-            <button 
-              onClick={() => setMobileSearchActive(true)} 
-              className="min-[1100px]:hidden p-2 text-slate-400 hover:text-amber-400 transition-all rounded-full bg-slate-800/50 border border-slate-700/50 hover:border-amber-500/50"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-          </div>
+          <div className="flex-1 min-[1100px]:hidden"></div>
 
           <div className="flex-1"></div>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center gap-3 lg:gap-6">
+          <div className="hidden md:flex items-center gap-1.5 min-[850px]:gap-3 lg:gap-6 mx-2 md:mx-4">
             <Link to="/" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Home</Link>
             <Link to="/cards" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Cards</Link>
-            <Link to="/marketplace" className="text-sm font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-2">
-              Marketplace
-              <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[8px] uppercase tracking-tighter border border-amber-500/20">Hot</span>
-            </Link>
+            <Link to="/marketplace" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Marketplace</Link>
           </div>
               
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             {/* Currency Selector */}
-            <div className="hidden md:flex bg-slate-800/20 border border-white/5 p-1 rounded-xl ml-3">
-              <button onClick={() => setCurrency('USD')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition-all ${currency === 'USD' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/10' : 'text-slate-500 hover:text-slate-200'}`}>USD</button>
-              <button onClick={() => setCurrency('INR')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition-all ${currency === 'INR' ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/10' : 'text-slate-500 hover:text-slate-200'}`}>INR</button>
-            </div>
-
-            {/* Mobile Currency Toggle - Premium Pill Control */}
-            <div className="md:hidden flex items-center bg-black/40 border border-white/10 p-0.5 rounded-full mr-1 scale-90 backdrop-blur-lg">
-                <button 
-                  onClick={() => setCurrency('USD')}
-                  className={`px-2.5 py-1 rounded-full text-[7px] font-black tracking-tighter transition-all duration-300 ${currency === 'USD' ? 'bg-amber-400 text-slate-950 shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                  USD
-                </button>
-                <button 
-                  onClick={() => setCurrency('INR')}
-                  className={`px-2.5 py-1 rounded-full text-[7px] font-black tracking-tighter transition-all duration-300 ${currency === 'INR' ? 'bg-amber-400 text-slate-950 shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                  INR
-                </button>
+            {/* Mobile Actions - Simplified */}
+            <div className="md:hidden flex items-center mr-1">
             </div>
             
+            {/* Spacer for better visual balance */}
+            <div className="hidden lg:block w-4"></div>
+
             {/* User Auth Section */}
             {user ? (
                 <div className="relative" ref={dropdownRef}>
@@ -233,29 +193,6 @@ const Navbar = ({
           </div>
       </div>
 
-      {/* MOBILE SEARCH OVERLAY */}
-      <div className={`absolute inset-0 px-4 flex items-center gap-3 bg-slate-950 transition-all duration-300 min-[1100px]:hidden ${mobileSearchActive ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10 pointer-events-none'}`}>
-          <div className="relative flex-1">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500" />
-             <input 
-               autoFocus={mobileSearchActive}
-               type="text" 
-               placeholder="Search cards..." 
-               className="w-full pl-10 pr-3 py-2 bg-slate-900/50 border border-slate-700 rounded-full text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-               value={searchQuery}
-               onChange={(e) => setSearchQuery(e.target.value)}
-             />
-          </div>
-          <button 
-            onClick={() => {
-              setMobileSearchActive(false);
-              setSearchQuery('');
-            }} 
-            className="p-2 text-slate-400 hover:text-white transition-colors"
-          >
-             <X className="w-6 h-6" />
-          </button>
-      </div>
     </div>
    </nav>
     </>

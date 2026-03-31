@@ -102,7 +102,9 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'http://localhost:5174',
   'http://127.0.0.1:5174',
-  'https://one-piece-trade.vercel.app', // Update with your actual Vercel URL
+  'https://one-piece-trade.vercel.app', 
+  'capacitor://localhost',
+  'http://localhost',
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -129,6 +131,36 @@ app.use(cors({
     },
     credentials: true
 }));
+
+const API_URL = 'https://en.onepiece-cardgame.com/';
+
+// --- IMAGE PROXY BYPASSES HOTLINKING BLOCKS ---
+app.get('/api/card-image', async (req, res) => {
+    const { url } = req.query;
+    if (!url) return res.status(400).send('URL is required');
+
+    try {
+        const response = await axios({
+            method: 'get',
+            url: decodeURIComponent(url),
+            responseType: 'stream',
+            headers: {
+                'Referer': API_URL,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            timeout: 15000
+        });
+
+        res.setHeader('Content-Type', response.headers['content-type'] || 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24h
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.setHeader('Access-Control-Allow-Origin', '*'); 
+        response.data.pipe(res);
+    } catch (error) {
+        console.error(`[PROXY ERROR] Failed to fetch image: ${url}`, error.message);
+        res.status(500).send('Error fetching image');
+    }
+});
 
 // 3. Rate Limiting (Prevent Brute Force)
 const limiter = rateLimit({
@@ -578,7 +610,6 @@ app.get('/api/youtube/stats', async (req, res) => {
     }
 });
 
-// --- ERROR HANDLER ---
 app.use((err, req, res, next) => {
     console.error('[SERVER ERROR]:', err);
     res.status(500).json({ 

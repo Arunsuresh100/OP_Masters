@@ -3,7 +3,7 @@ import { Search, Upload, X, Info, Filter, SlidersHorizontal, ChevronLeft, Chevro
 import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 
-const Cards = ({ currency, searchQuery }) => {
+const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLocale }) => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchQuery || '');
@@ -15,7 +15,6 @@ const Cards = ({ currency, searchQuery }) => {
   
   // Filters
   const [selectedRarity, setSelectedRarity] = useState('all');
-  const [selectedColor, setSelectedColor] = useState('all');
   const [selectedSet, setSelectedSet] = useState('all');
 
   // Scroll Indicators Logic
@@ -38,17 +37,72 @@ const Cards = ({ currency, searchQuery }) => {
       window.addEventListener('resize', checkScroll);
       return () => window.removeEventListener('resize', checkScroll);
     }
-  }, [cards]); // Re-check when cards (or filter buttons) are rendered
+  }, [cards]);
 
-  const COLORS = ['Red', 'Blue', 'Green', 'Purple', 'Black', 'Yellow'];
-  const SETS = ['OP01', 'OP02', 'OP03', 'OP04', 'OP05', 'OP06', 'OP07', 'OP08', 'OP09', 'OP10', 'OP11', 'OP12', 'OP13'];
+  const SETS = [
+    { id: 'all', name: 'ALL' },
+    { id: 'PRB02', name: 'Premium Booster vol.2 [PRB-02]' },
+    { id: 'PRB01', name: 'Premium Booster [PRB-01]' },
+    { id: 'EB03', name: 'Extra Booster Heroines [EB-03]' },
+    { id: 'EB02', name: 'Extra Booster Anime 25th [EB-02]' },
+    { id: 'EB01', name: 'Extra Booster Memorial [EB-01]' },
+    { id: 'OP15', name: 'Booster Pack [OP15]' },
+    { id: 'OP14', name: 'Booster Pack [OP14]' },
+    { id: 'OP13', name: 'Booster Pack [OP13]' },
+    { id: 'OP12', name: 'Booster Pack [OP12]' },
+    { id: 'OP11', name: 'Booster Pack [OP11]' },
+    { id: 'OP10', name: 'Booster Pack [OP10]' },
+    { id: 'OP09', name: 'Booster Pack [OP09]' },
+    { id: 'OP08', name: 'Booster Pack [OP08]' },
+    { id: 'OP07', name: 'Booster Pack [OP07]' },
+    { id: 'OP06', name: 'Booster Pack [OP06]' },
+    { id: 'OP05', name: 'Booster Pack [OP05]' },
+    { id: 'OP04', name: 'Booster Pack [OP04]' },
+    { id: 'OP03', name: 'Booster Pack [OP03]' },
+    { id: 'OP02', name: 'Booster Pack [OP02]' },
+    { id: 'OP01', name: 'Booster Pack [OP01]' },
+    { id: 'ST29', name: 'Starter Deck [ST-29]' },
+    { id: 'ST28', name: 'Starter Deck [ST-28]' },
+    { id: 'ST27', name: 'Starter Deck [ST-27]' },
+    { id: 'ST26', name: 'Starter Deck [ST-26]' },
+    { id: 'ST25', name: 'Starter Deck [ST-25]' },
+    { id: 'ST24', name: 'Starter Deck [ST-24]' },
+    { id: 'ST23', name: 'Starter Deck [ST-23]' },
+    { id: 'ST22', name: 'Starter Deck [ST-22]' },
+    { id: 'ST21', name: 'Starter Deck [ST-21]' },
+    { id: 'ST20', name: 'Starter Deck [ST-20]' },
+    { id: 'ST19', name: 'Starter Deck [ST-19]' },
+    { id: 'ST18', name: 'Starter Deck [ST-18]' },
+    { id: 'ST17', name: 'Starter Deck [ST-17]' },
+    { id: 'ST16', name: 'Starter Deck [ST-16]' },
+    { id: 'ST15', name: 'Starter Deck [ST-15]' },
+    { id: 'ST14', name: 'Starter Deck [ST-14]' },
+    { id: 'ST13', name: 'Starter Deck [ST-13]' },
+    { id: 'ST12', name: 'Starter Deck [ST-12]' },
+    { id: 'ST11', name: 'Starter Deck [ST-11]' },
+    { id: 'ST10', name: 'Starter Deck [ST-10]' },
+    { id: 'ST09', name: 'Starter Deck [ST-09]' },
+    { id: 'ST08', name: 'Starter Deck [ST-08]' },
+    { id: 'ST07', name: 'Starter Deck [ST-07]' },
+    { id: 'ST06', name: 'Starter Deck [ST-06]' },
+    { id: 'ST05', name: 'Starter Deck [ST-05]' },
+    { id: 'ST04', name: 'Starter Deck [ST-04]' },
+    { id: 'ST03', name: 'Starter Deck [ST-03]' },
+    { id: 'ST02', name: 'Starter Deck [ST-02]' },
+    { id: 'ST01', name: 'Starter Deck [ST-01]' },
+    { id: 'P', name: 'Promotion Cards' },
+    { id: 'Other', name: 'Other Products' }
+  ];
 
-  // Upload Logic
+  const getCardImageUrl = (url) => {
+    if (!url) return '';
+    return `${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
+  };
+
   const fileInputRef = React.useRef(null);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  // Prevent background scroll when drawer is open
   useEffect(() => {
     if (mobileFilterOpen) {
       document.body.style.overflow = 'hidden';
@@ -62,10 +116,7 @@ const Cards = ({ currency, searchQuery }) => {
 
   const handleImageUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
-        // In a real app, we would upload functionality here
-        // For now, prompt the user as requested
         setShowUploadPopup(true);
-        // Reset input
         e.target.value = '';
     }
   };
@@ -83,288 +134,293 @@ const Cards = ({ currency, searchQuery }) => {
       });
   }, []);
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20; // 4 rows * 5 columns approx
+  const itemsPerPage = 20;
 
-  // Image Loader Component
+  const SearchableSelect = ({ options, value, onChange, placeholder }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [filterQuery, setFilterQuery] = useState('');
+    const dropdownRef = React.useRef(null);
+    const inputRef = React.useRef(null);
+
+    const selectedOption = options.find(opt => opt.id === value) || options[0];
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setIsOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const filteredOptions = options.filter(opt => 
+      opt.name.toLowerCase().includes(filterQuery.toLowerCase()) ||
+      opt.id.toLowerCase().includes(filterQuery.toLowerCase())
+    );
+
+    return (
+      <div className="relative" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen(!isOpen);
+            if (!isOpen) setTimeout(() => inputRef.current?.focus(), 100);
+          }}
+          className="w-full bg-slate-950 border border-white/10 rounded-xl py-4 pl-4 pr-10 text-[11px] font-black text-white text-left hover:border-white transition-all flex items-center justify-between group"
+        >
+          <span className="truncate">{selectedOption.name}</span>
+          <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-90 text-white' : 'text-slate-500 group-hover:text-white'}`} />
+        </button>
+
+        {isOpen && (
+          <div className="absolute z-[100] mt-2 w-full bg-slate-950/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="p-3 border-b border-white/5 bg-slate-950/50">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Search set..."
+                  value={filterQuery}
+                  onChange={(e) => setFilterQuery(e.target.value)}
+                  className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-2.5 pl-9 pr-3 text-[11px] text-white focus:outline-none focus:border-white/20 transition-all font-bold"
+                />
+              </div>
+            </div>
+            <div className="max-h-60 overflow-y-auto custom-scrollbar py-1">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.id);
+                      setIsOpen(false);
+                      setFilterQuery('');
+                    }}
+                    className={`w-full px-4 py-3.5 text-left text-[11px] font-black transition-all flex items-center justify-between group ${value === opt.id ? 'bg-amber-500/10 text-amber-500' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                  >
+                    <span className="truncate uppercase tracking-wider">{opt.name}</span>
+                    {value === opt.id && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                    )}
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-6 text-[11px] text-slate-500 text-center font-bold">No results found</div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const ImageWithLoader = ({ src, alt, className }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
-    
     return (
       <div className={`relative overflow-hidden ${className}`}>
-        {/* Skeleton / Blur Placeholder */}
-        <div 
-            className={`absolute inset-0 bg-slate-800 transition-opacity duration-500 ${imageLoaded ? 'opacity-0' : 'opacity-100 animate-pulse'}`}
-        />
+        <div className={`absolute inset-0 bg-slate-800 transition-opacity duration-500 ${imageLoaded ? 'opacity-0' : 'opacity-100 animate-pulse'}`} />
         <img 
-          src={src} 
-          alt={alt} 
+          src={src} alt={alt} 
           className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setImageLoaded(true)}
-          loading="lazy"
+          onLoad={() => setImageLoaded(true)} loading="lazy"
         />
       </div>
     );
   };
 
   const filteredCards = cards.filter(card => {
-    const matchesSearch = 
-      card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      card.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = card.name.toLowerCase().includes(searchTerm.toLowerCase()) || card.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRarity = selectedRarity === 'all' || card.rarity === selectedRarity;
-    const matchesColor = selectedColor === 'all' || (card.colors && card.colors.includes(selectedColor));
     const matchesSet = selectedSet === 'all' || card.set === selectedSet;
-
-    return matchesSearch && matchesRarity && matchesColor && matchesSet;
+    return matchesSearch && matchesRarity && matchesSet;
   });
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredCards.length / itemsPerPage);
-  const paginatedCards = filteredCards.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedCards = filteredCards.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const getPageNumbers = () => {
+    const delta = 1;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    range.push(1);
+    for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+        if (i < totalPages && i > 1) {
+            range.push(i);
+        }
+    }
+    if (totalPages > 1) range.push(totalPages);
+
+    for (let i of range) {
+        if (l) {
+            if (i - l === 2) {
+                rangeWithDots.push(l + 1);
+            } else if (i - l !== 1) {
+                rangeWithDots.push('...');
+            }
+        }
+        rangeWithDots.push(i);
+        l = i;
+    }
+    return rangeWithDots;
+  };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const isFilterActive = searchTerm !== '' || selectedSet !== 'all' || selectedRarity !== 'all';
   const resetFilters = () => {
-      setSelectedColor('all');
-      setSelectedSet('all');
-      setSelectedRarity('all');
-      setSearchTerm('');
-      setCurrentPage(1);
+    setSelectedSet('all'); setSelectedRarity('all'); setSearchTerm(''); setCurrentPage(1);
   };
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Desktop Sidebar (Hidden on Mobile/Tablet) */}
-        <div className="hidden lg:block lg:col-span-1 space-y-6 lg:mt-[120px]">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block lg:col-span-1 space-y-6 lg:pt-[170px]">
            <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 space-y-6 sticky top-24">
-              <style>{`
-                .no-scrollbar::-webkit-scrollbar {
-                  display: none;
-                }
-              `}</style>
-              
-              {/* Search */}
-              <div>
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Find Card</h3>
+              <div className="pt-2">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Find Card</h3>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input 
-                    type="text" 
-                    placeholder="Search name, ID..." 
-                    value={searchTerm}
+                    type="text" placeholder="Search name, ID..." value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all"
+                    className="w-full bg-black border border-white/10 rounded-xl py-3.5 pl-10 pr-4 text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all font-bold"
                   />
                 </div>
               </div>
 
-              {/* Upload Section */}
               <div className="pt-4 border-t border-white/5">
                  <div className="group relative">
-                    <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        className="hidden" 
-                        accept="image/*" 
-                        onChange={handleImageUpload}
-                    />
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                     <button 
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 text-amber-500 font-bold flex flex-col items-center justify-center gap-2 hover:from-amber-500 hover:to-orange-500 hover:text-white transition-all shadow-lg shadow-amber-900/10 hover:shadow-amber-500/20"
+                        className="w-full py-5 rounded-xl bg-white/5 border border-white/10 text-white font-black flex flex-col items-center justify-center gap-2 hover:bg-white hover:text-slate-950 transition-all shadow-2xl"
                     >
                        <Upload className="w-6 h-6" />
-                       <span className="text-xs uppercase tracking-wider">Upload Image</span>
+                       <span className="text-[10px] uppercase tracking-widest leading-none">Upload Image</span>
                     </button>
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 rounded-lg bg-black/90 text-white text-[10px] text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10 shadow-xl z-20">
-                       Upload an image to identify your card automatically.
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-56 p-2.5 rounded-xl bg-black border border-white/10 text-white text-[9px] font-black leading-relaxed tracking-widest text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-[0_0_30px_rgba(0,0,0,0.5)] z-20">
+                       UPLOAD AN IMAGE TO IDENTIFY YOUR CARD AUTOMATICALLY.
                     </div>
                  </div>
               </div>
 
-              {/* Color Filter */}
               <div className="pt-4 border-t border-white/5">
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Color</h3>
-                <div className="grid grid-cols-3 gap-2">
-                    {COLORS.map(color => (
-                        <button 
-                            key={color}
-                            onClick={() => setSelectedColor(selectedColor === color ? 'all' : color)}
-                            className={`px-2 py-2 rounded-lg text-[10px] font-bold transition-all border flex items-center justify-center ${selectedColor === color ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md' : 'bg-slate-950 text-slate-400 border-white/5 hover:border-white/20 hover:bg-white/5'}`}
-                        >
-                            {color}
-                        </button>
-                    ))}
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Market Selection</h3>
+                <div className="relative group/locale">
+                  <div className="flex p-1 bg-black/40 border border-white/5 rounded-2xl relative overflow-hidden ring-1 ring-white/10 shadow-2xl h-12">
+                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl transition-all duration-500 cubic-bezier(0.19, 1, 0.22, 1) shadow-[0_0_20px_rgba(251,191,36,0.2)] ${marketLocale === 'EN' ? 'translate-x-0' : 'translate-x-full'}`} />
+                    <button onClick={() => setMarketLocale('EN')} className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black transition-all ${marketLocale === 'EN' ? 'text-white scale-105' : 'text-slate-500 hover:text-white'}`}>EN</button>
+                    <button onClick={() => setMarketLocale('JP')} className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black transition-all ${marketLocale === 'JP' ? 'text-white scale-105' : 'text-slate-500 hover:text-white'}`}>JP</button>
+                  </div>
                 </div>
               </div>
 
-              {/* Set Filter */}
               <div className="pt-4 border-t border-white/5">
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Set</h3>
-                <div className="grid grid-cols-3 gap-2">
-                    {SETS.map(set => (
-                        <button 
-                            key={set}
-                            onClick={() => setSelectedSet(selectedSet === set ? 'all' : set)}
-                            className={`px-2 py-2 rounded-lg text-[10px] font-bold transition-all border flex items-center justify-center ${selectedSet === set ? 'bg-white text-slate-950 border-white shadow-md' : 'bg-slate-950 text-slate-400 border-white/5 hover:border-white/20 hover:bg-white/5'}`}
-                        >
-                            {set}
-                        </button>
-                    ))}
-                </div>
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Set</h3>
+                <SearchableSelect options={SETS} value={selectedSet} onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} placeholder="Select Set" />
               </div>
               
               <button 
-                onClick={resetFilters}
-                className="w-full py-2.5 rounded-xl bg-red-500/10 text-red-500 text-[10px] font-bold uppercase tracking-widest border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                onClick={resetFilters} disabled={!isFilterActive}
+                className={`w-full py-4 rounded-xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest ${isFilterActive ? 'bg-white text-slate-950 border-white hover:shadow-2xl hover:scale-105' : 'bg-slate-900/50 text-slate-700 border-white/5 cursor-not-allowed opacity-50'}`}
               >
-                <X className="w-3 h-3" /> Reset Filters
+                <X className="w-3.5 h-3.5" /> RESET
               </button>
-
            </div>
         </div>
 
-        {/* Mobile Filter Drawer */}
+        {/* Professional Bottom Sheet (Mobile Filter Drawer) */}
         <div className={`lg:hidden fixed inset-0 z-50 transition-all duration-300 ${mobileFilterOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
-          {/* Backdrop */}
-          <div 
-            className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${mobileFilterOpen ? 'opacity-100' : 'opacity-0'}`}
-            onClick={() => setMobileFilterOpen(false)}
-          />
+          <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${mobileFilterOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setMobileFilterOpen(false)} />
           
-          {/* Drawer - Full width on mobile, right-aligned on tablet */}
-          <div className={`absolute bottom-0 left-0 sm:left-auto sm:right-0 w-full sm:max-w-[480px] mb-20 sm:mb-4 sm:mr-4 bg-slate-950 rounded-t-3xl sm:rounded-2xl border-t border-x sm:border border-white/10 transition-transform duration-300 flex flex-col ${mobileFilterOpen ? 'translate-y-0' : 'translate-y-full'}`} style={{maxHeight: '60vh', overflow: 'hidden'}}>
-            <style>{`
-              .drawer-scrollbar::-webkit-scrollbar {
-                width: 0 !important;
-                height: 0 !important;
-                display: none !important;
-              }
-              .drawer-scrollbar::-webkit-scrollbar-track {
-                display: none !important;
-              }
-              .drawer-scrollbar::-webkit-scrollbar-thumb {
-                display: none !important;
-              }
-              .drawer-scrollbar {
-                -ms-overflow-style: none !important;
-                scrollbar-width: none !important;
-                overflow-y: auto !important;
-              }
-              @supports selector(::-webkit-scrollbar) {
-                .drawer-scrollbar {
-                  scrollbar-width: none !important;
-                }
-              }
-            `}</style>
-            {/* Drawer Header */}
-            <div className="flex-shrink-0 bg-slate-950 border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+          <div className={`absolute top-0 right-0 bottom-0 w-full max-w-xs bg-slate-950 border-l border-white/10 transition-transform duration-500 cubic-bezier(0.19, 1, 0.22, 1) flex flex-col ${mobileFilterOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            {/* Drawer Header - Traditional Professional Sidebar */}
+            <div className="flex-shrink-0 bg-slate-950 px-6 py-6 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <SlidersHorizontal className="w-5 h-5 text-amber-500" />
-                <h2 className="text-lg font-black text-white">Filters</h2>
-                {(selectedColor !== 'all' || selectedSet !== 'all' || searchTerm) && (
-                  <div className="ml-2 px-2 py-1 bg-amber-500/20 text-amber-500 text-xs font-bold rounded-full">
-                    {[selectedColor !== 'all', selectedSet !== 'all', searchTerm].filter(Boolean).length} active
+                <SlidersHorizontal className="w-5 h-5 text-white" />
+                <h2 className="text-xl font-black text-white uppercase tracking-widest italic">Filters</h2>
+                {isFilterActive && (
+                  <div className="ml-2 px-2.5 py-0.5 bg-white text-slate-950 text-[10px] font-black rounded-full uppercase">
+                    {[selectedSet !== 'all', searchTerm, selectedRarity !== 'all'].filter(Boolean).length}
                   </div>
                 )}
               </div>
               <button 
                 onClick={() => setMobileFilterOpen(false)}
-                className="p-2 hover:bg-white/5 rounded-xl transition-all"
+                className="p-2 hover:bg-white/10 rounded-full transition-all border border-transparent hover:border-white/10"
               >
-                <X className="w-6 h-6 text-slate-400" />
+                <X className="w-6 h-6 text-white" />
               </button>
             </div>
 
-            {/* Drawer Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto drawer-scrollbar p-4 space-y-4">
-              {/* Search */}
-              <div>
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Find Card</h3>
+            <div className="flex-1 overflow-y-auto drawer-scrollbar px-6 py-2 space-y-6">
+              <div className="pb-2 border-b border-white/5">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Currency</h3>
+                <div className="flex p-1 bg-black border border-white/5 rounded-2xl h-11 relative overflow-hidden">
+                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl transition-all duration-500 shadow-[0_0_20px_rgba(251,191,36,0.2)] ${currency === 'USD' ? 'translate-x-0' : 'translate-x-full'}`} />
+                    <button onClick={() => setCurrency('USD')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${currency === 'USD' ? 'text-white' : 'text-slate-400'}`}>USD ($)</button>
+                    <button onClick={() => setCurrency('INR')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${currency === 'INR' ? 'text-white' : 'text-slate-400'}`}>INR (₹)</button>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Find Card</h3>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input 
-                    type="text" 
-                    placeholder="Search name, ID..." 
-                    value={searchTerm}
+                    type="text" placeholder="Card name or ID..." value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-900 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all"
+                    className="w-full bg-black border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 text-white text-sm focus:outline-none focus:border-white/50 transition-all font-bold"
                   />
                 </div>
               </div>
 
-              {/* Color Filter */}
               <div className="pt-2 border-t border-white/5">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Color</h3>
-                <div className="flex items-center gap-3 flex-wrap justify-center">
-                    {COLORS.map(color => {
-                      const colorMap = {
-                        'Red': 'bg-red-500',
-                        'Blue': 'bg-blue-500',
-                        'Green': 'bg-green-500',
-                        'Purple': 'bg-purple-500',
-                        'Black': 'bg-slate-900',
-                        'Yellow': 'bg-yellow-500'
-                      };
-                      return (
-                        <button 
-                            key={color}
-                            onClick={() => setSelectedColor(selectedColor === color ? 'all' : color)}
-                            className={`w-12 h-12 rounded-full transition-all border-2 flex items-center justify-center relative ${selectedColor === color ? 'border-amber-500 ring-4 ring-amber-500/30 scale-110' : 'border-white/20 hover:border-amber-500/50 hover:scale-105'}`}
-                            title={color}
-                        >
-                            <div className={`w-9 h-9 rounded-full ${colorMap[color]} ${color === 'Black' ? 'border border-white/20' : ''}`}></div>
-                            {selectedColor === color && (
-                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            )}
-                        </button>
-                      );
-                    })}
+                 <button onClick={() => fileInputRef.current?.click()} className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black flex items-center justify-center gap-3 active:scale-95 transition-all">
+                    <Upload className="w-5 h-5" />
+                    <span className="text-[10px] uppercase tracking-widest">Identify By Image</span>
+                 </button>
+              </div>
+
+              <div className="pt-2 border-t border-white/5">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Market Region</h3>
+                <div className="flex p-1 bg-black border border-white/5 rounded-2xl h-11 relative overflow-hidden">
+                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(251,191,36,0.2)] ${marketLocale === 'EN' ? 'translate-x-0' : 'translate-x-full'}`} />
+                    <button onClick={() => setMarketLocale('EN')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${marketLocale === 'EN' ? 'text-white' : 'text-slate-400'}`}>GLOBAL (EN)</button>
+                    <button onClick={() => setMarketLocale('JP')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${marketLocale === 'JP' ? 'text-white' : 'text-slate-400'}`}>LOCAL (JP)</button>
                 </div>
               </div>
 
-              {/* Set Filter */}
               <div className="pt-2 border-t border-white/5">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Set</h3>
-                <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
-                    {SETS.map(set => (
-                        <button 
-                            key={set}
-                            onClick={() => setSelectedSet(selectedSet === set ? 'all' : set)}
-                            className={`px-2 py-2 rounded-lg text-xs font-bold transition-all border ${selectedSet === set ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-slate-900 text-slate-400 border-white/5 hover:border-white/30 hover:bg-white/5'}`}
-                        >
-                            {set}
-                        </button>
-                    ))}
-                </div>
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Expansion Set</h3>
+                <SearchableSelect options={SETS} value={selectedSet} onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} placeholder="Expansion" />
               </div>
               
-              {/* Action Buttons - Inline after filters */}
-              <div className="pt-3 border-t border-white/10">
-                <div className="flex gap-2">
-                  <button 
-                    onClick={resetFilters}
-                    className="flex-1 py-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold uppercase tracking-widest border border-white/10 hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-95"
-                  >
-                    <X className="w-4 h-4" /> Reset
-                  </button>
+              <div className="pt-6 pb-12 border-t border-white/5">
+                <div className="flex flex-col gap-3">
                   <button 
                     onClick={() => setMobileFilterOpen(false)}
-                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold uppercase tracking-widest hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg shadow-amber-500/30 active:scale-95"
+                    className="w-full py-4 rounded-xl bg-white text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
                   >
-                    Apply Filters
+                    View Results
+                  </button>
+                  <button 
+                    onClick={resetFilters}
+                    disabled={!isFilterActive}
+                    className={`w-full py-4 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${isFilterActive ? 'bg-black text-white border-white/20' : 'bg-slate-900 text-slate-700 border-white/5 cursor-not-allowed opacity-30'}`}
+                  >
+                    Reset
                   </button>
                 </div>
               </div>
@@ -372,175 +428,122 @@ const Cards = ({ currency, searchQuery }) => {
           </div>
         </div>
 
-
-
-        {/* Right Content (Cards Grid) */}
+        {/* Right Content */}
         <div className="lg:col-span-3 pt-0">
            
-           {/* Top Rarity Filter (Centered with Scroll Indicators) */}
+           {/* Top Rarity Filter */}
            <div className="mb-8 relative group/filters">
-                {/* Desktop Scroll Indicators */}
                 <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => filterScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
-                      className={`hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-slate-900/80 backdrop-blur-md border border-white/10 text-white transition-all opacity-0 group-hover/filters:opacity-100 shadow-xl hover:bg-amber-500 hover:text-slate-950`}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-
-                    <div 
-                      ref={filterScrollRef}
-                      onScroll={checkScroll}
-                      className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar max-w-full px-2 snap-x" 
-                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                    >
-                        <button 
-                          onClick={() => setSelectedRarity('all')}
-                          className={`flex-shrink-0 px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border snap-start ${selectedRarity === 'all' ? 'bg-white text-slate-950 shadow-lg shadow-white/10 border-white' : 'bg-slate-800/50 text-slate-400 border-white/5 hover:bg-white/5'}`}
-                        >
-                          All
-                        </button>
+                    <button onClick={() => filterScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' })} className={`hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-slate-950 border border-white/10 text-white transition-all opacity-0 group-hover/filters:opacity-100 shadow-xl hover:bg-white hover:text-slate-950`}><ChevronLeft className="w-4 h-4" /></button>
+                    <div ref={filterScrollRef} onScroll={checkScroll} className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar max-w-full px-2 lg:px-0 snap-x" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        <button onClick={() => setSelectedRarity('all')} className={`flex-shrink-0 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border snap-start ${selectedRarity === 'all' ? 'bg-white text-slate-950 border-white' : 'bg-slate-900 text-slate-500 border-white/5 hover:bg-white/5 hover:text-white'}`}>All</button>
                         {RARITIES.map(r => (
-                          <button 
-                              key={r.id}
-                              onClick={() => setSelectedRarity(r.code)}
-                              className={`flex-shrink-0 px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border snap-start ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent shadow-lg` : 'bg-slate-800/50 text-slate-400 border-white/5 hover:bg-white/5'}`}
-                          >
-                              {r.code}
-                          </button>
+                          <button key={r.id} onClick={() => setSelectedRarity(r.code)} className={`flex-shrink-0 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border snap-start ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent` : 'bg-slate-900 text-slate-500 border-white/5 hover:bg-white/5 hover:text-white'}`}>{r.code}</button>
                         ))}
                     </div>
-
-                    <button 
-                      onClick={() => filterScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
-                      className={`hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-slate-900/80 backdrop-blur-md border border-white/10 text-white transition-all opacity-0 group-hover/filters:opacity-100 shadow-xl hover:bg-amber-500 hover:text-slate-950`}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                <button onClick={() => filterScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })} className={`hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-slate-950 border border-white/10 text-white transition-all opacity-0 group-hover/filters:opacity-100 shadow-xl hover:bg-white hover:text-slate-950`}><ChevronRight className="w-4 h-4" /></button>
                 </div>
-                
-                {/* Mobile Scroll Buttons */}
-                {showRightArrow && (
-                  <button 
-                    onClick={() => filterScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })}
-                    className="md:hidden absolute right-0 top-1/2 -translate-y-[calc(50%+8px)] z-30 p-1.5 bg-slate-900/60 backdrop-blur-md border border-white/20 rounded-full text-white shadow-[0_0_15px_rgba(255,255,255,0.1)] animate-pulse active:scale-95 transition-all"
-                  >
-                    <ChevronRight className="w-5 h-5" strokeWidth={3} />
-                  </button>
-                )}
-                {showLeftArrow && (
-                  <button 
-                    onClick={() => filterScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
-                    className="md:hidden absolute left-0 top-1/2 -translate-y-[calc(50%+8px)] z-30 p-1.5 bg-slate-900/60 backdrop-blur-md border border-white/20 rounded-full text-white shadow-[0_0_15px_rgba(255,255,255,0.1)] animate-pulse active:scale-95 transition-all"
-                  >
-                    <ChevronLeft className="w-5 h-5" strokeWidth={3} />
-                  </button>
-                )}
-
-                {/* Fading Gradients */}
-                <div className={`md:hidden absolute right-0 top-0 bottom-4 w-16 bg-gradient-to-l from-slate-950 via-slate-950/40 to-transparent pointer-events-none transition-opacity duration-300 ${showRightArrow ? 'opacity-100' : 'opacity-0'}`}></div>
-                <div className={`md:hidden absolute left-0 top-0 bottom-4 w-16 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent pointer-events-none transition-opacity duration-300 ${showLeftArrow ? 'opacity-100' : 'opacity-0'}`}></div>
-           </div>
-
-           <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">
-                 Card Library <span className="text-slate-500 text-sm font-normal ml-2">({filteredCards.length} results)</span>
-              </h2>
-              
-              {/* Filter Button - Mobile/Tablet Only */}
-              <button
-                onClick={() => setMobileFilterOpen(true)}
-                className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95"
-              >
-                <SlidersHorizontal className="w-5 h-5 text-white" />
-                <span className="text-white font-bold text-sm hidden sm:inline">Filters</span>
-                {/* Active Filters Badge */}
-                {(selectedColor !== 'all' || selectedSet !== 'all' || searchTerm) && (
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-[10px] font-black">
-                      {[selectedColor !== 'all', selectedSet !== 'all', searchTerm].filter(Boolean).length}
+                {showRightArrow && !mobileFilterOpen && <button onClick={() => filterScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })} className="md:hidden absolute right-0 top-1/2 -translate-y-[calc(50%+8px)] z-20 p-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-white shadow-xl animate-pulse"><ChevronRight className="w-5 h-5" strokeWidth={3}/></button>}
+           </div>           {/* Consolidated Results Header (Optimized One-Line) */}
+           <div className="mb-6 lg:mb-12 flex flex-row items-center justify-between gap-1 sm:gap-6 px-1">
+               <div className="flex items-center gap-1.5 sm:gap-4 flex-nowrap min-w-0">
+                  <h2 className="text-base xs:text-lg sm:text-lg md:text-2xl lg:text-4xl font-black text-white tracking-tight leading-relaxed whitespace-nowrap">
+                    Card Library
+                  </h2>
+                  <div className="px-3 py-2 bg-slate-900/50 rounded-xl border border-white/5 backdrop-blur-md flex-shrink-0 flex items-center justify-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                    <span className="text-slate-400 text-[10px] font-black leading-none uppercase tracking-[0.2em] whitespace-nowrap">
+                      {filteredCards.length}
                     </span>
                   </div>
-                )}
-              </button>
+               </div>
+
+               <div className="flex items-center gap-1 sm:gap-4 flex-nowrap flex-shrink-0">
+                  {/* Compact Currency Toggle */}
+                  <div className="relative group/curr">
+                     <div className="flex p-0.5 bg-black border border-white/5 rounded-lg sm:rounded-2xl relative overflow-hidden shadow-2xl ring-1 ring-white/10 w-24 xs:w-28 sm:w-32 md:w-36 h-7 sm:h-10">
+                       <div className={`absolute top-0.5 bottom-0.5 w-[calc(50%-1px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-md sm:rounded-xl transition-all duration-500 cubic-bezier(0.19, 1, 0.22, 1) shadow-[0_0_20px_rgba(251,191,36,0.3)] ${currency === 'USD' ? 'translate-x-0' : 'translate-x-full'}`} />
+                       <button onClick={() => setCurrency('USD')} className={`relative z-10 flex-1 flex items-center justify-center text-[7px] sm:text-[9px] md:text-[10px] font-black transition-all ${currency === 'USD' ? 'text-white' : 'text-slate-500 hover:text-white'}`}>USD <span className="hidden sm:inline">($)</span></button>
+                       <button onClick={() => setCurrency('INR')} className={`relative z-10 flex-1 flex items-center justify-center text-[7px] sm:text-[9px] md:text-[10px] font-black transition-all ${currency === 'INR' ? 'text-white' : 'text-slate-500 hover:text-white'}`}>INR <span className="hidden sm:inline">(₹)</span></button>
+                     </div>
+                  </div>
+
+                  {/* Settings Button */}
+                  <button
+                    onClick={() => setMobileFilterOpen(true)}
+                    className="lg:hidden flex items-center gap-1.5 sm:gap-2 px-2 sm:px-5 py-1.5 sm:py-3.5 bg-white text-slate-950 rounded-lg sm:rounded-xl shadow-xl hover:shadow-white/20 transition-all active:scale-95"
+                  >
+                    <SlidersHorizontal className="w-3 h-3 sm:w-5 sm:h-5 text-slate-950" strokeWidth={3} />
+                    <span className="text-slate-950 font-black text-[9px] sm:text-[10px] uppercase tracking-widest hidden md:inline">Settings</span>
+                    {/* Badge */}
+                    {isFilterActive && (
+                      <div className="w-2.5 h-2.5 sm:w-4 sm:h-4 bg-slate-900 rounded-full flex items-center justify-center border border-white/20">
+                        <span className="text-white text-[6px] sm:text-[8px] font-black">
+                           {[selectedSet !== 'all', searchTerm, selectedRarity !== 'all'].filter(Boolean).length}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+               </div>
            </div>
 
+           {/* Card Grid */}
            {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="aspect-[2.5/3.5] rounded-xl bg-white/5 animate-pulse"></div>
-              ))}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {[...Array(8)].map((_, i) => <div key={i} className="aspect-[2.5/3.5] rounded-2xl bg-white/5 animate-pulse" />)}
             </div>
           ) : (
             <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                 {paginatedCards.length > 0 ? (
                     paginatedCards.map((card, index) => (
                         <div 
-                        key={card.id} 
-                        onClick={() => setSelectedCard(card)}
-                        className="cursor-pointer group relative bg-slate-900 rounded-xl overflow-hidden border border-white/5 hover:border-amber-500/50 transition-all hover:shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)] hover:-translate-y-2 opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]"
+                        key={card.id} onClick={() => setSelectedCard(card)}
+                        className="cursor-pointer group relative bg-slate-900 rounded-2xl overflow-hidden border border-white/5 hover:border-white/50 transition-all hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.2)] hover:-translate-y-2 opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]"
                         style={{ animationDelay: `${index * 50}ms` }}
                         >
                         <div className="aspect-[2.5/3.5] overflow-hidden bg-slate-950 relative">
-                            <ImageWithLoader 
-                                src={card.image} 
-                                alt={card.name} 
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            />
+                            <ImageWithLoader src={getCardImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                         </div>
-                        <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-10">
-                            <div className="text-xs font-bold text-white truncate">{card.name}</div>
-                            <div className="text-[10px] text-amber-400 font-mono mt-0.5">
-                            ~{formatPrice(card.price, currency, USD_TO_INR)}
+                        <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black via-black/60 to-transparent pt-12">
+                            <div className="text-[11px] font-black text-white truncate uppercase tracking-wider">{card.name}</div>
+                            <div className="text-[10px] text-white font-bold mt-1 opacity-80 uppercase tracking-tighter">
+                            ~ {formatPrice(marketLocale === 'EN' ? card.priceEnglish : card.priceJapanese, currency, USD_TO_INR)}
                             </div>
                         </div>
                         </div>
                     ))
                 ) : (
-                    <div className="col-span-full py-12 text-center text-slate-500">
-                        No cards found matching your filters.
-                    </div>
+                    <div className="col-span-full py-24 text-center text-slate-500 font-black uppercase tracking-widest text-[10px]">No cards discovered yet.</div>
                 )}
                 </div>
 
-                {/* Pagination Controls */}
                 {totalPages > 1 && (
-                    <div className="mt-12 flex justify-center gap-2">
-                        <button
-                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    <div className="mt-16 flex flex-wrap justify-center items-center gap-1.5 sm:gap-2 px-4">
+                        <button 
+                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))} 
                             disabled={currentPage === 1}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${currentPage === 1 ? 'bg-slate-900 text-slate-600 border-white/5 cursor-not-allowed' : 'bg-slate-800 text-white border-white/10 hover:bg-slate-700'}`}
+                            className={`px-4 sm:px-5 py-2.5 rounded-lg sm:rounded-xl border transition-all text-[10px] sm:text-[11px] font-black uppercase tracking-widest ${currentPage === 1 ? 'bg-slate-900/50 text-slate-700 border-white/5 cursor-not-allowed' : 'bg-slate-900/80 border-white/10 text-slate-400 hover:bg-white/5 hover:text-white active:scale-95'}`}
                         >
                             Prev
                         </button>
-                        
-                        {/* Page Numbers */}
-                        <div className="flex gap-1 overflow-x-auto max-w-[200px] no-scrollbar">
-                           {[...Array(totalPages)].map((_, i) => {
-                               const page = i + 1;
-                               // Show first, last, and pages around current
-                               if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
-                                   return (
-                                       <button
-                                           key={page}
-                                           onClick={() => handlePageChange(page)}
-                                           className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all border ${currentPage === page ? 'bg-amber-500 text-slate-900 border-amber-500' : 'bg-slate-800 text-slate-400 border-white/10 hover:bg-slate-700'}`}
-                                       >
-                                           {page}
-                                       </button>
-                                   );
-                               } else if (page === currentPage - 2 || page === currentPage + 2) {
-                                   return <span key={page} className="flex items-center justify-center w-8 h-8 text-slate-600">...</span>;
-                               }
-                               return null;
-                           })}
+
+                        <div className="flex items-center gap-1 sm:gap-1.5">
+                            {getPageNumbers().map((page, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => typeof page === 'number' && handlePageChange(page)}
+                                    className={`min-w-[36px] sm:min-w-[44px] h-9 sm:h-10 flex items-center justify-center rounded-lg sm:rounded-xl border text-[10px] sm:text-[11px] font-black transition-all ${page === currentPage ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.25)]' : page === '...' ? 'bg-transparent border-transparent text-slate-600 cursor-default' : 'bg-slate-900/80 border-white/5 text-slate-400 hover:border-white/20 hover:text-white active:scale-95'}`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
                         </div>
 
-                        <button
-                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        <button 
+                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} 
                             disabled={currentPage === totalPages}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${currentPage === totalPages ? 'bg-slate-900 text-slate-600 border-white/5 cursor-not-allowed' : 'bg-slate-800 text-white border-white/10 hover:bg-slate-700'}`}
+                            className={`px-4 sm:px-5 py-2.5 rounded-lg sm:rounded-xl border transition-all text-[10px] sm:text-[11px] font-black uppercase tracking-widest ${currentPage === totalPages ? 'bg-slate-900/50 text-slate-700 border-white/5 cursor-not-allowed' : 'bg-slate-900/80 border-white/10 text-white hover:bg-white/5 active:scale-95'}`}
                         >
                             Next
                         </button>
@@ -551,53 +554,28 @@ const Cards = ({ currency, searchQuery }) => {
         </div>
       </div>
 
-      {/* Detail Popup (Modal) */}
+
+      {/* Detail Popup */}
       {selectedCard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedCard(null)}>
-          {/* ... existing card detail modal ... */}
-          <div 
-            className="bg-slate-900 w-full max-w-lg rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-200"
-            onClick={e => e.stopPropagation()}
-          >
-            <button 
-              onClick={() => setSelectedCard(null)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-red-500 transition-colors z-10"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedCard(null)}>
+          <div className="bg-slate-950 w-full max-w-lg rounded-[2.5rem] border border-white/10 overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] relative animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setSelectedCard(null)} className="absolute top-6 right-6 p-2.5 rounded-full bg-white/5 text-white hover:bg-white hover:text-slate-950 transition-all z-20"><X className="w-6 h-6" /></button>
             <div className="flex flex-col md:flex-row">
-              <div className="md:w-1/2 bg-slate-950 p-6 flex items-center justify-center">
-                 <div className="relative rounded-xl overflow-hidden shadow-2xl rotate-1 hover:rotate-0 transition-transform duration-500">
-                    <img src={selectedCard.image} alt={selectedCard.name} className="w-full object-cover max-w-[200px]" />
-                 </div>
+              <div className="md:w-1/2 bg-black p-8 flex items-center justify-center">
+                 <div className="relative rounded-2xl overflow-hidden shadow-2xl rotate-2 hover:rotate-0 transition-all duration-700"><img src={getCardImageUrl(selectedCard.image)} alt={selectedCard.name} className="w-full object-cover max-w-[220px]" /></div>
               </div>
-              
-              <div className="md:w-1/2 p-6 flex flex-col gap-4">
+              <div className="md:w-1/2 p-8 flex flex-col gap-6">
                  <div>
-                   <div className="text-xs text-amber-500 font-bold uppercase tracking-widest mb-1">{selectedCard.set} • {selectedCard.id}</div>
-                   <h2 className="text-2xl font-black text-white leading-tight">{selectedCard.name}</h2>
+                   <div className="text-[10px] text-white/50 font-black uppercase tracking-[0.3em] mb-2">{selectedCard.set} • {selectedCard.id}</div>
+                   <h2 className="text-3xl font-black text-white leading-none uppercase italic">{selectedCard.name}</h2>
                  </div>
-
-                 <div className="bg-white/5 rounded-lg p-3 border border-white/5">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold text-center mb-1">Approximate Value</div>
-                    <div className="text-xl font-mono font-bold text-emerald-400 text-center">
-                      {formatPrice(selectedCard.price, currency, USD_TO_INR)}
-                    </div>
-                 </div>
-
-                 <div className="space-y-2 text-sm text-slate-300">
-                    <div className="flex justify-between border-b border-white/5 pb-2">
-                       <span className="text-slate-500">Rarity</span>
-                       <span className="font-bold">{selectedCard.rarity}</span>
-                    </div>
-                 </div>
-                 
-                 <div className="mt-auto pt-4">
-                   <div className="p-3 rounded-lg bg-blue-500/10 text-blue-400 text-xs border border-blue-500/20 flex gap-2">
-                      <Info className="w-4 h-4 flex-shrink-0" />
-                      <p>Prices are estimates based on recent market activity.</p>
-                   </div>
+                  <div className="bg-white text-slate-950 rounded-2xl p-4 shadow-xl">
+                     <div className="text-[9px] font-black uppercase tracking-widest text-center mb-1 opacity-60">{marketLocale === 'EN' ? 'Global' : 'Local'} Estimate</div>
+                     <div className="text-2xl font-black text-center tabular-nums">{formatPrice(marketLocale === 'EN' ? selectedCard.priceEnglish : selectedCard.priceJapanese, currency, USD_TO_INR)}</div>
+                  </div>
+                 <div className="space-y-3">
+                    <div className="flex justify-between border-b border-white/5 pb-3"><span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Rarity</span><span className="text-xs font-black text-white uppercase italic">{selectedCard.rarity}</span></div>
+                    <div className="p-3.5 rounded-2xl bg-white/5 text-slate-400 text-[10px] font-bold border border-white/5 leading-relaxed">Prices are dynamic market estimates and may vary by vendor.</div>
                  </div>
               </div>
             </div>
@@ -605,36 +583,18 @@ const Cards = ({ currency, searchQuery }) => {
         </div>
       )}
 
-      {/* Upload Feature Popup */}
+      {/* AI Scanner Popup */}
       {showUploadPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setShowUploadPopup(false)}>
-            <div className="bg-slate-900 border border-white/10 p-8 rounded-2xl max-w-sm w-full text-center relative shadow-2xl animate-in fade-in zoom-in duration-200">
-                <button 
-                  onClick={() => setShowUploadPopup(false)}
-                  className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                
-                <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-                    <Upload className="w-8 h-8 text-amber-500" />
-                </div>
-                
-                <h3 className="text-xl font-black text-white mb-2">AI Scanner Coming Soon!</h3>
-                <p className="text-slate-400 text-sm mb-6">
-                    We are building an advanced AI model to identify your cards automatically from photos. Stay tuned for updates!
-                </p>
-                
-                <button 
-                    onClick={() => setShowUploadPopup(false)}
-                    className="w-full py-3 rounded-xl bg-amber-500 text-slate-900 font-bold hover:bg-amber-400 transition-colors"
-                >
-                    Got it
-                </button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-lg animate-in fade-in duration-300" onClick={() => setShowUploadPopup(false)}>
+            <div className="bg-slate-950 border border-white/10 p-10 rounded-[3rem] max-w-sm w-full text-center relative shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setShowUploadPopup(false)} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors"><X className="w-6 h-6" /></button>
+                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6 border border-white/10"><Upload className="w-10 h-10 text-white" /></div>
+                <h3 className="text-2xl font-black text-white mb-3 uppercase italic tracking-widest">AI Scanner</h3>
+                <p className="text-slate-400 text-sm mb-8 leading-relaxed font-bold">We are building an advanced AI model to identify your cards automatically. Stay tuned for the release!</p>
+                <button onClick={() => setShowUploadPopup(false)} className="w-full py-4 rounded-2xl bg-white text-slate-950 font-black uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Understood</button>
             </div>
         </div>
       )}
-
     </div>
   );
 };

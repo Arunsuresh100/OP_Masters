@@ -1,14 +1,18 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap, Info } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap, Info, SlidersHorizontal, Globe, Coins, Diamond } from 'lucide-react';
 import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 import { useUser } from '../context/UserContext';
 import ListingModal from '../components/ListingModal';
 import BuyModal from '../components/BuyModal';
 
-// --- Helper Components ---
+// --- Professional Helper Components ---
 
-// Card Image with Loading State
+const getCardImageUrl = (url) => {
+  if (!url) return '';
+  return `${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
+};
+
 const CardImage = ({ src, alt, className }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -17,7 +21,7 @@ const CardImage = ({ src, alt, className }) => {
     setLoaded(false);
     setError(false);
     const img = new Image();
-    img.src = src;
+    img.src = getCardImageUrl(src);
     img.onload = () => setLoaded(true);
     img.onerror = () => setError(true);
   }, [src]);
@@ -25,30 +29,22 @@ const CardImage = ({ src, alt, className }) => {
   if (error) {
     return (
       <div className={className}>
-        <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-500 text-xs">
-          <AlertCircle className="w-4 h-4" />
+        <div className="w-full h-full flex items-center justify-center bg-slate-900 text-slate-700 text-xs rounded-lg border border-white/5">
+          <AlertCircle className="w-4 h-4 opacity-30" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`relative ${className}`}>
-      {/* Loading Skeleton */}
+    <div className={`relative overflow-hidden ${className}`}>
       {!loaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 animate-pulse">
-          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
-        </div>
+        <div className="absolute inset-0 bg-slate-800 animate-pulse" />
       )}
-      {/* Actual Image */}
       <img 
-        src={src} 
+        src={getCardImageUrl(src)} 
         alt={alt} 
-        className={`w-full h-full object-cover transition-opacity duration-300 ${
-          loaded ? 'opacity-100' : 'opacity-0'
-        }`}
-        onLoad={() => setLoaded(true)}
-        onError={() => setError(true)}
+        className={`w-full h-full object-cover transition-all duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
       />
     </div>
   );
@@ -58,8 +54,8 @@ const Sparkline = ({ data, color }) => {
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
-  const height = 30;
-  const width = 100;
+  const height = 24;
+  const width = 70;
   const step = width / (data.length - 1);
 
   const points = data.map((val, i) => {
@@ -69,267 +65,96 @@ const Sparkline = ({ data, color }) => {
   }).join(' ');
 
   return (
-    <svg width={width} height={height} className="overflow-visible">
-      <polyline
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        points={points}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg width={width} height={height} className="overflow-visible opacity-30 group-hover:opacity-70 transition-opacity">
+      <polyline fill="none" stroke={color} strokeWidth="1.5" points={points} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 };
 
-const MarketTicker = ({ items }) => {
-  return (
-    <div className="w-full bg-slate-950/40 backdrop-blur-md border-y border-white/5 overflow-hidden py-3 flex items-center group relative">
-      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-slate-950 to-transparent z-10"></div>
-      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-slate-950 to-transparent z-10"></div>
-      
-      <div className="flex animate-[scroll_40s_linear_infinite] group-hover:[animation-play-state:paused] gap-12 whitespace-nowrap px-10">
-        {items.map((item, idx) => (
-          <div key={idx} className="flex items-center gap-4 bg-white/5 px-4 py-1.5 rounded-full border border-white/5 hover:border-amber-500/30 transition-all cursor-default">
-            <span className="text-slate-400 font-black text-[10px] tracking-tighter uppercase">{item.pair}</span>
-            <span className="text-white font-mono text-sm font-bold">
-              ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </span>
-            <div className={`flex items-center gap-1 text-xs font-bold ${item.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {item.change >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-              {Math.abs(item.change)}%
-            </div>
-            <div className="w-8 h-4 opacity-50">
-              <Sparkline data={item.trendData || [10, 12, 11, 14, 13, 16, 15]} color={item.change >= 0 ? '#10b981' : '#ef4444'} />
-            </div>
-          </div>
-        ))}
-         {items.map((item, idx) => (
-          <div key={`dup-${idx}`} className="flex items-center gap-4 bg-white/5 px-4 py-1.5 rounded-full border border-white/5 hover:border-amber-500/30 transition-all cursor-default">
-            <span className="text-slate-400 font-black text-[10px] tracking-tighter uppercase">{item.pair}</span>
-            <span className="text-white font-mono text-sm font-bold">
-              ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </span>
-            <div className={`flex items-center gap-1 text-xs font-bold ${item.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {item.change >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-              {Math.abs(item.change)}%
-            </div>
-             <div className="w-8 h-4 opacity-50">
-              <Sparkline data={item.trendData || [10, 12, 11, 14, 13, 16, 15]} color={item.change >= 0 ? '#10b981' : '#ef4444'} />
-            </div>
-          </div>
-        ))}
-      </div>
-      <style>{`
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes shimmer {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(100%); }
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-    </div>
-  );
-};
-
-const MarketplaceDetailModal = ({ isOpen, onClose, card, currency }) => {
+const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale }) => {
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    if (isOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
   if (!card) return null;
 
   return (
-    <div 
-      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-500 ${
-        isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-      }`}
-    >
-      {/* Backdrop - darker on mobile for focus */}
-      <div 
-        className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
-        onClick={onClose}
-      />
-
-      {/* Modal Container: Centered Horizontal Card on all devices */}
-      <div 
-        className={`relative w-full max-w-[95%] sm:max-w-2xl md:max-w-3xl bg-slate-900 border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.9)] transition-all duration-500 ease-out transform ${
-          isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-        }`}
-      >
-        {/* Animated Glow Backgrounds */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] -mr-32 -mt-32 animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] -ml-32 -mb-32 animate-pulse [animation-duration:4s]"></div>
-
-        {/* Close Button */}
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 z-50 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-slate-400 hover:text-white transition-all active:scale-95 shadow-xl"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex flex-row h-full">
-          {/* Left Side: Immersive Artwork */}
-          <div className="w-[40%] sm:w-[35%] bg-black/20 p-3 sm:p-6 flex flex-col items-center justify-center relative border-r border-white/5">
-             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-0"></div>
-             
-             <div className="relative group">
-                <div className="absolute -inset-4 bg-amber-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-full"></div>
-                <CardImage 
-                  src={card.image} 
-                  alt={card.name} 
-                  className="w-full max-w-[120px] sm:max-w-[180px] aspect-[1/1.4] rounded-xl shadow-[0_15px_30px_rgba(0,0,0,0.5)] transition-all duration-700 ease-out" 
-                />
-             </div>
-             
-             <div className="mt-3 flex flex-wrap justify-center gap-1.5 relative z-10">
-                <div className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-full text-[6px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                   {card.set}
-                </div>
-                <div className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-[6px] sm:text-[8px] font-black text-amber-500 uppercase tracking-widest whitespace-nowrap">
-                   {card.rarity}
-                </div>
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-3xl" onClick={onClose} />
+      <div className={`relative w-full max-w-[95%] md:max-w-2xl bg-slate-950 border border-white/5 rounded-[2.5rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] transition-all duration-500 ease-out transform ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+        <button onClick={onClose} className="absolute top-6 right-6 z-50 p-3 bg-white/5 hover:bg-white text-white hover:text-slate-950 rounded-full transition-all active:scale-95 shadow-xl border border-white/10"><X className="w-5 h-5" /></button>
+        <div className="flex flex-col md:flex-row h-full">
+          <div className="w-full md:w-[45%] bg-black/40 p-10 flex flex-col items-center justify-center relative border-b md:border-b-0 md:border-r border-white/5">
+             <CardImage src={card.image} alt={card.name} className="w-full max-w-[200px] aspect-[1/1.4] rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-transform duration-700" />
+             <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <div className="px-5 py-1.5 bg-white text-slate-950 rounded-full text-[9px] font-bold uppercase tracking-widest leading-none">{card.rarity}</div>
+                <div className="px-5 py-1.5 bg-white/5 border border-white/10 rounded-full text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Exp: {card.set}</div>
              </div>
           </div>
-
-          {/* Right Side: Market Intelligence */}
-          <div className="w-[60%] sm:w-[65%] p-4 sm:p-8 flex flex-col relative z-10">
-             {/* Header */}
-             <div className="mb-3">
-                <div className="flex items-center gap-1.5 mb-1 text-[7px] sm:text-[8px] font-black text-slate-500 uppercase tracking-widest">
-                   <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
-                   <span>Live Market</span>
+          <div className="w-full md:w-[55%] p-10 flex flex-col relative z-10">
+             <div className="mb-8">
+                <div className="flex items-center gap-2 mb-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                   <Activity className="w-3.5 h-3.5 text-emerald-500" />
+                   <span>Live Exchange Data</span>
                 </div>
-                <h2 className="text-sm sm:text-2xl font-black text-white leading-tight tracking-tighter mb-0.5 truncate">
-                   {card.name}
-                </h2>
-                <div className="font-mono text-[7px] sm:text-[10px] text-slate-500 uppercase">{card.id}</div>
+                <h2 className="text-2xl font-bold text-white leading-none tracking-tight mb-2 uppercase">{card.name}</h2>
+                <div className="font-mono text-xs text-slate-500 font-bold uppercase">{card.id}</div>
              </div>
 
-             {/* Price Overview */}
-             <div className="grid grid-cols-2 gap-3 mb-3 pb-3 border-b border-white/5">
-                <div>
-                   <div className="text-[7px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Value</div>
-                   <div className="text-xs sm:text-xl font-black text-white font-mono tracking-tighter">
-                      {formatPrice(card.price, currency, USD_TO_INR)}
-                   </div>
+             <div className="space-y-6 mb-8 border-t border-white/5 pt-8">
+                <div className="flex justify-between items-end">
+                    <div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Asset Value</div>
+                    <div className="text-2xl font-bold text-white font-mono leading-none tracking-tighter">
+                        {formatPrice(marketLocale === 'EN' ? card.priceEnglish : card.priceJapanese, currency, USD_TO_INR)}
+                    </div>
+                    </div>
+                    <div className="text-right">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">24h Progress</div>
+                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold ${card.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                        {card.change24h >= 0 ? '+' : ''}{card.change24h}%
+                        {card.change24h >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                    </div>
+                    </div>
                 </div>
-                <div>
-                   <div className="text-[7px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 text-right">Trend</div>
-                   <div className="flex flex-col items-end">
-                      <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[8px] sm:text-[10px] font-black ${
-                         card.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                      }`}>
-                         {card.change24h >= 0 ? '+' : ''}{card.change24h}%
-                         {card.change24h >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-                      </div>
-                   </div>
-                </div>
-             </div>
 
-             {/* Detailed Metrics Grid */}
-             <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="space-y-0.5">
-                   <div className="text-[6px] sm:text-[8px] font-bold text-slate-600 uppercase tracking-widest">1H</div>
-                   <div className={`text-[8px] sm:text-xs font-black font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {card.change1h >= 0 ? '+' : ''}{card.change1h}%
-                   </div>
-                </div>
-                <div className="space-y-0.5">
-                   <div className="text-[6px] sm:text-[8px] font-bold text-slate-600 uppercase tracking-widest">1M</div>
-                   <div className={`text-[8px] sm:text-xs font-black font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {card.change1m >= 0 ? '+' : ''}{card.change1m}%
-                   </div>
-                </div>
-                <div className="space-y-0.5">
-                   <div className="text-[6px] sm:text-[8px] font-bold text-slate-600 uppercase tracking-widest">Vol</div>
-                   <div className="text-[8px] sm:text-xs font-black text-white font-mono">${(card.volume || 0)}K</div>
+                <div className="grid grid-cols-3 gap-3 bg-white/10 p-5 rounded-2xl border border-white/5 shadow-inner">
+                    <div className="text-center">
+                    <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 opacity-60">1 Hour</div>
+                    <div className={`text-[11px] font-bold font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1h >= 0 ? '+' : ''}{card.change1h}%</div>
+                    </div>
+                    <div className="text-center border-x border-white/5">
+                    <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 opacity-60">1 Month</div>
+                    <div className={`text-[11px] font-bold font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1m >= 0 ? '+' : ''}{card.change1m}%</div>
+                    </div>
+                    <div className="text-center">
+                    <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 opacity-60">Volume</div>
+                    <div className="text-[11px] font-bold text-white font-mono italic">${(card.volume || 0)}K</div>
+                    </div>
                 </div>
              </div>
 
-             {/* Trend Visualization */}
-             <div className="mb-3 bg-white/[0.02] border border-white/5 rounded-xl p-2.5 relative overflow-hidden">
-                <div className="text-[6px] font-bold text-slate-500 uppercase tracking-widest mb-2">Performance</div>
-                <div className="h-10 w-full">
-                   <svg width="100%" height="100%" viewBox="0 0 100 30" preserveAspectRatio="none">
-                      <defs>
-                         <linearGradient id="gradient-line-detail" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={card.change24h >= 0 ? '#10b981' : '#ef4444'} stopOpacity="0.3" />
-                            <stop offset="100%" stopColor={card.change24h >= 0 ? '#10b981' : '#ef4444'} stopOpacity="0" />
-                         </linearGradient>
-                      </defs>
-                      <path 
-                         d={`M ${card.trendData.map((v, i) => `${(i / (card.trendData.length - 1)) * 100},${30 - ((v - Math.min(...card.trendData)) / (Math.max(...card.trendData) - Math.min(...card.trendData) || 1)) * 30}`).join(' L ')}`} 
-                         fill="none" 
-                         stroke={card.change24h >= 0 ? '#10b981' : '#ef4444'} 
-                         strokeWidth="1.5"
-                         strokeLinecap="round"
-                         strokeLinejoin="round"
-                      />
-                      <path 
-                         d={`M ${card.trendData.map((v, i) => `${(i / (card.trendData.length - 1)) * 100},${30 - ((v - Math.min(...card.trendData)) / (Math.max(...card.trendData) - Math.min(...card.trendData) || 1)) * 30}`).join(' L ')} L 100,30 L 0,30 Z`} 
-                         fill="url(#gradient-line-detail)" 
-                      />
-                   </svg>
-                </div>
-             </div>
-
-             {/* Footer Control - REMOVED for streamlined design */}
+             <button onClick={onClose} className="mt-auto w-full py-4 rounded-xl bg-white text-slate-950 text-[10px] font-bold uppercase tracking-widest shadow-2xl active:scale-95 transition-all">Close Dashboard</button>
           </div>
         </div>
       </div>
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </div>
   );
 };
 
-
-
-// Feature flag to temporarily hide trade functionality
-const SHOW_TRADE_FEATURES = false;
-
-const Marketplace = ({ currency, searchQuery }) => {
+const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLocale }) => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchQuery || '');
-
-  useEffect(() => {
-    setSearchTerm(searchQuery || '');
-  }, [searchQuery]);
+  useEffect(() => { setSearchTerm(searchQuery || ''); }, [searchQuery]);
   const [activeFilter, setActiveFilter] = useState('all');
-  const [tradeModalOpen, setTradeModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isListingModalOpen, setIsListingModalOpen] = useState(false);
-  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const { user, openAuth } = useUser();
-  const itemsPerPage = 15;
+  const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -338,65 +163,52 @@ const Marketplace = ({ currency, searchQuery }) => {
         const data = await res.json();
         let rawCards = data?.cards || (Array.isArray(data) ? data : []);
         const augmentedCards = rawCards.map(card => {
-            const price = Number(card.price) || 0;
+            const price = marketLocale === 'EN' ? (Number(card.priceEnglish) || 0) : (Number(card.priceJapanese) || 0);
             const change24h = card.percentChange !== undefined ? Number(card.percentChange) : (Math.random() * 4 - 2);
-            // Simulate granular changes
             const change1h = Number((change24h / 24 + (Math.random() * 0.2 - 0.1)).toFixed(2));
             const change1m = Number((change1h / 60 + (Math.random() * 0.05 - 0.025)).toFixed(3));
-            
             const volume = card.volume || Math.floor(Math.random() * 500) + 50;
             const marketCap = volume * price * 1000;
             const baseTrend = Array.from({ length: 7 }, (_, i) => price * (1 + (i / 7) * (change24h / 100) + (Math.random() * 0.02 - 0.01)));
-            
-            return { 
-                ...card, 
-                price, 
-                change24h: Number(change24h.toFixed(2)), 
-                change1h,
-                change1m,
-                volume, 
-                marketCap, 
-                trendData: baseTrend 
-            };
+            return { ...card, price, change24h: Number(change24h.toFixed(2)), change1h, change1m, volume, marketCap, trendData: baseTrend };
         });
-        setCards(augmentedCards.sort((a,b) => b.price - a.price));
-      } catch (err) { console.error("Fetch failed", err); } finally { setLoading(false); }
+        setCards(augmentedCards.sort((a,b) => (marketLocale === 'EN' ? b.priceEnglish : b.priceJapanese) - (marketLocale === 'EN' ? a.priceEnglish : a.priceJapanese)));
+      } catch (err) { console.error("Market fetch error", err); } finally { setLoading(false); }
     };
     fetchCards();
-  }, []);
-
-  const openTrade = (card) => { 
-    if (!user) {
-      openAuth('login');
-      return;
-    }
-    setSelectedCard(card);
-    setIsBuyModalOpen(true);
-  };
-  
-  const handleOpenListing = () => { 
-    if (!user) {
-      openAuth('login'); 
-    } else {
-      setIsListingModalOpen(true); 
-    }
-  };
+  }, [marketLocale]);
 
   const filteredCards = useMemo(() => {
     let result = cards.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.id.toLowerCase().includes(searchTerm.toLowerCase()));
     if (activeFilter === 'gainers') result = result.filter(c => c.change24h > 0).sort((a,b) => b.change24h - a.change24h);
     else if (activeFilter === 'losers') result = result.filter(c => c.change24h < 0).sort((a,b) => a.change24h - b.change24h);
-    else if (activeFilter === 'high') result = [...result].sort((a,b) => b.price - a.price);
+    else if (activeFilter === 'high') result = [...result].sort((a,b) => (marketLocale === 'EN' ? b.priceEnglish : b.priceJapanese) - (marketLocale === 'EN' ? a.priceEnglish : a.priceJapanese));
     return result;
-  }, [cards, searchTerm, activeFilter]);
+  }, [cards, searchTerm, activeFilter, marketLocale]);
 
   const totalPages = Math.ceil(filteredCards.length / itemsPerPage);
   const currentListings = filteredCards.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const tickerItems = useMemo(() => {
-      if (cards.length === 0) return [];
-      return [...cards].sort((a,b) => b.change24h - a.change24h).slice(0, 5).concat([...cards].sort((a,b) => a.change24h - b.change24h).slice(0, 5)).map(c => ({ pair: `${c.id}/USD`, price: c.price, change: c.change24h, trendData: c.trendData }));
-  }, [cards]);
+  const getPageNumbers = () => {
+    const delta = 1;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+    range.push(1);
+    for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+        if (i < totalPages && i > 1) range.push(i);
+    }
+    if (totalPages > 1) range.push(totalPages);
+    for (let i of range) {
+        if (l) {
+            if (i - l === 2) rangeWithDots.push(l + 1);
+            else if (i - l !== 1) rangeWithDots.push('...');
+        }
+        rangeWithDots.push(i);
+        l = i;
+    }
+    return rangeWithDots;
+  };
 
   const marketStats = useMemo(() => {
     if (cards.length === 0) return { volume: 0, cap: 0, topGainer: null };
@@ -407,299 +219,218 @@ const Marketplace = ({ currency, searchQuery }) => {
   }, [cards]);
 
   if (loading) return (
-    <div className="min-h-screen pt-20 flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm z-50">
-        <div className="relative w-24 h-24 mb-8">
-           <div className="absolute inset-0 border-t-4 border-amber-500 rounded-full animate-spin"></div>
-           <div className="absolute inset-4 border-r-4 border-blue-500 rounded-full animate-spin [animation-duration:1.5s]"></div>
-           <div className="absolute inset-8 border-b-4 border-emerald-500 rounded-full animate-spin [animation-duration:2s]"></div>
-        </div>
-        <div className="text-amber-500 animate-pulse text-[10px] font-bold tracking-[0.5em] uppercase">Connecting Exchange</div>
+    <div className="min-h-screen pt-20 flex flex-col items-center justify-center bg-slate-950">
+        <div className="w-10 h-10 border-2 border-white/5 border-t-amber-500 rounded-full animate-spin mb-4 shadow-[0_0_20px_rgba(245,158,11,0.2)]"></div>
+        <div className="text-white text-[10px] font-bold tracking-[0.3em] uppercase italic opacity-40">Refreshing Market Live Data</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen pt-20 pb-12 bg-slate-950 font-sans text-slate-200">
-      <BuyModal isOpen={isBuyModalOpen} onClose={() => setIsBuyModalOpen(false)} card={selectedCard} />
-      <ListingModal isOpen={isListingModalOpen} onClose={() => setIsListingModalOpen(false)} card={cards[0]} />
-      <MarketplaceDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} card={selectedCard} currency={currency} />
+    <div className="min-h-screen pt-24 pb-12 bg-slate-950 text-slate-200">
+      <MarketplaceDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} card={selectedCard} currency={currency} marketLocale={marketLocale} />
       
-      {/* Market Ticker - REMOVED for better UX */}
+      <div className="px-4 sm:px-6 max-w-7xl mx-auto">
+         {/* App-Style Compact Stats Bar */}
+         <div className="mb-6 grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+             <div className="p-3 sm:p-4 rounded-xl bg-slate-900 border border-white/5 shadow-lg">
+                <div className="flex items-center gap-1.5 mb-1 opacity-40">
+                    <Activity className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500" />
+                    <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">24h Sales</span>
+                </div>
+                <div className="text-base sm:text-xl font-bold text-white tabular-nums tracking-tight">${(marketStats.volume / 1000).toFixed(1)}K</div>
+             </div>
 
-      <div className="px-4 sm:px-6 max-w-7xl mx-auto mt-8">
-         {/* Stats Section - User-Friendly Redesign */}
-         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 p-4 md:p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-900/50 border border-white/5 shadow-2xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
-             
-             {/* Today's Sales (was 24H VOL) */}
-             <div className="space-y-1 relative z-10 bg-slate-800/30 p-3 md:p-4 rounded-xl border-l-2 border-amber-500/30 hover:border-amber-500 transition-all group">
-                 <div className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 md:gap-2">
-                   <Activity className="w-3 h-3 md:w-4 md:h-4 text-amber-500" /> 
-                   <span className="hidden sm:inline">Today's Sales</span>
-                   <span className="sm:hidden">Sales</span>
-                   <div className="relative group/tooltip">
-                     <HelpCircle className="w-3 h-3 text-slate-500 opacity-50 hover:opacity-100 cursor-help transition-opacity" />
-                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-xl border border-white/10 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:pointer-events-auto transition-opacity z-50">
-                       Total trading value in last 24 hours
-                       <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
-                     </div>
-                   </div>
-                 </div>
-                 <div className="text-lg md:text-2xl font-black text-white">${(marketStats.volume / 1000).toFixed(1)}K</div>
-                 <div className="text-[9px] md:text-[10px] text-emerald-500 font-bold flex items-center gap-1">
-                   <ArrowUpRight className="w-3 h-3" /> +12.5%
-                 </div>
+             <div className="p-3 sm:p-4 rounded-xl bg-slate-900 border border-white/5 shadow-lg">
+                <div className="flex items-center gap-1.5 mb-1 opacity-40">
+                    <BarChart3 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500" />
+                    <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">Global Value</span>
+                </div>
+                <div className="text-base sm:text-xl font-bold text-white tabular-nums tracking-tight">${(marketStats.cap / 1000000).toFixed(1)}M</div>
              </div>
-             
-             {/* Total Market Value (was CAP) */}
-             <div className="space-y-1 relative z-10 bg-slate-800/30 p-3 md:p-4 rounded-xl border-l-2 border-blue-500/30 hover:border-blue-500 transition-all group">
-                 <div className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 md:gap-2">
-                   <BarChart3 className="w-3 h-3 md:w-4 md:h-4 text-blue-500" /> 
-                   <span className="hidden sm:inline">Total Value</span>
-                   <span className="sm:hidden">Value</span>
-                   <div className="relative group/tooltip">
-                     <HelpCircle className="w-3 h-3 text-slate-500 opacity-50 hover:opacity-100 cursor-help transition-opacity" />
-                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-xl border border-white/10 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:pointer-events-auto transition-opacity z-50">
-                       Combined value of all listed cards
-                       <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
-                     </div>
-                   </div>
-                 </div>
-                 <div className="text-lg md:text-2xl font-black text-white">${(marketStats.cap / 1000000).toFixed(1)}M</div>
-                 <div className="text-[9px] md:text-[10px] text-emerald-500 font-bold flex items-center gap-1">
-                   <ArrowUpRight className="w-3 h-3" /> +3.2%
-                 </div>
+
+             <div className="p-3 sm:p-4 rounded-xl bg-slate-900 border border-white/5 shadow-lg">
+                <div className="flex items-center gap-1.5 mb-1 opacity-40">
+                    <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-500" />
+                    <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">Market</span>
+                </div>
+                <div className="text-base sm:text-xl font-bold text-white tracking-tight uppercase">Bullish</div>
              </div>
-             
-             {/* Trending Now (was TOP PERFORMER) */}
-             <div className="hidden md:block space-y-1 relative z-10 bg-slate-800/30 p-4 rounded-xl border-l-2 border-emerald-500/30 hover:border-emerald-500 transition-all group">
-                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                   <Zap className="w-4 h-4 text-emerald-500" /> 
-                   🔥 Trending Now
-                   <div className="relative group/tooltip">
-                     <HelpCircle className="w-3 h-3 text-slate-500 opacity-50 hover:opacity-100 cursor-help transition-opacity" />
-                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-xl border border-white/10 whitespace-nowrap opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:pointer-events-auto transition-opacity z-50">
-                       Most popular card right now
-                       <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
-                     </div>
-                   </div>
-                 </div>
-                 <div className="text-2xl font-black text-emerald-400">{marketStats.topGainer?.id || '---'}</div>
-                 <div className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
-                   <TrendingUp className="w-3 h-3" /> +{marketStats.topGainer?.change1h || 0}%
-                 </div>
-             </div>
-             
-             {/* Updates Every (was NEXT LISTING UPDATE) */}
-             <div className="hidden md:block space-y-1 relative z-10 bg-slate-800/30 p-4 rounded-xl border-l-2 border-purple-500/30 hover:border-purple-500 transition-all group">
-                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                   <Clock className="w-4 h-4 text-purple-500" /> 
-                   Updates Every
-                 </div>
-                 <div className="text-2xl font-black text-white">5 min</div>
-                 <div className="text-[10px] text-purple-400 font-bold">Real-time pricing</div>
+
+             <div className="p-3 sm:p-4 rounded-xl bg-slate-900 border border-white/5 shadow-lg">
+                <div className="flex items-center gap-1.5 mb-1 opacity-40">
+                    <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-500" />
+                    <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest whitespace-nowrap whitespace-nowrap">Top</span>
+                </div>
+                <div className="text-base sm:text-xl font-bold text-emerald-400 truncate leading-none tracking-tight">{marketStats.topGainer?.id || '---'}</div>
              </div>
          </div>
-      </div>
 
-      {/* Search & Filter Bar - App-like Mobile Design */}
-      <div className="px-4 sm:px-6 max-w-7xl mx-auto mt-6 mb-6">
-        <div className="flex flex-col gap-3 p-3 md:p-4 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl">
-             {/* Search Input */}
-             <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search cards..." 
-                  className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3.5 md:py-3 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all placeholder-slate-500" 
-                  value={searchTerm} 
-                  onChange={(e) => setSearchTerm(e.target.value)} 
-                />
-             </div>
-             
-             {/* Filter Pills - App-Style Horizontal Scroll */}
-             <div className="flex items-center">
-                <div className="flex-1 flex overflow-x-auto scrollbar-hide gap-2 pb-1 sm:pb-0">
-                   {['all', 'gainers', 'losers', 'high'].map((f) => {
-                       const isActive = activeFilter === f;
+         {/* Compact Unified Header Box */}
+         <div className="mb-8 p-4 sm:p-6 rounded-2xl bg-slate-900 border border-white/5 shadow-xl space-y-4 sm:space-y-6">
+              {/* Desktop/Tablet: Search + Toggles in one row | Mobile: Stacked */}
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+                  {/* Search */}
+                  <div className="relative group flex-1">
+                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-white transition-colors" />
+                     <input 
+                        type="text" placeholder="Search Card name or ID..." value={searchTerm} 
+                        onChange={(e) => setSearchTerm(e.target.value)} 
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 sm:py-3.5 pl-11 pr-5 text-sm text-white focus:outline-none focus:border-white/20 transition-all font-bold placeholder-slate-700" 
+                     />
+                  </div>
 
-                       return (
-                         <button 
-                           key={f} 
-                           onClick={() => { setActiveFilter(f); setCurrentPage(1); }} 
-                           className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-tighter transition-all whitespace-nowrap flex items-center justify-center gap-1 sm:gap-1.5 border ${
-                             isActive 
-                               ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)]' 
-                               : 'bg-slate-800/40 text-slate-400 border-white/5 hover:text-white hover:bg-slate-700/40'
-                           }`}
-                         >
-                           {f === 'all' ? '🔍 All' : f === 'gainers' ? '🚀 Gainers' : f === 'losers' ? '🔻 Losers' : '💎 Premium'}
-                         </button>
-                       );
-                   })}
-                </div>
-               {SHOW_TRADE_FEATURES && (
-                 <button 
-                   onClick={handleOpenListing} 
-                   className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-4 md:px-6 py-3 md:py-3 rounded-xl font-black uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
-                 >
-                   <PlusCircle className="w-4 h-4" /> 
-                   <span>Sell Asset</span>
-                 </button>
-               )}
-             </div>
-        </div>
-      </div>
+                  {/* Toggles Container (Aligned Right on Desktop) */}
+                  <div className="grid grid-cols-2 lg:flex lg:items-center gap-3 flex-shrink-0">
+                     {/* Locale Toggle */}
+                     <div className="flex p-0.5 bg-black border border-white/10 rounded-lg relative overflow-hidden h-9 w-full lg:w-32 shadow-inner">
+                        <div className={`absolute top-0.5 bottom-0.5 w-[calc(50%-1px)] bg-white rounded-md transition-all duration-300 ${marketLocale === 'EN' ? 'translate-x-0' : 'translate-x-full'}`} />
+                        <button onClick={() => setMarketLocale('EN')} className={`relative z-10 flex-1 flex items-center justify-center text-[9px] font-bold transition-all ${marketLocale === 'EN' ? 'text-slate-950' : 'text-slate-500 hover:text-white'}`}>GLOBAL</button>
+                        <button onClick={() => setMarketLocale('JP')} className={`relative z-10 flex-1 flex items-center justify-center text-[9px] font-bold transition-all ${marketLocale === 'JP' ? 'text-slate-950' : 'text-slate-500 hover:text-white'}`}>LOCAL</button>
+                     </div>
+                     {/* Currency Toggle */}
+                     <div className="flex p-0.5 bg-black border border-white/10 rounded-lg relative overflow-hidden h-9 w-full lg:w-32 shadow-inner">
+                        <div className={`absolute top-0.5 bottom-0.5 w-[calc(50%-1px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-md transition-all duration-300 ${currency === 'USD' ? 'translate-x-0' : 'translate-x-full'}`} />
+                        <button onClick={() => setCurrency('USD')} className={`relative z-10 flex-1 flex items-center justify-center text-[9px] font-bold transition-all ${currency === 'USD' ? 'text-white' : 'text-slate-500 hover:text-white'}`}>USD ($)</button>
+                        <button onClick={() => setCurrency('INR')} className={`relative z-10 flex-1 flex items-center justify-center text-[9px] font-bold transition-all ${currency === 'INR' ? 'text-white' : 'text-slate-500 hover:text-white'}`}>INR (₹)</button>
+                     </div>
+                  </div>
+              </div>
+              
+              {/* Filter Chips - Clean row below */}
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                 {['all', 'gainers', 'losers', 'high'].map((f) => (
+                    <button 
+                        key={f} onClick={() => { setActiveFilter(f); setCurrentPage(1); }} 
+                        className={`px-5 py-2.5 rounded-xl text-[10px] font-bold transition-all border border-transparent whitespace-nowrap flex items-center gap-2 ${activeFilter === f ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-black/40 text-slate-400 hover:text-white'}`}
+                    >
+                      {f === 'all' ? <span>🔍 All</span> : f === 'gainers' ? <span>🚀 Gainers</span> : f === 'losers' ? <span>🔻 Losers</span> : <span>💎 Premium</span>}
+                    </button>
+                 ))}
+              </div>
+         </div>
 
-      {/* Listings - Hybrid Table/Card Layout */}
-      <div className="px-4 sm:px-6 max-w-7xl mx-auto">
-         {/* Desktop Table View */}
-         <div className="hidden md:block bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
-            <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+         {/* Professional Asset Index Section */}
+         <div className="bg-slate-900 border border-white/5 rounded-2xl overflow-hidden shadow-2xl relative">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left">
                     <thead>
-                        <tr className="bg-slate-950/50 text-[10px] uppercase font-bold tracking-widest text-slate-400 border-b border-white/10">
-                            <th className="py-5 px-6 font-bold">Card</th>
-                            <th className="py-5 px-6 text-right">Price</th>
-                            <th className="py-5 px-6 text-right">1h Change</th>
-                            <th className="py-5 px-6 text-right hidden lg:table-cell">1m Change</th>
-                            <th className="py-5 px-6 text-right">Trading Vol</th>
-                            <th className="py-5 px-6 w-32">Week Trend</th>
-                            {SHOW_TRADE_FEATURES && <th className="py-5 px-6 text-right">Action</th>}
+                        <tr className="bg-black/20 text-[10px] uppercase font-bold tracking-widest text-slate-600 border-b border-white/5">
+                            <th className="py-6 px-10">Card</th>
+                            <th className="py-6 px-8 text-right">Price</th>
+                            <th className="py-6 px-8 text-right">1h Change</th>
+                            <th className="py-6 px-8 text-right">1m Change</th>
+                            <th className="py-6 px-8 text-right">Trading Vol</th>
+                            <th className="py-6 px-10 w-44">Week Trend</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
                         {currentListings.map((card, index) => (
                             <tr 
-                                key={card.id} 
-                                onClick={() => { setSelectedCard(card); setIsDetailModalOpen(true); }}
-                                className="hover:bg-white/[0.03] transition-colors group opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards] cursor-pointer"
-                                style={{ animationDelay: `${index * 50}ms` }}
+                                key={card.id} onClick={() => { setSelectedCard(card); setIsDetailModalOpen(true); }} 
+                                className="group hover:bg-white/[0.02] transition-all cursor-pointer animate-in fade-in" 
+                                style={{ animationDelay: `${index * 30}ms` }}
                             >
-                                <td className="py-4 px-6">
-                                    <div className="flex items-center gap-4">
-                                        <CardImage src={card.image} alt={card.name} className="w-10 h-14 rounded-lg bg-slate-800 overflow-hidden relative flex-shrink-0 border border-white/10 group-hover:border-amber-500/40 transition-all shadow-md" />
-                                        <div>
-                                            <div className="font-bold text-white text-sm group-hover:text-amber-400 transition-colors line-clamp-1">{card.name}</div>
-                                            <div className="text-[10px] text-slate-500 font-mono uppercase mt-0.5 flex items-center gap-2"><span className="bg-white/5 px-1.5 py-0.5 rounded">{card.id}</span></div>
+                                <td className="py-4 px-10">
+                                    <div className="flex items-center gap-5">
+                                        <CardImage src={card.image} alt={card.name} className="w-12 h-16 rounded-xl bg-black border border-white/5 group-hover:scale-105 transition-all shadow-lg" />
+                                        <div className="min-w-0">
+                                            <div className="font-bold text-white text-sm uppercase leading-tight mb-1 group-hover:text-amber-400 transition-colors">{card.name}</div>
+                                            <div className="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-widest">{card.id}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="py-4 px-6 text-right"><div className="font-bold text-white font-mono text-sm">{formatPrice(card.price, currency, USD_TO_INR)}</div></td>
-                                <td className="py-4 px-6 text-right">
-                                    <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black ${
-                                      card.change1h >= 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                    }`}>
-                                        {card.change1h >= 0 ? '+' : ''}{card.change1h}%
-                                        {card.change1h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                <td className="py-4 px-8 text-right">
+                                    <div className="text-base font-bold text-white font-mono tracking-tighter leading-none group-hover:text-white transition-colors">
+                                        {formatPrice(marketLocale === 'EN' ? card.priceEnglish : card.priceJapanese, currency, USD_TO_INR)}
                                     </div>
                                 </td>
-                                <td className="py-4 px-6 text-right hidden lg:table-cell">
-                                    <div className={`text-[10px] font-bold ${card.change1m >= 0 ? 'text-emerald-500/70' : 'text-red-500/70'}`}>
+                                <td className="py-4 px-8 text-right">
+                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold ${card.change1h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                        {card.change1h >= 0 ? '+' : ''}{card.change1h}%
+                                        {card.change1h >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                                    </div>
+                                </td>
+                                <td className="py-4 px-8 text-right">
+                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold ${card.change1m >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                                         {card.change1m >= 0 ? '+' : ''}{card.change1m}%
                                     </div>
                                 </td>
-                                <td className="py-4 px-6 text-right"><div className="font-mono text-xs text-slate-300">${card.volume.toLocaleString()}K</div></td>
-                                <td className="py-4 px-6"><Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#ef4444'} /></td>
-                                {SHOW_TRADE_FEATURES && (
-                                  <td className="py-4 px-6 text-right"><button onClick={() => openTrade(card)} className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-black uppercase tracking-widest hover:from-amber-400 hover:to-orange-500 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95">Buy</button></td>
-                                )}
+                                <td className="py-4 px-8 text-right font-bold font-mono text-slate-500 text-sm italic opacity-50 group-hover:opacity-100 transition-opacity whitespace-nowrap">${(card.volume).toLocaleString()}K</td>
+                                <td className="py-4 px-10"><Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#f43f5e'} /></td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-            </div>
-            
-            {/* Table Pagination */}
-            {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between bg-slate-950/50">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Page {currentPage} of {totalPages}</span>
-                    <div className="flex gap-2">
-                        <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-lg bg-slate-800 text-white disabled:opacity-30 hover:bg-slate-700 transition-all text-xs font-bold">← Prev</button>
-                        <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-lg bg-slate-800 text-white disabled:opacity-30 hover:bg-slate-700 transition-all text-xs font-bold">Next →</button>
-                    </div>
-                </div>
-            )}
-         </div>
-         
-         {/* Mobile Card View */}
-         <div className="md:hidden space-y-3">
-            {currentListings.map((card, index) => (
-              <div 
-                key={card.id} 
-                onClick={() => { setSelectedCard(card); setIsDetailModalOpen(true); }}
-                className="bg-slate-900/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-amber-500/30 transition-all opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards] cursor-pointer"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                {/* Redesigned Card Header - App-style UI/UX */}
-                <div className="p-3 flex items-start gap-4 bg-gradient-to-br from-slate-900 to-slate-950">
-                  <CardImage src={card.image} alt={card.name} className="w-14 h-20 rounded-xl bg-slate-800 overflow-hidden border border-white/10 shadow-lg flex-shrink-0" />
-                  
-                  <div className="flex-1 min-w-0 flex flex-col h-20 py-0.5">
-                    <div>
-                      <div className="font-bold text-white text-sm line-clamp-1 mb-0.5">{card.name}</div>
-                      <div className="text-[9px] text-slate-500 font-mono uppercase bg-white/5 px-2 py-0.5 rounded inline-block">{card.id}</div>
-                    </div>
-                    {/* Price strategically placed with refined size for mobile */}
-                    <div className="text-sm font-bold text-white font-mono tracking-tight mt-auto">
-                      {formatPrice(card.price, currency, USD_TO_INR)}
-                    </div>
-                  </div>
-
-                  <div className="h-20 flex flex-col items-end py-1">
-                    <div className={`px-2 py-1 rounded-lg text-[10px] font-black ${
-                      card.change1h >= 0 
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                        : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                    }`}>
-                      {card.change1h >= 0 ? '+' : ''}{card.change1h}%
-                    </div>
-                    
-                    {/* Trend Sparkline with added top-spacing */}
-                    <div className="opacity-70 scale-90 origin-right pr-1 mt-auto">
-                      <Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#ef4444'} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Simplified Trade Action */}
-                {SHOW_TRADE_FEATURES && (
-                  <div className="px-3 pb-3">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); openTrade(card); }} 
-                      className="w-full py-2.5 rounded-xl bg-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-amber-500/10"
-                    >
-                      Buy Now
-                    </button>
-                  </div>
+                {currentListings.length === 0 && (
+                    <div className="py-32 text-center text-slate-600 font-bold uppercase text-[10px] tracking-[0.3em]">No matching market assets</div>
                 )}
-              </div>
-            ))}
-            
-            {/* Mobile Pagination */}
+            </div>
+
+            {/* Native App Style Mobile Feed */}
+            <div className="md:hidden divide-y divide-white/5">
+                {currentListings.map((card, index) => (
+                  <div 
+                    key={card.id} onClick={() => { setSelectedCard(card); setIsDetailModalOpen(true); }} 
+                    className="p-4 flex items-center gap-4 active:bg-white/5 transition-all animate-in fade-in"
+                  >
+                      <CardImage src={card.image} alt={card.name} className="w-16 h-22 rounded-xl bg-black border border-white/5 shadow-lg flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                          <div className="font-bold text-white text-sm uppercase leading-none mb-1.5 truncate">{card.name}</div>
+                          <div className="text-[9px] text-slate-500 font-mono font-bold mb-3 uppercase tracking-wider">{card.id}</div>
+                          <div className="flex flex-wrap items-center gap-2">
+                             <div className={`px-2 py-1 rounded-lg text-[9px] font-bold ${card.change1h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                 1h: {card.change1h >= 0 ? '+' : ''}{card.change1h}%
+                             </div>
+                             <div className={`px-2 py-1 rounded-lg text-[9px] font-bold ${card.change1m >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                 1m: {card.change1m >= 0 ? '+' : ''}{card.change1m}%
+                             </div>
+                          </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-3 px-1 flex-shrink-0">
+                          <div className="text-base font-bold text-white font-mono leading-none tracking-tighter">
+                            {formatPrice(marketLocale === 'EN' ? card.priceEnglish : card.priceJapanese, currency, USD_TO_INR)}
+                          </div>
+                          <div className="scale-90 origin-right opacity-30"><Sparkline data={card.trendData} color={card.change24h >= 0 ? '#10b981' : '#f43f5e'} /></div>
+                      </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Unified Compact Pagination */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4 pb-2">
-                    <span className="text-xs font-bold text-slate-400">Page {currentPage}/{totalPages}</span>
-                    <div className="flex gap-2">
-                        <button 
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} 
-                          disabled={currentPage === 1} 
-                          className="px-5 py-2.5 rounded-xl bg-slate-800 text-white disabled:opacity-30 hover:bg-slate-700 transition-all text-sm font-bold active:scale-95"
-                        >
-                          ←
-                        </button>
-                        <button 
-                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} 
-                          disabled={currentPage === totalPages} 
-                          className="px-5 py-2.5 rounded-xl bg-slate-800 text-white disabled:opacity-30 hover:bg-slate-700 transition-all text-sm font-bold active:scale-95"
-                        >
-                          →
-                        </button>
+                <div className="p-6 border-t border-white/5 bg-black/10 flex flex-wrap justify-center items-center gap-1.5">
+                    <button 
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} 
+                        disabled={currentPage === 1}
+                        className={`px-4 py-2.5 rounded-lg border transition-all text-[10px] font-bold uppercase tracking-widest ${currentPage === 1 ? 'bg-slate-900/50 text-slate-700 border-white/5 cursor-not-allowed' : 'bg-slate-800 border-white/10 text-slate-400 hover:bg-white/5 hover:text-white active:scale-95'}`}
+                    >
+                        Prev
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                        {getPageNumbers().map((page, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                                className={`min-w-[36px] h-9 flex items-center justify-center rounded-lg border text-[10px] font-bold transition-all ${page === currentPage ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.25)]' : page === '...' ? 'bg-transparent border-transparent text-slate-600 cursor-default' : 'bg-slate-800 border-white/5 text-slate-400 hover:border-white/10 hover:text-white active:scale-95'}`}
+                            >
+                                {page}
+                            </button>
+                        ))}
                     </div>
+
+                    <button 
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} 
+                        disabled={currentPage === totalPages}
+                        className={`px-4 py-2.5 rounded-lg border transition-all text-[10px] font-bold uppercase tracking-widest ${currentPage === totalPages ? 'bg-slate-900/50 text-slate-700 border-white/5 cursor-not-allowed' : 'bg-slate-800 border-white/10 text-white hover:bg-white/5 active:scale-95'}`}
+                    >
+                        Next
+                    </button>
                 </div>
             )}
          </div>
       </div>
-
     </div>
   );
 };

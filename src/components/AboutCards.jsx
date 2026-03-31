@@ -73,7 +73,7 @@ const AboutCards = () => {
                          
                          {/* High Value Card Image */}
                          <img 
-                            src="https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p3.png?260130" 
+                            src={`${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent("https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p3.png?260330")}`} 
                             alt="Manga Rare Pull" 
                             className="w-full h-full object-contain rounded-[2rem] shadow-2xl transform group-hover:scale-105 transition-transform duration-700" 
                          />
