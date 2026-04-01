@@ -318,12 +318,12 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
               </div>
 
               <div className="pt-4 border-t border-white/5">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Market Selection</h3>
-                <div className="relative group/locale">
-                  <div className="flex p-1 bg-black/40 border border-white/5 rounded-2xl relative overflow-hidden ring-1 ring-white/10 shadow-2xl h-12">
-                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl transition-all duration-500 cubic-bezier(0.19, 1, 0.22, 1) shadow-[0_0_20px_rgba(251,191,36,0.2)] ${marketLocale === 'EN' ? 'translate-x-0' : 'translate-x-full'}`} />
-                    <button onClick={() => setMarketLocale('EN')} className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black transition-all ${marketLocale === 'EN' ? 'text-white scale-105' : 'text-slate-500 hover:text-white'}`}>EN</button>
-                    <button onClick={() => setMarketLocale('JP')} className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black transition-all ${marketLocale === 'JP' ? 'text-white scale-105' : 'text-slate-500 hover:text-white'}`}>JP</button>
+                <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Market Rate</h2>
+                <div className="relative group/market">
+                  <div className="flex p-1 bg-black/40 border border-white/5 rounded-[10px] relative overflow-hidden ring-1 ring-white/10 shadow-2xl h-12">
+                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-[8px] transition-all duration-500 cubic-bezier(0.19, 1, 0.22, 1) shadow-[0_0_20px_rgba(251,191,36,0.2)] ${marketLocale === 'EN' ? 'translate-x-0' : 'translate-x-full'}`} />
+                    <button onClick={() => setMarketLocale('EN')} className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black transition-all ${marketLocale === 'EN' ? 'text-white scale-105' : 'text-slate-500 hover:text-white'}`}>GLOBAL</button>
+                    <button onClick={() => setMarketLocale('JP')} className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black transition-all ${marketLocale === 'JP' ? 'text-white scale-105' : 'text-slate-500 hover:text-white'}`}>JAPANESE</button>
                   </div>
                 </div>
               </div>
@@ -368,11 +368,11 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
 
             <div className="flex-1 overflow-y-auto drawer-scrollbar px-6 py-2 space-y-6">
               <div className="pb-2 border-b border-white/5">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Currency</h3>
-                <div className="flex p-1 bg-black border border-white/5 rounded-2xl h-11 relative overflow-hidden">
-                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl transition-all duration-500 shadow-[0_0_20px_rgba(251,191,36,0.2)] ${currency === 'USD' ? 'translate-x-0' : 'translate-x-full'}`} />
-                    <button onClick={() => setCurrency('USD')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${currency === 'USD' ? 'text-white' : 'text-slate-400'}`}>USD ($)</button>
-                    <button onClick={() => setCurrency('INR')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${currency === 'INR' ? 'text-white' : 'text-slate-400'}`}>INR (₹)</button>
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Market Rate</h3>
+                <div className="flex p-1 bg-black border border-white/5 rounded-[10px] h-11 relative overflow-hidden">
+                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-[8px] transition-all duration-300 shadow-[0_0_20px_rgba(251,191,36,0.2)] ${marketLocale === 'EN' ? 'translate-x-0' : 'translate-x-full'}`} />
+                    <button onClick={() => setMarketLocale('EN')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${marketLocale === 'EN' ? 'text-white' : 'text-slate-400'}`}>GLOBAL</button>
+                    <button onClick={() => setMarketLocale('JP')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${marketLocale === 'JP' ? 'text-white' : 'text-slate-400'}`}>JAPANESE</button>
                 </div>
               </div>
 
@@ -432,21 +432,53 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
 
         {/* Right Content */}
         <div className="lg:col-span-3 pt-0">
-           
-           {/* Top Rarity Filter */}
-           <div className="mb-8 relative group/filters">
-                <div className="flex items-center gap-2">
-                    <button onClick={() => filterScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' })} className={`hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-slate-950 border border-white/10 text-white transition-all opacity-0 group-hover/filters:opacity-100 shadow-xl hover:bg-white hover:text-slate-950`}><ChevronLeft className="w-4 h-4" /></button>
-                    <div ref={filterScrollRef} onScroll={checkScroll} className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar max-w-full px-2 lg:px-0 snap-x" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                        <button onClick={() => setSelectedRarity('all')} className={`flex-shrink-0 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border snap-start ${selectedRarity === 'all' ? 'bg-white text-slate-950 border-white' : 'bg-slate-900 text-slate-500 border-white/5 hover:bg-white/5 hover:text-white'}`}>All</button>
+                     {/* Top Rarity Filter - Centered with Precise Geometry */}
+           <div className="mb-12 relative">
+                <div className="flex items-center justify-center gap-3">
+                    {/* Left Navigation Control */}
+                    <button 
+                        onClick={() => filterScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' })} 
+                        className="flex-shrink-0 w-10 h-10 items-center justify-center rounded-[10px] bg-slate-900 border border-white/10 text-white hover:bg-white hover:text-slate-950 transition-all flex shadow-xl active:scale-90"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+
+                    {/* Uniform Filter Rail */}
+                    <div 
+                        ref={filterScrollRef} 
+                        className="flex items-center gap-2 overflow-x-auto no-scrollbar snap-x px-1 py-2" 
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                        {/* 'All' Selector */}
+                        <button 
+                            onClick={() => { setSelectedRarity('all'); setCurrentPage(1); }} 
+                            className={`flex-shrink-0 w-16 h-10 flex items-center justify-center rounded-[10px] text-[10px] font-black uppercase tracking-widest transition-all border snap-start ${selectedRarity === 'all' ? 'bg-white text-slate-950 border-white shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 'bg-slate-900 text-slate-500 border-white/5 hover:border-white/20 hover:text-white'}`}
+                        >
+                            All
+                        </button>
+                        
+                        {/* Dynamic Rarity Selectors */}
                         {RARITIES.map(r => (
-                          <button key={r.id} onClick={() => setSelectedRarity(r.code)} className={`flex-shrink-0 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border snap-start ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent` : 'bg-slate-900 text-slate-500 border-white/5 hover:bg-white/5 hover:text-white'}`}>{r.code}</button>
+                            <button 
+                                key={r.id} 
+                                onClick={() => { setSelectedRarity(r.code); setCurrentPage(1); }} 
+                                className={`flex-shrink-0 w-16 h-10 flex items-center justify-center rounded-[10px] text-[10px] font-black uppercase tracking-widest transition-all border snap-start ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent shadow-lg` : 'bg-slate-900 text-slate-500 border-white/5 hover:border-white/20 hover:text-white'}`}
+                            >
+                                {r.code}
+                            </button>
                         ))}
                     </div>
-                <button onClick={() => filterScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })} className={`hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-slate-950 border border-white/10 text-white transition-all opacity-0 group-hover/filters:opacity-100 shadow-xl hover:bg-white hover:text-slate-950`}><ChevronRight className="w-4 h-4" /></button>
+
+                    {/* Right Navigation Control */}
+                    <button 
+                        onClick={() => filterScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })} 
+                        className="flex-shrink-0 w-10 h-10 items-center justify-center rounded-[10px] bg-slate-900 border border-white/10 text-white hover:bg-white hover:text-slate-950 transition-all flex shadow-xl active:scale-90"
+                    >
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
                 </div>
-                {showRightArrow && !mobileFilterOpen && <button onClick={() => filterScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })} className="md:hidden absolute right-0 top-1/2 -translate-y-[calc(50%+8px)] z-20 p-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-white shadow-xl animate-pulse"><ChevronRight className="w-5 h-5" strokeWidth={3}/></button>}
-           </div>           {/* Consolidated Results Header (Optimized One-Line) */}
+           </div>
+           {/* Consolidated Results Header (Optimized One-Line) */}
            <div className="mb-6 lg:mb-12 flex flex-row items-center justify-between gap-1 sm:gap-6 px-1">
                <div className="flex items-center gap-1.5 sm:gap-4 flex-nowrap min-w-0">
                   <h2 className="text-base xs:text-lg sm:text-lg md:text-2xl lg:text-4xl font-black text-white tracking-tight leading-relaxed whitespace-nowrap">
@@ -463,8 +495,8 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
                <div className="flex items-center gap-1 sm:gap-4 flex-nowrap flex-shrink-0">
                   {/* Compact Currency Toggle */}
                   <div className="relative group/curr">
-                     <div className="flex p-0.5 bg-black border border-white/5 rounded-lg sm:rounded-2xl relative overflow-hidden shadow-2xl ring-1 ring-white/10 w-24 xs:w-28 sm:w-32 md:w-36 h-7 sm:h-10">
-                       <div className={`absolute top-0.5 bottom-0.5 w-[calc(50%-1px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-md sm:rounded-xl transition-all duration-500 cubic-bezier(0.19, 1, 0.22, 1) shadow-[0_0_20px_rgba(251,191,36,0.3)] ${currency === 'USD' ? 'translate-x-0' : 'translate-x-full'}`} />
+                     <div className="flex p-0.5 bg-black border border-white/5 rounded-[10px] relative overflow-hidden shadow-2xl ring-1 ring-white/10 w-24 xs:w-28 sm:w-32 md:w-36 h-7 sm:h-10">
+                       <div className={`absolute top-0.5 bottom-0.5 w-[calc(50%-1px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-[8px] transition-all duration-500 cubic-bezier(0.19, 1, 0.22, 1) shadow-[0_0_20px_rgba(251,191,36,0.3)] ${currency === 'USD' ? 'translate-x-0' : 'translate-x-full'}`} />
                        <button onClick={() => setCurrency('USD')} className={`relative z-10 flex-1 flex items-center justify-center text-[7px] sm:text-[9px] md:text-[10px] font-black transition-all ${currency === 'USD' ? 'text-white' : 'text-slate-500 hover:text-white'}`}>USD <span className="hidden sm:inline">($)</span></button>
                        <button onClick={() => setCurrency('INR')} className={`relative z-10 flex-1 flex items-center justify-center text-[7px] sm:text-[9px] md:text-[10px] font-black transition-all ${currency === 'INR' ? 'text-white' : 'text-slate-500 hover:text-white'}`}>INR <span className="hidden sm:inline">(₹)</span></button>
                      </div>
