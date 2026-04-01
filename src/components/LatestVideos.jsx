@@ -105,10 +105,14 @@ const LatestVideos = ({ videos = [], loading }) => {
                       </div>
                     </div>
 
-                    {/* Badge: New */}
-                    <div className="absolute top-3 left-3 bg-red-600/90 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-red-500/20 shadow-lg">
-                      <span className="text-[10px] font-black text-white tracking-wider uppercase">New</span>
-                    </div>
+                    {/* Badge: New (Only if uploaded today/recently) */}
+                    {(video.timeAgo?.toLowerCase().includes('hour') || 
+                      video.timeAgo?.toLowerCase().includes('minute') || 
+                      video.timeAgo?.toLowerCase().includes('second')) && (
+                      <div className="absolute top-3 left-3 bg-red-600/90 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-red-500/20 shadow-lg animate-pulse">
+                        <span className="text-[10px] font-black text-white tracking-wider uppercase">New</span>
+                      </div>
+                    )}
 
                     {/* Badge: Duration */}
                     <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 text-white flex items-center gap-1.5">
