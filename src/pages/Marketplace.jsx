@@ -83,72 +83,61 @@ const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale,
   return (
     <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
       <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-3xl" onClick={onClose} />
-      <div className={`relative w-full max-w-[95%] md:max-w-2xl bg-slate-950 border border-white/5 rounded-[2.5rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] transition-all duration-500 ease-out transform ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
-        <button onClick={onClose} className="absolute top-6 right-6 z-50 p-3 bg-white/5 hover:bg-white text-white hover:text-slate-950 rounded-full transition-all active:scale-95 shadow-xl border border-white/10"><X className="w-5 h-5" /></button>
-        <div className="flex flex-col md:flex-row h-full">
-          <div className="w-full md:w-[45%] bg-black/40 p-10 flex flex-col items-center justify-center relative border-b md:border-b-0 md:border-r border-white/5">
-             <CardImage src={card.image} alt={card.name} className="w-full max-w-[200px] aspect-[1/1.4] rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-transform duration-700" />
-             <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <div className="px-5 py-1.5 bg-white text-slate-950 rounded-full text-[9px] font-bold uppercase tracking-widest leading-none">{card.rarity}</div>
-                <div className="px-5 py-1.5 bg-white/5 border border-white/10 rounded-full text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Exp: {card.set}</div>
+      <div className={`relative w-full max-w-[95%] md:max-w-2xl bg-slate-950 border border-white/5 rounded-[2.5rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] transition-all duration-500 ease-out transform ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'} max-h-[85vh] flex flex-col`}>
+        <button onClick={onClose} className="absolute top-4 right-4 md:top-6 md:right-6 z-50 p-2 md:p-3 bg-white/5 hover:bg-white text-white hover:text-slate-950 rounded-full transition-all active:scale-95 shadow-xl border border-white/10"><X className="w-5 h-5" /></button>
+        <div className="flex flex-col md:flex-row h-full overflow-y-auto no-scrollbar">
+          <div className="w-full md:w-[45%] bg-black/40 p-6 md:p-10 flex flex-col items-center justify-center relative border-b md:border-b-0 md:border-r border-white/5 shrink-0">
+             <CardImage src={card.image} alt={card.name} className="w-full max-w-[150px] md:max-w-[200px] aspect-[1/1.4] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-transform duration-700" />
+             <div className="mt-6 md:mt-8 flex flex-wrap justify-center gap-3">
+                <div className="px-4 md:px-5 py-1.5 bg-white text-slate-950 rounded-full text-[8px] md:text-[9px] font-bold uppercase tracking-widest leading-none">{card.rarity}</div>
+                <div className="px-4 md:px-5 py-1.5 bg-white/5 border border-white/10 rounded-full text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Exp: {card.set}</div>
              </div>
           </div>
-          <div className="w-full md:w-[55%] p-10 flex flex-col relative z-10">
-             <div className="mb-8">
-                <div className="flex items-center gap-2 mb-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+          <div className="w-full md:w-[55%] p-6 md:p-10 flex flex-col relative z-10">
+             <div className="mb-6 md:mb-8 text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-2 md:mb-3 text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-widest">
                    <Activity className="w-3.5 h-3.5 text-emerald-500" />
                    <span>Live Exchange Data</span>
                 </div>
-                <h2 className="text-2xl font-bold text-white leading-none tracking-tight mb-2 uppercase">{card.name}</h2>
-                <div className="font-mono text-xs text-slate-500 font-bold uppercase">{card.id}</div>
+                <h2 className="text-xl md:text-2xl font-bold text-white leading-none tracking-tight mb-2 uppercase">{card.name}</h2>
+                <div className="font-mono text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wider">{card.id}</div>
              </div>
 
-             <div className="space-y-6 mb-8 border-t border-white/5 pt-8">
+             <div className="space-y-4 md:space-y-6 mb-6 md:mb-8 border-t border-white/5 pt-6 md:pt-8">
                 <div className="flex justify-between items-end">
                     <div>
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Asset Value</div>
-                    <div className="text-2xl font-bold text-white font-mono leading-none tracking-tighter">
-                        {formatPrice(marketLocale === 'EN' ? card.priceEnglish : card.priceJapanese, currency, USD_TO_INR)}
-                    </div>
+                        <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5">Asset Value</div>
+                        <div className="text-xl md:text-2xl font-bold text-white font-mono leading-none tracking-tighter">
+                            {formatPrice(marketLocale === 'EN' ? card.priceEnglish : card.priceJapanese, currency, USD_TO_INR)}
+                        </div>
                     </div>
                     <div className="text-right">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">24h Progress</div>
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold ${card.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                        {card.change24h >= 0 ? '+' : ''}{card.change24h}%
-                        {card.change24h >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                    </div>
+                        <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5">24h Progress</div>
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-[12px] font-bold ${card.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                            {card.change24h >= 0 ? '+' : ''}{card.change24h}%
+                            {card.change24h >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                        </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 bg-white/10 p-5 rounded-2xl border border-white/5 shadow-inner">
+                <div className="grid grid-cols-3 gap-2 md:gap-3 bg-white/10 p-4 md:p-5 rounded-2xl border border-white/5 shadow-inner">
                     <div className="text-center">
-                    <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 opacity-60">1 Hour</div>
-                    <div className={`text-[11px] font-bold font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1h >= 0 ? '+' : ''}{card.change1h}%</div>
+                        <div className="text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5 opacity-60">1 Hour</div>
+                        <div className={`text-[10px] md:text-[11px] font-bold font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1h >= 0 ? '+' : ''}{card.change1h}%</div>
                     </div>
                     <div className="text-center border-x border-white/5">
-                    <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 opacity-60">1 Month</div>
-                    <div className={`text-[11px] font-bold font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1m >= 0 ? '+' : ''}{card.change1m}%</div>
+                        <div className="text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5 opacity-60">1 Month</div>
+                        <div className={`text-[10px] md:text-[11px] font-bold font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1m >= 0 ? '+' : ''}{card.change1m}%</div>
                     </div>
                     <div className="text-center">
-                    <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 opacity-60">Volume</div>
-                    <div className="text-[11px] font-bold text-white font-mono italic">${(card.volume || 0)}K</div>
+                        <div className="text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5 opacity-60">Volume</div>
+                        <div className="text-[10px] md:text-[11px] font-bold text-white font-mono italic whitespace-nowrap">${(card.volume || 0)}K</div>
                     </div>
                 </div>
              </div>
 
-             <div className="mt-auto grid grid-cols-2 gap-3">
-                 <button 
-                  onClick={() => { onClose(); onBuy(card); }}
-                  className="w-full py-4 rounded-xl bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:bg-white hover:shadow-white/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-                 >
-                   <ShoppingCart className="w-3.5 h-3.5" /> Buy Asset
-                 </button>
-                 <button 
-                  onClick={() => { onClose(); onSell(card); }}
-                  className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-slate-950 transition-all active:scale-95 flex items-center justify-center gap-2"
-                 >
-                   <Tag className="w-3.5 h-3.5" /> Post Listing
-                 </button>
+             <div className="mt-auto pt-6 border-t border-white/5 shrink-0">
+                 <button onClick={onClose} className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-slate-950 transition-all active:scale-95">Dismiss Dashboard</button>
              </div>
           </div>
         </div>
