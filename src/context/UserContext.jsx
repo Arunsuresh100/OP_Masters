@@ -6,6 +6,7 @@ export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [wishlist, setWishlist] = useState([]);
+    const [ownedCards, setOwnedCards] = useState({}); // { cardId: quantity }
     const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'login' });
     const [transactions, setTransactions] = useState([]);
 
@@ -13,6 +14,7 @@ export const UserProvider = ({ children }) => {
         const savedUser = localStorage.getItem('op_user');
         const savedTransactions = localStorage.getItem('op_transactions');
         const savedWishlist = localStorage.getItem('op_wishlist');
+        const savedOwned = localStorage.getItem('op_owned_cards');
         
         if (savedUser) {
             const userData = JSON.parse(savedUser);
@@ -29,6 +31,10 @@ export const UserProvider = ({ children }) => {
         if (savedWishlist) {
             setWishlist(JSON.parse(savedWishlist));
         }
+
+        if (savedOwned) {
+            setOwnedCards(JSON.parse(savedOwned));
+        }
         
         setLoading(false);
     }, []);
@@ -40,6 +46,25 @@ export const UserProvider = ({ children }) => {
         
         setWishlist(updatedWishlist);
         localStorage.setItem('op_wishlist', JSON.stringify(updatedWishlist));
+    };
+
+    const updateOwnedCard = (cardId, quantity) => {
+        const updatedOwned = { ...ownedCards };
+        if (quantity <= 0) {
+            delete updatedOwned[cardId];
+        } else {
+            updatedOwned[cardId] = quantity;
+        }
+        setOwnedCards(updatedOwned);
+        localStorage.setItem('op_owned_cards', JSON.stringify(updatedOwned));
+    };
+
+    const toggleOwnedCard = (cardId) => {
+        if (ownedCards[cardId]) {
+            updateOwnedCard(cardId, 0);
+        } else {
+            updateOwnedCard(cardId, 1);
+        }
     };
 
     const login = (userData) => {
@@ -57,9 +82,11 @@ export const UserProvider = ({ children }) => {
         setUser(null);
         setTransactions([]);
         setWishlist([]);
+        setOwnedCards({});
         localStorage.removeItem('op_user');
         localStorage.removeItem('op_transactions');
         localStorage.removeItem('op_wishlist');
+        localStorage.removeItem('op_owned_cards');
     };
 
     const openAuth = (mode = 'login') => setAuthModal({ isOpen: true, mode });
@@ -114,7 +141,10 @@ export const UserProvider = ({ children }) => {
             addTransaction,
             getTransactions,
             wishlist,
-            toggleWishlist
+            toggleWishlist,
+            ownedCards,
+            updateOwnedCard,
+            toggleOwnedCard
         }}>
             {children}
         </UserContext.Provider>
