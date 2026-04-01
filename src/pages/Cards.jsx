@@ -123,24 +123,11 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
     }
   };
 
-  const [marketMetadata, setMarketMetadata] = useState(null);
-
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/cards`)
       .then(res => res.json())
       .then(data => {
-        // Handle new Market Data Bridge structure
-        if (data.cards) {
-            setCards(data.cards);
-            setMarketMetadata({
-                last_synced_at: data.last_synced_at,
-                source: data.source,
-                total: data.total_cards
-            });
-        } else {
-            // Fallback for legacy arrays
-            setCards(data);
-        }
+        setCards(data);
         setLoading(false);
       })
       .catch(err => {
@@ -492,25 +479,16 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
                 </div>
            </div>
            {/* Consolidated Results Header (Optimized One-Line) */}
-           <div className="mb-6 lg:mb-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-1">
-               <div className="flex flex-col gap-1 sm:gap-4 flex-nowrap min-w-0">
-                  <div className="flex items-baseline gap-4">
-                    <h2 className="text-base xs:text-lg sm:text-lg md:text-2xl lg:text-4xl font-black text-white tracking-tight leading-relaxed whitespace-nowrap uppercase">
-                        Card Library
-                    </h2>
-                    {marketMetadata && (
-                        <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                            <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none">Market Uplink Online</span>
-                            <span className="text-[8px] font-medium text-slate-500 uppercase tracking-widest leading-none border-l border-white/10 pl-2">
-                                Last Sync: {new Date(marketMetadata.last_synced_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                        </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
-                      <span className="text-[8px] sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap">Catalog Capacity: {filteredCards.length} Cards</span>
-                      {marketMetadata && <span className="hidden xs:inline text-[8px] sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap border-l border-white/5 pl-4 px-2">Market Source: {marketMetadata.source}</span>}
+           <div className="mb-6 lg:mb-12 flex flex-row items-center justify-between gap-1 sm:gap-6 px-1">
+               <div className="flex items-center gap-1.5 sm:gap-4 flex-nowrap min-w-0">
+                  <h2 className="text-base xs:text-lg sm:text-lg md:text-2xl lg:text-4xl font-black text-white tracking-tight leading-relaxed whitespace-nowrap">
+                    Card Library
+                  </h2>
+                  <div className="px-3 py-2 bg-slate-900/50 rounded-xl border border-white/5 backdrop-blur-md flex-shrink-0 flex items-center justify-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                    <span className="text-slate-400 text-[10px] font-black leading-none uppercase tracking-[0.2em] whitespace-nowrap">
+                      {filteredCards.length}
+                    </span>
                   </div>
                </div>
 

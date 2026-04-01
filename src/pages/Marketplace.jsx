@@ -273,14 +273,6 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
       />
       
       <div className="px-4 sm:px-6 max-w-7xl mx-auto">
-         {/* Market Uplink Status */}
-         <div className="mb-4 flex items-center gap-3">
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Market Uplink Online</span>
-             </div>
-             <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">// Real-time TCG Market Data via OPTCG Sync Engine</span>
-         </div>
          {/* App-Style Compact Stats Bar */}
          <div className="mb-6 grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
              <div className="p-3 sm:p-4 rounded-xl bg-slate-900 border border-white/5 shadow-lg">
