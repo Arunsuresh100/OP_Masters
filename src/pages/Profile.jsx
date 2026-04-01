@@ -221,6 +221,8 @@ const Profile = () => {
                 )}
 
                 {/* 2. Command Dashboard Layout */}
+                <div className="relative h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-10" />
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
                     
                     {/* Navigation Rail */}
@@ -261,7 +263,7 @@ const Profile = () => {
                             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {portfolioStats.ownedCount === 0 ? (
                                     <div className="py-24 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
-                                        <div className="w-20 h-20 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
+                                        <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
                                             <Package className="w-8 h-8 text-slate-800" />
                                         </div>
                                         <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Vault is Empty</h3>
@@ -269,42 +271,48 @@ const Profile = () => {
                                         <button onClick={() => window.location.href='/cards'} className="px-10 py-4 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl">Discover Cards</button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                                         {allCards.filter(card => (ownedCards[card.id] || 0) > 0).map((card) => {
                                             const qty = ownedCards[card.id] || 0;
+                                            const cardWorth = (card.priceEnglish || 50) * qty;
                                             return (
                                                 <div 
                                                     key={card.id} 
-                                                    className="group relative flex flex-col p-5 rounded-[2.5rem] border bg-white/[0.02] border-white/10 hover:border-white/30 transition-all duration-500 shadow-2xl hover:-translate-y-2"
+                                                    className="group relative flex flex-col p-4 sm:p-5 rounded-[2rem] sm:rounded-[2.5rem] border bg-white/[0.02] border-white/10 hover:border-white/30 transition-all duration-500 shadow-2xl hover:-translate-y-2"
                                                 >
-                                                    <div className="relative aspect-[1/1.4] rounded-[1.5rem] overflow-hidden mb-6 bg-black shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                                                    <div className="relative aspect-[1/1.4] rounded-[1.2rem] sm:rounded-[1.5rem] overflow-hidden mb-5 bg-black shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/5">
                                                         <img 
                                                             src={getCardImageUrl(card.image)} 
                                                             alt={card.name} 
                                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                                         />
-                                                        <div className="absolute top-3 right-3 bg-white text-slate-950 w-10 h-10 rounded-2xl flex flex-col items-center justify-center shadow-2xl border border-white/20">
+                                                        <div className="absolute top-2 left-2 px-2.5 py-1 bg-black/80 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-1.5 translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                                                            <div className="w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+                                                            <span className="text-[7px] font-black text-white uppercase tracking-widest">Rate {formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</span>
+                                                        </div>
+                                                        <div className="absolute bottom-2 right-2 bg-white text-slate-950 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xl">
                                                             <span className="text-[10px] font-black leading-none">{qty}</span>
-                                                            <span className="text-[7px] font-black uppercase tracking-tighter opacity-50">PCS</span>
+                                                            <span className="text-[7px] font-black uppercase tracking-tighter opacity-50">Units</span>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div className="px-1">
-                                                        <div className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1.5 opacity-60">{card.id}</div>
-                                                        <h4 className="text-sm font-black text-white uppercase tracking-tight line-clamp-1 mb-5">{card.name}</h4>
+                                                    <div className="px-1 flex flex-col h-full">
+                                                        <div className="flex justify-between items-start gap-2 mb-1">
+                                                            <h4 className="text-[11px] sm:text-[12px] font-black text-white uppercase tracking-tight line-clamp-1">{card.name}</h4>
+                                                        </div>
+                                                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-4">Worth: <span className="text-white">{formatPrice(cardWorth, currency, USD_TO_INR)}</span></div>
                                                         
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex-1 flex items-center justify-between px-4 py-3 bg-black/40 border border-white/5 rounded-2xl">
-                                                                <button onClick={() => updateOwnedCard(card.id, qty - 1)} className="p-1 text-slate-500 hover:text-rose-500 transition-colors"><Minus className="w-4 h-4" /></button>
-                                                                <span className="text-xs font-black text-white font-mono">{qty}</span>
-                                                                <button onClick={() => updateOwnedCard(card.id, qty + 1)} className="p-1 text-slate-500 hover:text-emerald-500 transition-colors"><Plus className="w-4 h-4" /></button>
+                                                        <div className="mt-auto flex items-center gap-2">
+                                                            <div className="flex-1 flex items-center justify-between px-3 py-1.5 bg-black/60 border border-white/5 rounded-xl">
+                                                                <button onClick={() => updateOwnedCard(card.id, qty - 1)} className="p-1 text-slate-500 hover:text-rose-500 transition-colors"><Minus className="w-3.5 h-3.5" /></button>
+                                                                <span className="text-[9px] font-black text-white font-mono">{qty}</span>
+                                                                <button onClick={() => updateOwnedCard(card.id, qty + 1)} className="p-1 text-slate-500 hover:text-emerald-500 transition-colors"><Plus className="w-3.5 h-3.5" /></button>
                                                             </div>
                                                             <button 
                                                                 onClick={() => updateOwnedCard(card.id, 0)}
-                                                                className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all active:scale-90"
-                                                                title="Remove from Vault"
+                                                                className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95"
                                                             >
-                                                                <X className="w-4 h-4" />
+                                                                <X className="w-3.5 h-3.5" />
                                                             </button>
                                                         </div>
                                                     </div>
@@ -318,36 +326,41 @@ const Profile = () => {
 
                         {/* TAB: WISHLIST HUB */}
                         {activeTab === 'wishlist' && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
                                 {wishlist.length === 0 ? (
                                     <div className="py-24 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
-                                        <div className="w-20 h-20 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
+                                        <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
                                             <Heart className="w-8 h-8 text-slate-800" />
                                         </div>
-                                        <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Silent Watchlist</h3>
-                                        <p className="text-slate-600 text-xs font-bold uppercase tracking-widest mb-8">Save assets from the market to track them here.</p>
-                                        <button onClick={() => window.location.href='/marketplace'} className="px-10 py-4 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95">Go to Marketplace</button>
+                                        <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Watchlist Static</h3>
+                                        <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest mb-8">Save upcoming assets to monitor their daily valuation metrics.</p>
+                                        <button onClick={() => window.location.href='/marketplace'} className="px-10 py-4 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Open Marketplace</button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                                         {allCards.filter(c => wishlist.includes(c.id)).map(card => (
-                                            <div key={card.id} className="group relative bg-slate-900/50 border border-white/5 p-5 rounded-[2.5rem] hover:border-amber-500/20 transition-all duration-500">
-                                                <div className="flex gap-5">
-                                                    <div className="w-24 h-32 rounded-xl overflow-hidden bg-black flex-shrink-0">
-                                                        <img src={getCardImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                                    </div>
-                                                    <div className="flex-1 py-1">
-                                                        <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">{card.set}</div>
-                                                        <h4 className="text-sm font-black text-white uppercase tracking-tight mb-3 line-clamp-2">{card.name}</h4>
-                                                        <div className="text-xs font-bold text-white font-mono">{formatPrice(card.priceEnglish, currency, USD_TO_INR)}</div>
+                                            <div key={card.id} className="group relative bg-white/[0.02] border border-white/10 p-5 rounded-[2.5rem] hover:border-amber-500/30 transition-all duration-500 flex items-center gap-5 overflow-hidden shadow-2xl">
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl rounded-full -mr-12 -mt-12 pointer-events-none" />
+                                                <div className="w-20 h-28 rounded-2xl overflow-hidden bg-black flex-shrink-0 shadow-2xl border border-white/5">
+                                                    <img src={getCardImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                                </div>
+                                                <div className="flex-1 py-1 relative z-10 min-w-0">
+                                                    <div className="text-[7px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1 opacity-60 line-clamp-1">{card.id}</div>
+                                                    <h4 className="text-[11px] font-black text-white uppercase tracking-tight mb-4 line-clamp-1">{card.name}</h4>
+                                                    
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <div>
+                                                            <div className="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Market Rate</div>
+                                                            <div className="text-[10px] font-black text-white font-mono tracking-tighter">{formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => toggleWishlist(card.id)}
+                                                            className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95 group/x"
+                                                        >
+                                                            <X className="w-3.5 h-3.5 group-hover/x:rotate-90 transition-transform" />
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                <button 
-                                                    onClick={() => toggleWishlist(card.id)}
-                                                    className="absolute top-4 right-4 p-2 bg-slate-950 rounded-lg text-rose-500 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
                                             </div>
                                         ))}
                                     </div>
@@ -355,86 +368,198 @@ const Profile = () => {
                             </div>
                         )}
 
-                        {/* TAB: ACTIVITY Log (Trade History) */}
+                        {/* TAB: ACTIVITY Log (Trade History Split-Sector) */}
                         {activeTab === 'history' && (
-                             <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] overflow-hidden shadow-2xl animate-in fade-in slide-in-from-right-4 duration-700">
-                                <div className="p-8 border-b border-white/5 bg-black/20 flex items-center gap-4">
-                                    <History className="w-5 h-5 text-emerald-500" />
-                                    <h3 className="text-base font-black text-white uppercase tracking-widest italic">Terminal Logs</h3>
-                                </div>
+                             <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-700">
                                 {getTransactions().length === 0 ? (
-                                    <div className="py-24 text-center">
-                                        <History className="w-12 h-12 text-slate-800 mx-auto mb-6 opacity-30" />
-                                        <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] italic">No digital records found for active session</p>
+                                    <div className="py-24 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
+                                        <History className="w-16 h-16 text-slate-800 mx-auto mb-6 opacity-30" />
+                                        <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] italic">No digital records found for active session</p>
                                     </div>
                                 ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                            <thead>
-                                                <tr className="bg-black/40 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] border-b border-white/5">
-                                                    <th className="py-6 px-10">Record Hash</th>
-                                                    <th className="py-6 px-10">Operation</th>
-                                                    <th className="py-6 px-10">Asset</th>
-                                                    <th className="py-6 px-10 text-right">Settlement</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-white/5">
-                                                {getTransactions().map((tx) => (
-                                                    <tr key={tx.id} className="hover:bg-white/[0.03] transition-colors">
-                                                        <td className="py-6 px-10 text-[10px] font-mono text-slate-600 uppercase tracking-tighter italic">#{tx.id.toString().slice(-8)}</td>
-                                                        <td className="py-6 px-10">
-                                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${tx.type === 'buy' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-500'}`}>{tx.type}</span>
-                                                        </td>
-                                                        <td className="py-6 px-10 text-xs font-black text-white uppercase tracking-tight">{tx.card.name}</td>
-                                                        <td className="py-6 px-10 text-right font-black font-mono text-white tracking-widest text-sm">{formatPrice(tx.total, currency, USD_TO_INR)}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                    <div className="grid grid-cols-1 gap-12">
+                                        {/* ACQUISITIONS (BUYING) */}
+                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] sm:rounded-[3.5rem] overflow-hidden shadow-2xl">
+                                            <div className="p-6 sm:p-8 border-b border-white/5 bg-black/40 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                                                        <ArrowDownRight className="w-5 h-5 text-emerald-500" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-widest italic leading-none mb-1">Acquisitions</h3>
+                                                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest opacity-60">Asset Inflow History</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="overflow-x-auto no-scrollbar">
+                                                <table className="w-full text-left">
+                                                    <thead>
+                                                        <tr className="bg-black/20 text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] border-b border-white/5 whitespace-nowrap">
+                                                            <th className="py-5 px-6 sm:px-10">Record ID</th>
+                                                            <th className="py-5 px-6 sm:px-10">Asset Detail</th>
+                                                            <th className="py-5 px-6 sm:px-10 text-right">Settlement</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-white/5">
+                                                        {getTransactions('buy').map((tx) => (
+                                                            <tr key={tx.id} className="hover:bg-white/[0.03] transition-colors group">
+                                                                <td className="py-5 px-6 sm:px-10 text-[10px] font-mono text-slate-600 uppercase italic opacity-60 group-hover:opacity-100 transition-opacity">#{tx.id.toString().slice(-8)}</td>
+                                                                <td className="py-5 px-6 sm:px-10">
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="w-8 h-10 rounded bg-black overflow-hidden flex-shrink-0 border border-white/5">
+                                                                            <img src={getCardImageUrl(tx.card.image)} className="w-full h-full object-cover" />
+                                                                        </div>
+                                                                        <span className="text-xs font-black text-white uppercase tracking-tight line-clamp-1">{tx.card.name}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-5 px-6 sm:px-10 text-right font-black font-mono text-emerald-400 tracking-widest text-sm whitespace-nowrap">{formatPrice(tx.total, currency, USD_TO_INR)}</td>
+                                                            </tr>
+                                                        ))}
+                                                        {getTransactions('buy').length === 0 && (
+                                                            <tr><td colSpan="3" className="py-12 text-center text-[10px] font-black text-slate-700 uppercase tracking-widest">No Acquisitions Recorded</td></tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        {/* LIQUIDATIONS (SELLING) */}
+                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] sm:rounded-[3.5rem] overflow-hidden shadow-2xl">
+                                            <div className="p-6 sm:p-8 border-b border-white/5 bg-black/40 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                                                        <ArrowUpRight className="w-5 h-5 text-amber-500" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-widest italic leading-none mb-1">Liquidations</h3>
+                                                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest opacity-60">Asset Outflow History</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="overflow-x-auto no-scrollbar">
+                                                <table className="w-full text-left">
+                                                    <thead>
+                                                        <tr className="bg-black/20 text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] border-b border-white/5 whitespace-nowrap">
+                                                            <th className="py-5 px-6 sm:px-10">Record ID</th>
+                                                            <th className="py-5 px-6 sm:px-10">Asset Detail</th>
+                                                            <th className="py-5 px-6 sm:px-10 text-right">Settlement</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-white/5">
+                                                        {getTransactions('sell').map((tx) => (
+                                                            <tr key={tx.id} className="hover:bg-white/[0.03] transition-colors group">
+                                                                <td className="py-5 px-6 sm:px-10 text-[10px] font-mono text-slate-600 uppercase italic opacity-60 group-hover:opacity-100 transition-opacity">#{tx.id.toString().slice(-8)}</td>
+                                                                <td className="py-5 px-6 sm:px-10">
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="w-8 h-10 rounded bg-black overflow-hidden flex-shrink-0 border border-white/5">
+                                                                            <img src={getCardImageUrl(tx.card.image)} className="w-full h-full object-cover" />
+                                                                        </div>
+                                                                        <span className="text-xs font-black text-white uppercase tracking-tight line-clamp-1">{tx.card.name}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-5 px-6 sm:px-10 text-right font-black font-mono text-amber-400 tracking-widest text-sm whitespace-nowrap">{formatPrice(tx.total, currency, USD_TO_INR)}</td>
+                                                            </tr>
+                                                        ))}
+                                                        {getTransactions('sell').length === 0 && (
+                                                            <tr><td colSpan="3" className="py-12 text-center text-[10px] font-black text-slate-700 uppercase tracking-widest">No Liquidations Recorded</td></tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                              </div>
                         )}
 
-                        {/* TAB: SUPPORT */}
+                        {/* TAB: SUPPORT (Integrated Terminal Form) */}
                         {activeTab === 'support' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-700">
-                                <div className="p-10 rounded-[3rem] bg-gradient-to-br from-indigo-600 to-amber-600 text-white relative overflow-hidden shadow-2xl">
-                                    <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
-                                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                                        <div className="text-center md:text-left">
-                                            <h2 className="text-3xl font-black uppercase tracking-tighter mb-2 italic">Priority Assistance</h2>
-                                            <p className="text-white/80 text-xs font-semibold max-w-sm leading-relaxed tracking-wide">Elite collection agents are standing by for asset valuation, contract disputes, and account security.</p>
-                                        </div>
-                                        <button onClick={() => setShowSupportModal(true)} className="px-10 py-5 bg-white text-slate-950 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all">Encrypted Support</button>
-                                    </div>
-                                </div>
+                            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-700">
+                                <div className="grid grid-cols-1 xl:grid-cols-5 gap-10">
+                                    {/* Direct Transmission Form */}
+                                    <div className="xl:col-span-3 bg-white/[0.02] border border-white/10 rounded-[3rem] p-8 sm:p-12 shadow-2xl relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[100px] rounded-full -mr-32 -mt-32 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100" />
+                                        
+                                        <div className="relative z-10">
+                                            <div className="flex items-center gap-5 mb-10">
+                                                <div className="w-14 h-14 rounded-3xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-inner">
+                                                    <Mail className="w-6 h-6 text-indigo-400" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic leading-none mb-1.5">Direct Transmission</h3>
+                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] opacity-60">Secure Admin Uplink</p>
+                                                </div>
+                                            </div>
 
-                                <div className="bg-slate-900 border border-white/5 rounded-[3rem] overflow-hidden">
-                                    {userTickets.length === 0 ? (
-                                        <div className="p-20 text-center text-slate-600 text-[10px] font-black uppercase italic tracking-widest">No active secure channels</div>
-                                    ) : (
-                                        <div className="divide-y divide-white/5">
-                                            {userTickets.map((ticket) => (
-                                                <div key={ticket.id} className="p-8 hover:bg-white/[0.02] transition-colors group">
-                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-3 mb-3">
-                                                                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${ticket.priority === 'critical' ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}>{ticket.priority}</span>
-                                                                <span className="text-[9px] font-medium text-slate-600 uppercase tracking-widest">{ticket.category}</span>
-                                                            </div>
-                                                            <h4 className="text-lg font-black text-white uppercase tracking-tight group-hover:text-amber-500 transition-colors">{ticket.subject}</h4>
-                                                        </div>
-                                                        <div className={`px-5 py-2 rounded-xl border text-[9px] font-black uppercase tracking-[0.2em] text-center ${
-                                                            ticket.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                                        }`}>
-                                                            Status: {ticket.status}
-                                                        </div>
+                                            <form className="space-y-8" onSubmit={(e) => {
+                                                e.preventDefault();
+                                                const formData = new FormData(e.target);
+                                                createTicket({
+                                                    userEmail: user.email,
+                                                    subject: formData.get('subject'),
+                                                    message: formData.get('message'),
+                                                    priority: formData.get('priority'),
+                                                    category: 'General Inquiry'
+                                                });
+                                                alert('Transmission Finalized. Admin decryption pending.');
+                                                e.target.reset();
+                                            }}>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                                    <div className="space-y-3">
+                                                        <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">Priority Protocol</label>
+                                                        <select name="priority" className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white focus:outline-none focus:border-indigo-500/50 transition-all uppercase appearance-none cursor-pointer">
+                                                            <option value="low">Standard Activity</option>
+                                                            <option value="high">Urgent Protocol</option>
+                                                            <option value="critical">Critical Anomaly</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">Transmission Subject</label>
+                                                        <input name="subject" required type="text" placeholder="Identify Subject..." className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-6 py-4 text-xs font-black text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all" />
                                                     </div>
                                                 </div>
-                                            ))}
+                                                <div className="space-y-3">
+                                                    <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1">Encrypted Log Entry</label>
+                                                    <textarea name="message" required rows="5" placeholder="Input transmission parameters..." className="w-full bg-slate-950/50 border border-white/5 rounded-[2rem] px-6 py-6 text-xs font-black text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
+                                                </div>
+                                                <button type="submit" className="w-full py-5 bg-white text-slate-950 rounded-2xl font-black uppercase text-[11px] tracking-[0.3em] shadow-2xl hover:bg-amber-400 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 group/send">
+                                                    Engage Transmission
+                                                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                                </button>
+                                            </form>
                                         </div>
-                                    )}
+                                    </div>
+
+                                    {/* Connection Feed (Response Stream) */}
+                                    <div className="xl:col-span-2 space-y-6">
+                                        <div className="flex items-center justify-between mb-4 px-4">
+                                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Feeds</h3>
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                                        </div>
+                                        
+                                        <div className="space-y-6 max-h-[600px] overflow-y-auto no-scrollbar pr-1">
+                                            {userTickets.length === 0 ? (
+                                                <div className="p-16 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-[3rem] text-slate-700 text-[10px] font-black uppercase italic tracking-[0.2em]">
+                                                    No ongoing transmissions detected
+                                                </div>
+                                            ) : (
+                                                userTickets.map((ticket) => (
+                                                    <div key={ticket.id} className="p-8 bg-white/[0.02] border border-white/10 rounded-[3rem] hover:border-amber-500/20 transition-all duration-500 group relative">
+                                                        <div className="flex items-center gap-3 mb-4">
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${ticket.priority === 'critical' ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
+                                                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{ticket.status}</span>
+                                                        </div>
+                                                        <h4 className="text-[13px] font-black text-white uppercase tracking-tight mb-3 group-hover:text-amber-500 transition-colors line-clamp-1">{ticket.subject}</h4>
+                                                        <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest line-clamp-3 leading-relaxed italic">{ticket.message}</p>
+                                                        <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+                                                            <span className="text-[7px] font-black text-slate-700 uppercase tracking-widest">Hash #{ticket.id.toString().slice(-6)}</span>
+                                                            <button className="text-[8px] font-black text-amber-500/50 hover:text-amber-500 uppercase tracking-widest transition-colors">Decrypt Thread</button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
