@@ -120,7 +120,7 @@ const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale,
                     </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/5">
+                <div className="grid grid-cols-3 gap-2 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/5 mt-auto">
                     <div className="text-center px-1">
                         <div className="text-[8px] font-medium text-slate-500 uppercase tracking-widest mb-1.5">1 Hour</div>
                         <div className={`text-[10px] font-medium font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1h >= 0 ? '+' : ''}{card.change1h}%</div>
