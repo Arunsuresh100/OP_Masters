@@ -560,24 +560,24 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedCard(null)}>
           <div className="bg-slate-950 w-full max-w-sm md:max-w-xl rounded-[2rem] md:rounded-[2.5rem] border border-white/10 overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] relative animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col no-scrollbar" onClick={e => e.stopPropagation()}>
             <button onClick={() => setSelectedCard(null)} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 rounded-full bg-white/5 text-white hover:bg-white hover:text-slate-950 transition-all z-50"><X className="w-5 h-5 md:w-6 md:h-6" /></button>
-            <div className="flex flex-col md:flex-row overflow-y-auto no-scrollbar">
-              <div className="md:w-1/2 bg-black/50 p-6 md:p-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-white/5">
-                 <div className="relative rounded-xl md:rounded-2xl overflow-hidden shadow-2xl transition-all duration-700 max-w-[160px] md:max-w-[220px]">
+            <div className="flex flex-col sm:flex-row overflow-y-auto no-scrollbar">
+              <div className="sm:w-1/2 bg-black/50 p-6 sm:p-8 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-white/5">
+                 <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all duration-700 max-w-[160px] sm:max-w-[220px]">
                     <img src={getCardImageUrl(selectedCard.image)} alt={selectedCard.name} className="w-full object-cover" />
                  </div>
               </div>
-              <div className="md:w-1/2 p-6 md:p-8 flex flex-col gap-4 md:gap-6">
-                 <div className="text-center md:text-left">
-                   <div className="text-[9px] md:text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-1">{selectedCard.set} • {selectedCard.id}</div>
-                   <h2 className="text-xl md:text-3xl font-black text-white leading-none uppercase italic tracking-tight">{selectedCard.name}</h2>
+              <div className="sm:w-1/2 p-6 sm:p-8 flex flex-col gap-4 sm:gap-6">
+                 <div className="text-center sm:text-left">
+                   <div className="text-[9px] sm:text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-1">{selectedCard.set} • {selectedCard.id}</div>
+                   <h2 className="text-xl sm:text-3xl font-black text-white leading-none uppercase italic tracking-tight">{selectedCard.name}</h2>
                  </div>
-                  <div className="bg-white text-slate-950 rounded-xl md:rounded-2xl p-3 md:p-4 shadow-xl">
-                     <div className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-center mb-0.5 md:mb-1 opacity-60">{marketLocale === 'EN' ? 'Global' : 'Local'} Estimate</div>
-                     <div className="text-xl md:text-2xl font-black text-center tabular-nums leading-none">{formatPrice(marketLocale === 'EN' ? selectedCard.priceEnglish : selectedCard.priceJapanese, currency, USD_TO_INR)}</div>
+                  <div className="bg-white text-slate-950 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-xl">
+                     <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-center mb-0.5 sm:mb-1 opacity-60">{marketLocale === 'EN' ? 'Global' : 'Local'} Estimate</div>
+                     <div className="text-xl sm:text-2xl font-black text-center tabular-nums leading-none">{formatPrice(marketLocale === 'EN' ? selectedCard.priceEnglish : selectedCard.priceJapanese, currency, USD_TO_INR)}</div>
                   </div>
                  <div className="space-y-3">
-                    <div className="flex justify-between border-b border-white/5 pb-2 md:pb-3"><span className="text-[9px] md:text-[10px] text-slate-500 font-black uppercase tracking-widest">Rarity</span><span className="text-[11px] md:text-xs font-black text-white uppercase italic">{selectedCard.rarity}</span></div>
-                    <div className="p-3 md:p-3.5 rounded-xl md:rounded-2xl bg-white/5 text-slate-500 text-[9px] md:text-[10px] font-bold border border-white/5 leading-relaxed">Dynamic market estimates based on recent exchange data.</div>
+                    <div className="flex justify-between border-b border-white/5 pb-2 sm:pb-3"><span className="text-[9px] sm:text-[10px] text-slate-500 font-black uppercase tracking-widest">Rarity</span><span className="text-[11px] sm:text-xs font-black text-white uppercase italic">{selectedCard.rarity}</span></div>
+                    <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 text-slate-500 text-[9px] sm:text-[10px] font-bold border border-white/5 leading-relaxed">Dynamic market estimates based on recent exchange data.</div>
                  </div>
                  <button onClick={() => setSelectedCard(null)} className="w-full py-3 rounded-lg bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-slate-950 transition-all active:scale-95">Dismiss</button>
               </div>
