@@ -2,8 +2,8 @@ import React, { useRef } from 'react';
 import { Play, ArrowUpRight, Youtube, Clock, ChevronRight } from 'lucide-react';
 
 const VideoSkeleton = () => (
-  <div className="min-w-[280px] md:min-w-[320px] bg-slate-900/40 rounded-3xl p-3 animate-pulse border border-white/5">
-     <div className="w-full aspect-video bg-slate-800/50 rounded-2xl mb-4"></div>
+  <div className="min-w-[280px] md:min-w-[320px] bg-slate-900/40 rounded-[15px] p-3 animate-pulse border border-white/5">
+     <div className="w-full aspect-video bg-slate-800/50 rounded-[12px] mb-4"></div>
      <div className="h-4 bg-slate-800/50 rounded-full w-3/4 mb-3"></div>
      <div className="h-3 bg-slate-800/50 rounded-full w-1/2"></div>
   </div>
@@ -18,7 +18,7 @@ const CinematicImage = ({ src, alt }) => {
               src={src} 
               alt={alt}
               onLoad={() => setLoaded(true)}
-              className={`w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 ${loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+              className={`w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 ${loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
             />
         </div>
     );
@@ -89,7 +89,7 @@ const LatestVideos = ({ videos = [], loading }) => {
                   style={{ transitionDelay: `${idx * 150}ms` }}
                 >
                   {/* Card Image Container - Glassmorphic Border with subtle Shadow */}
-                  <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-500 group-hover:shadow-red-600/20 group-hover:border-red-500/30 group-hover:-translate-y-2">
+                  <div className="relative aspect-video rounded-[15px] overflow-hidden bg-slate-900 border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-500 group-hover:shadow-red-600/20 group-hover:border-red-500/40 group-hover:-translate-y-1">
                     <CinematicImage 
                       src={video.thumbnail} 
                       alt={video.title}
@@ -141,9 +141,9 @@ const LatestVideos = ({ videos = [], loading }) => {
                 href="https://www.youtube.com/@OnepieceMasters/videos" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group flex flex-col items-center justify-center min-w-[280px] sm:min-w-[320px] md:min-w-[360px] aspect-video rounded-3xl bg-gradient-to-br from-slate-900 to-slate-950 border border-white/5 hover:border-amber-500/30 transition-all snap-center md:snap-start hover:shadow-2xl hover:shadow-amber-500/5 group"
+                className="group flex flex-col items-center justify-center min-w-[280px] sm:min-w-[320px] md:min-w-[360px] aspect-video rounded-[15px] bg-gradient-to-br from-slate-900 to-slate-950 border border-white/10 hover:border-amber-500/40 transition-all snap-center md:snap-start hover:shadow-2xl hover:shadow-amber-500/5 group"
               >
-                <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-amber-500 transition-all duration-500 shadow-xl group-hover:scale-110 group-hover:rotate-45">
+                <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-amber-500 transition-all duration-500 shadow-xl group-hover:scale-105 group-hover:rotate-12">
                    <ArrowUpRight className="w-6 h-6 text-slate-400 group-hover:text-slate-900 transition-colors" />
                 </div>
                 <span className="text-base font-bold text-white group-hover:text-amber-400 tracking-tight">Visit Channel</span>
