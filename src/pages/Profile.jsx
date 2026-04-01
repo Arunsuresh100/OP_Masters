@@ -65,13 +65,24 @@ const Profile = () => {
     const { getUserTickets } = useSupport();
     const userTickets = user ? getUserTickets(user.email) : [];
 
+    const [marketMetadata, setMarketMetadata] = useState(null);
+
     // Fetch all cards for Vault selection
     useEffect(() => {
         const fetchCards = async () => {
             try {
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
                 const data = await response.json();
-                setAllCards(data);
+                
+                if (data.cards) {
+                    setAllCards(data.cards);
+                    setMarketMetadata({
+                        last_synced_at: data.last_synced_at,
+                        source: data.source
+                    });
+                } else {
+                    setAllCards(data);
+                }
             } catch (err) {
                 console.error("Error fetching cards for vault:", err);
             } finally {
@@ -90,9 +101,14 @@ const Profile = () => {
         allCards.forEach(card => {
             const qty = ownedCards[card.id] || 0;
             if (qty > 0) {
-                const price = card.priceEnglish || 50; 
+                // Use live market price based on secondary currency preference if needed, 
+                // but usually portfolio BASE is USD/INR relative.
+                // We'll use priceEnglish as the global baseline for worth.
+                const price = card.priceEnglish || 0; 
                 const worth = qty * price;
-                const change = getDeterministicChange(card.id, user?.email) - 1;
+                
+                // Use real percentChange from bridge if available
+                const change = (card.percentChange || 0) / 100;
                 
                 totalWorth += worth;
                 totalChange += worth * change;

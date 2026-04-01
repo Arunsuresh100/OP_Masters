@@ -76,6 +76,23 @@ setInterval(() => {
     // Heartbeat
 }, 60000);
 
+// --- 24H MARKET DATA SYNC HEARTBEAT ---
+import { execFile } from 'child_process';
+const syncMarketData = () => {
+    console.log('[MARKET SYNC] Initiating 24h scheduled market data refresh...');
+    execFile('node', [path.join(__dirname, 'fetch_cards.js')], (err, stdout, stderr) => {
+        if (err) {
+            console.error('[MARKET SYNC] Scheduled sync failed:', err.message);
+        } else {
+            console.log('[MARKET SYNC] Scheduled sync complete. Market Bridge: ONLINE');
+        }
+    });
+};
+// Run sync every 24 hours
+const SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000;
+setInterval(syncMarketData, SYNC_INTERVAL_MS);
+console.log(`[MARKET SYNC] Next auto-sync scheduled in 24 hours.`);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -554,9 +571,14 @@ app.get('/api/stats', authenticateAdmin, (req, res) => {
     });
 });
 
-// Endpoint to get all cards
+// Endpoint to get all cards with Market Metadata
 app.get('/api/cards', (req, res) => {
-    res.json(readCards());
+    try {
+        const data = JSON.parse(fs.readFileSync(CARDS_FILE, 'utf8'));
+        res.json(data); // Returns { last_synced_at, source, cards, total_cards }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to read cards catalog' });
+    }
 });
 
 // Endpoint to post a new card (Protected with Middleware)
