@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap, Info, SlidersHorizontal, Globe, Coins, Diamond } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap, Info, SlidersHorizontal, Globe, Coins, Diamond, ShoppingCart, Tag } from 'lucide-react';
 import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 import { useUser } from '../context/UserContext';
@@ -71,7 +71,7 @@ const Sparkline = ({ data, color }) => {
   );
 };
 
-const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale }) => {
+const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale, onBuy, onSell }) => {
   useEffect(() => {
     if (isOpen) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = 'unset';
@@ -136,7 +136,20 @@ const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale 
                 </div>
              </div>
 
-             <button onClick={onClose} className="mt-auto w-full py-4 rounded-xl bg-white text-slate-950 text-[10px] font-bold uppercase tracking-widest shadow-2xl active:scale-95 transition-all">Close Dashboard</button>
+             <div className="mt-auto grid grid-cols-2 gap-3">
+                 <button 
+                  onClick={() => { onClose(); onBuy(card); }}
+                  className="w-full py-4 rounded-xl bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:bg-white hover:shadow-white/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                 >
+                   <ShoppingCart className="w-3.5 h-3.5" /> Buy Asset
+                 </button>
+                 <button 
+                  onClick={() => { onClose(); onSell(card); }}
+                  className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-slate-950 transition-all active:scale-95 flex items-center justify-center gap-2"
+                 >
+                   <Tag className="w-3.5 h-3.5" /> Post Listing
+                 </button>
+             </div>
           </div>
         </div>
       </div>
@@ -153,6 +166,12 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
   const [selectedCard, setSelectedCard] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  
+  // Trade Modal States
+  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+  const [isSellModalOpen, setIsSellModalOpen] = useState(false);
+  const [activeTradeCard, setActiveTradeCard] = useState(null);
+
   const { user, openAuth } = useUser();
   const itemsPerPage = 12;
 
@@ -227,7 +246,27 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-slate-950 text-slate-200">
-      <MarketplaceDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} card={selectedCard} currency={currency} marketLocale={marketLocale} />
+      <MarketplaceDetailModal 
+        isOpen={isDetailModalOpen} 
+        onClose={() => setIsDetailModalOpen(false)} 
+        card={selectedCard} 
+        currency={currency} 
+        marketLocale={marketLocale} 
+        onBuy={(card) => { setActiveTradeCard(card); setIsBuyModalOpen(true); }}
+        onSell={(card) => { setActiveTradeCard(card); setIsSellModalOpen(true); }}
+      />
+
+      <BuyModal 
+        isOpen={isBuyModalOpen} 
+        onClose={() => setIsBuyModalOpen(false)} 
+        card={activeTradeCard} 
+      />
+
+      <ListingModal 
+        isOpen={isSellModalOpen} 
+        onClose={() => setIsSellModalOpen(false)} 
+        card={activeTradeCard} 
+      />
       
       <div className="px-4 sm:px-6 max-w-7xl mx-auto">
          {/* App-Style Compact Stats Bar */}
