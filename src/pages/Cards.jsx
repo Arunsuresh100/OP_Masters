@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Upload, X, Info, Filter, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Upload, X, Info, Filter, SlidersHorizontal, ChevronLeft, ChevronRight, Package, CheckCircle2 } from 'lucide-react';
 import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
+import { useUser } from '../context/UserContext';
 
 const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLocale }) => {
+  const { ownedCards, toggleOwnedCard } = useUser();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchQuery || '');
@@ -577,7 +579,26 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
                   </div>
                  <div className="space-y-3">
                     <div className="flex justify-between border-b border-white/5 pb-2 sm:pb-3"><span className="text-[9px] sm:text-[10px] text-slate-500 font-black uppercase tracking-widest">Rarity</span><span className="text-[11px] sm:text-xs font-black text-white uppercase italic">{selectedCard.rarity}</span></div>
-                    <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 text-slate-500 text-[9px] sm:text-[10px] font-bold border border-white/5 leading-relaxed">Dynamic market estimates based on recent exchange data.</div>
+                    <button 
+                      onClick={() => toggleOwnedCard(selectedCard.id)}
+                      className={`w-full py-4 rounded-xl sm:rounded-2xl border transition-all flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest ${
+                        ownedCards[selectedCard.id] 
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                          : 'bg-white text-slate-950 border-white hover:scale-[1.02] active:scale-95 shadow-xl'
+                      }`}
+                    >
+                      {ownedCards[selectedCard.id] ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          Saved in Vault
+                        </>
+                      ) : (
+                        <>
+                          <Package className="w-4 h-4" />
+                          Add to Profile Vault
+                        </>
+                      )}
+                    </button>
                  </div>
               </div>
             </div>
