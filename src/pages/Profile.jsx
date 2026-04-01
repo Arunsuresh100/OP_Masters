@@ -119,11 +119,6 @@ const Profile = () => {
 
     const currentAvatar = CHARACTER_AVATARS.find(a => a.id === (user.selectedAvatar || 'luffy')) || CHARACTER_AVATARS[0];
 
-    const filteredVaultCards = allCards.filter(card => {
-        const matchesSearch = card.name.toLowerCase().includes(vaultSearch.toLowerCase()) || card.id.toLowerCase().includes(vaultSearch.toLowerCase());
-        const matchesFilter = vaultFilter === 'all' || card.rarity === vaultFilter || (vaultFilter === 'owned' && ownedCards[card.id]);
-        return matchesSearch && matchesFilter;
-    });
 
     return (
         <div className="min-h-screen bg-slate-950 pt-20 pb-12 sm:pt-28">
