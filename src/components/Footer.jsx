@@ -13,12 +13,12 @@ const Footer = ({ channelUrl }) => {
         <>
             <footer className="relative pt-12 pb-16 border-t border-white/10 text-center space-y-6">
                 <p className="text-slate-600 text-sm">© 2026 One Piece Masters. Unofficial Fan Site. <br/>One Piece is a trademark of Eiichiro Oda / Shueisha / Toei Animation.</p>
-                <div className="flex justify-center items-center gap-8">
-                  <a href="https://instagram.com/onepiece_masters" target="_blank" rel="noopener noreferrer" className="text-slate-700 hover:text-orange-500 transition-all transform hover:scale-110 active:scale-95">
-                    <Instagram className="w-6 h-6" />
+                <div className="flex justify-center items-center gap-6 text-slate-700">
+                  <a href="https://instagram.com/onepiece_masters" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 transition-all transform hover:scale-110 active:scale-95">
+                    <Instagram className="w-5 h-5" />
                   </a>
-                  <a href="https://discord.gg/onepiecemasters" target="_blank" rel="noopener noreferrer" className="text-slate-700 hover:text-indigo-400 transition-all transform hover:scale-110 active:scale-95">
-                    <DiscordIcon className="w-7 h-7" />
+                  <a href="https://discord.gg/onepiecemasters" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-all transform hover:scale-110 active:scale-95">
+                    <DiscordIcon className="w-6 h-6" />
                   </a>
                 </div>
             </footer>
