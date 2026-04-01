@@ -93,49 +93,52 @@ const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale,
                 <div className="px-4 sm:px-5 py-1.5 bg-white/5 border border-white/10 rounded-full text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Exp: {card.set}</div>
              </div>
           </div>
-          <div className="w-full sm:w-[55%] p-6 sm:p-10 flex flex-col relative z-10">
-             <div className="mb-6 sm:mb-8 text-center sm:text-left">
-                <div className="flex items-center justify-center sm:justify-start gap-2 mb-2 sm:mb-3 text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                   <Activity className="w-3.5 h-3.5 text-emerald-500" />
-                   <span>Live Exchange Data</span>
+          <div className="w-full sm:w-[57%] p-6 sm:p-8 flex flex-col relative z-10">
+             <div className="mb-6 sm:mb-8 text-left">
+                <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+                   <Activity className="w-3 h-3 text-emerald-500" />
+                   <span className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Live Market Index</span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white leading-none tracking-tight mb-2 uppercase">{card.name}</h2>
-                <div className="font-mono text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider">{card.id}</div>
+                <h2 className="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight mb-2 uppercase italic">{card.name}</h2>
+                <div className="font-mono text-[10px] sm:text-xs text-slate-500 font-black uppercase tracking-widest">{card.id}</div>
              </div>
 
-             <div className="space-y-4 md:space-y-6 mb-6 md:mb-8 border-t border-white/5 pt-6 md:pt-8">
-                <div className="flex justify-between items-end">
-                    <div>
-                        <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5">Asset Value</div>
-                        <div className="text-xl md:text-2xl font-bold text-white font-mono leading-none tracking-tighter">
+             <div className="space-y-6 sm:space-y-8 border-t border-white/5 pt-6 sm:pt-8 flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div className="space-y-1">
+                        <div className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Current Asset Value</div>
+                        <div className="text-2xl sm:text-4xl font-black text-white font-mono leading-none tracking-tighter">
                             {formatPrice(marketLocale === 'EN' ? card.priceEnglish : card.priceJapanese, currency, USD_TO_INR)}
                         </div>
                     </div>
-                    <div className="text-right">
-                        <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5">24h Progress</div>
-                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-[12px] font-bold ${card.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                    <div className="flex flex-col items-start sm:items-end gap-1.5">
+                        <div className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] opacity-40">24h Progress</div>
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-black ${card.change24h >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                             {card.change24h >= 0 ? '+' : ''}{card.change24h}%
-                            {card.change24h >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                            {card.change24h >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 md:gap-3 bg-white/10 p-4 md:p-5 rounded-2xl border border-white/5 shadow-inner">
-                    <div className="text-center">
-                        <div className="text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5 opacity-60">1 Hour</div>
-                        <div className={`text-[10px] md:text-[11px] font-bold font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1h >= 0 ? '+' : ''}{card.change1h}%</div>
+                <div className="grid grid-cols-3 gap-3 bg-white/5 p-5 rounded-2xl border border-white/5 shadow-inner">
+                    <div className="text-center px-2">
+                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-2">1 Hour</div>
+                        <div className={`text-[11px] font-black font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1h >= 0 ? '+' : ''}{card.change1h}%</div>
                     </div>
-                    <div className="text-center border-x border-white/5">
-                        <div className="text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5 opacity-60">1 Month</div>
-                        <div className={`text-[10px] md:text-[11px] font-bold font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1m >= 0 ? '+' : ''}{card.change1m}%</div>
+                    <div className="text-center px-2 border-x border-white/5">
+                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-2">1 Month</div>
+                        <div className={`text-[11px] font-black font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1m >= 0 ? '+' : ''}{card.change1m}%</div>
                     </div>
-                    <div className="text-center">
-                        <div className="text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1 md:mb-1.5 opacity-60">Volume</div>
-                        <div className="text-[10px] md:text-[11px] font-bold text-white font-mono italic whitespace-nowrap">${(card.volume || 0)}K</div>
+                    <div className="text-center px-2">
+                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-2">Volume</div>
+                        <div className="text-[11px] font-black text-white font-mono italic whitespace-nowrap">${(card.volume || 0)}K</div>
                     </div>
                 </div>
-             </div>
 
+                <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-slate-500 text-[10px] sm:text-[11px] font-bold leading-relaxed italic">
+                    All exchange rates are live market estimates and may vary based on platform liquidity.
+                </div>
+             </div>
           </div>
         </div>
       </div>
