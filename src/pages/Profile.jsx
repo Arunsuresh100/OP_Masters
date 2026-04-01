@@ -7,7 +7,7 @@ import {
   Shield, DollarSign, Activity, ArrowUpRight, ArrowDownRight, 
   Wallet, History, Tag, ChevronRight, LayoutDashboard, Settings, 
   HelpCircle, Package, ExternalLink, Info, Heart, Search, Filter, 
-  User, CheckCircle2, AlertCircle, Plus, Minus
+  User, CheckCircle2, AlertCircle, Plus, Minus, X
 } from 'lucide-react';
 import { formatPrice } from '../utils';
 import { USD_TO_INR, RARITIES } from '../constants';
