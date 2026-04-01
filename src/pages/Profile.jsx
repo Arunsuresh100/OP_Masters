@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useSupport } from '../context/SupportContext';
 import SupportTicketModal from '../components/SupportTicketModal';
-import { Camera, Mail, Calendar, ShoppingBag, TrendingUp, TrendingDown, Shield, DollarSign, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Camera, Mail, Calendar, ShoppingBag, TrendingUp, TrendingDown, Shield, DollarSign, Activity, ArrowUpRight, ArrowDownRight, Wallet, History, Tag, ChevronRight, LayoutDashboard, Settings, HelpCircle, Package, ExternalLink, Info } from 'lucide-react';
 import { formatPrice } from '../utils';
 import { USD_TO_INR } from '../constants';
 
@@ -28,36 +28,11 @@ import brookImg from '../assets/brook.png';
 
 // One Piece Character Avatars - Using uploaded images
 const CHARACTER_AVATARS = [
-    {
-        id: 'luffy',
-        name: 'Monkey D. Luffy',
-        role: 'Captain',
-        image: luffyImg
-    },
-    {
-        id: 'zoro',
-        name: 'Roronoa Zoro',
-        role: 'Swordsman',
-        image: zoroImg
-    },
-    {
-        id: 'sanji',
-        name: 'Sanji',
-        role: 'Cook',
-        image: sanjiImg
-    },
-    {
-        id: 'usopp',
-        name: 'Usopp',
-        role: 'Sniper',
-        image: usoppImg
-    },
-    {
-        id: 'brook',
-        name: 'Brook',
-        role: 'Musician',
-        image: brookImg
-    }
+    { id: 'luffy', name: 'Monkey D. Luffy', role: 'Captain', image: luffyImg },
+    { id: 'zoro', name: 'Roronoa Zoro', role: 'Swordsman', image: zoroImg },
+    { id: 'sanji', name: 'Sanji', role: 'Cook', image: sanjiImg },
+    { id: 'usopp', name: 'Usopp', role: 'Sniper', image: usoppImg },
+    { id: 'brook', name: 'Brook', role: 'Musician', image: brookImg }
 ];
 
 const Profile = () => {
@@ -65,63 +40,51 @@ const Profile = () => {
     const [selectedAvatar, setSelectedAvatar] = useState(user?.selectedAvatar || 'luffy');
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
     const [showSupportModal, setShowSupportModal] = useState(false);
-    const [currency, setCurrency] = useState('usd');
+    const [currency, setCurrency] = useState('USD');
+    const [activeTab, setActiveTab] = useState('portfolio');
     const { getUserTickets } = useSupport();
     const userTickets = user ? getUserTickets(user.email) : [];
 
     // Sync selectedAvatar when user changes
-    React.useEffect(() => {
+    useEffect(() => {
         if (user?.selectedAvatar) {
             setSelectedAvatar(user.selectedAvatar);
         }
     }, [user]);
 
-    // Get all transactions (hooks must be called before early return)
+    // Get all transactions
     const allTransactions = user && getTransactions ? getTransactions() : [];
     const purchases = user && getTransactions ? getTransactions('buy') : [];
     const sales = user && getTransactions ? getTransactions('sell') : [];
     const listings = allTransactions.filter(t => t.status === 'listed');
 
-    // Calculate portfolio stats (hooks must be called unconditionally)
+    // Calculate portfolio stats
     const portfolioStats = useMemo(() => {
         if (!user || purchases.length === 0) {
-            return {
-                totalInvested: 0,
-                currentValue: 0,
-                totalProfit: 0,
-                profitPercent: 0,
-                activePurchases: []
-            };
+            return { totalInvested: 0, currentValue: 0, totalProfit: 0, profitPercent: 0, activePurchases: [] };
         }
-
         const activePurchases = purchases.filter(p => p.status === 'active');
-        
         const totalInvested = activePurchases.reduce((sum, p) => sum + (p.total || 0), 0);
-        
-        // Deterministic market value changes based on card ID and user email
         const currentValue = activePurchases.reduce((sum, p) => {
             const marketChange = getDeterministicChange(p.card.id, user.email);
             return sum + (p.total * marketChange);
         }, 0);
-        
         const totalProfit = currentValue - totalInvested;
         const profitPercent = totalInvested > 0 ? ((totalProfit / totalInvested) * 100) : 0;
-        
-        return {
-            totalInvested,
-            currentValue,
-            totalProfit,
-            profitPercent,
-            activePurchases
-        };
+        return { totalInvested, currentValue, totalProfit, profitPercent, activePurchases };
     }, [user, purchases]);
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-                <div className="text-center">
-                    <h2 className="text-2xl font-black text-white mb-4">Please Login</h2>
-                    <p className="text-slate-400">You need to be logged in to view your profile.</p>
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10 animate-pulse">
+                    <Shield className="w-10 h-10 text-slate-700" />
+                </div>
+                <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Secure Area</h2>
+                <p className="text-slate-500 max-w-xs mx-auto mb-8 font-bold leading-relaxed">Verification required. Please provide your credentials to access the Trading Dashboard.</p>
+                <div className="flex gap-4">
+                    <button onClick={() => window.location.href = '/'} className="px-8 py-3 bg-white text-slate-950 rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all">Return Home</button>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('open-auth'))} className="px-8 py-3 bg-white/5 border border-white/10 text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all">Sign In</button>
                 </div>
             </div>
         );
@@ -129,393 +92,333 @@ const Profile = () => {
 
     const handleAvatarChange = (avatarId) => {
         setSelectedAvatar(avatarId);
-        if (updateAvatar) {
-            updateAvatar(avatarId);
-        }
+        if (updateAvatar) updateAvatar(avatarId);
         setShowAvatarSelector(false);
     };
 
     const currentAvatar = CHARACTER_AVATARS.find(a => a.id === selectedAvatar) || CHARACTER_AVATARS[0];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-24 pb-12 px-4">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-slate-950 pt-28 pb-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 
-                {/* Profile Header */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border border-white/10 p-8 mb-6 relative overflow-hidden">
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-500/5 via-transparent to-transparent pointer-events-none"></div>
+                {/* 1. Dashboard Hero Header */}
+                <div className="relative mb-8 p-6 sm:p-10 rounded-[2.5rem] bg-slate-900 border border-white/5 overflow-hidden shadow-2xl">
+                    {/* Abstract Grid Background */}
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 blur-[120px] rounded-full -mr-48 -mt-48 pointer-events-none" />
                     
-                    <div className="relative flex flex-col md:flex-row items-center gap-6">
-                        {/* Avatar Section */}
-                        <div className="relative">
-                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 p-1 shadow-2xl shadow-amber-500/20">
-                                {currentAvatar.image ? (
+                    <div className="relative flex flex-col lg:flex-row items-center lg:items-end justify-between gap-10">
+                        {/* Profile Identity */}
+                        <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+                            <div className="relative">
+                                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 p-1.5 shadow-[0_20px_50px_rgba(245,158,11,0.3)]">
                                     <img 
                                         src={currentAvatar.image} 
                                         alt={user.username} 
-                                        className="w-full h-full rounded-full bg-slate-800 border-4 border-slate-900 object-cover"
+                                        className="w-full h-full rounded-full bg-slate-950 object-cover border-4 border-slate-900"
                                     />
-                                ) : (
-                                    <div className="w-full h-full rounded-full bg-slate-800 border-4 border-slate-900 flex items-center justify-center">
-                                        <span className="text-5xl font-black text-amber-500 uppercase">
-                                            {user.username.charAt(0)}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                            <button 
-                                onClick={() => setShowAvatarSelector(!showAvatarSelector)}
-                                className="absolute bottom-0 right-0 p-2.5 bg-amber-500 rounded-full shadow-lg hover:bg-amber-400 transition-all group"
-                            >
-                                <Camera className="w-4 h-4 text-slate-950 group-hover:scale-110 transition-transform" />
-                            </button>
-                        </div>
-
-                        {/* User Info */}
-                        <div className="flex-1 text-center md:text-left">
-                            <div className="flex items-center gap-3 justify-center md:justify-start mb-2">
-                                <h1 className="text-3xl font-black text-white uppercase tracking-tight">{user.username}</h1>
-                                {user.verified && (
-                                    <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full flex items-center gap-1.5">
-                                        <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Verified</span>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex flex-col sm:flex-row items-center gap-4 text-sm text-slate-400 justify-center md:justify-start">
-                                <div className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-amber-500" />
-                                    <span>{user.email}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-blue-500" />
-                                    <span>Joined {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
-                                </div>
+                                <button 
+                                    onClick={() => setShowAvatarSelector(!showAvatarSelector)}
+                                    className="absolute bottom-1 right-1 p-3 bg-white text-slate-950 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all z-10"
+                                >
+                                    <Camera className="w-4 h-4" />
+                                </button>
                             </div>
-                            <div className="mt-4">
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-950/50 border border-white/10 rounded-xl">
-                                    <span className="text-xs font-bold text-slate-500 uppercase">Character:</span>
-                                    <span className="text-sm font-black text-amber-500">{currentAvatar.name}</span>
-                                    <span className="text-xs text-slate-600">•</span>
-                                    <span className="text-xs font-bold text-slate-400">{currentAvatar.role}</span>
+                            
+                            <div className="flex-1">
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4">
+                                    <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">{user.username}</h1>
+                                    <div className="px-4 py-1.5 bg-emerald-500 text-slate-950 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                                        <Shield className="w-3.5 h-3.5" /> Verified Trader
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                    <div className="flex items-center gap-2.5"><Mail className="w-4 h-4 text-amber-500" /> {user.email}</div>
+                                    <div className="flex items-center gap-2.5"><Activity className="w-4 h-4 text-purple-500" /> Level 12 Collector</div>
+                                    <div className="flex items-center gap-2.5 text-slate-400 border-l border-white/10 pl-6 hidden md:flex italic">Crew: {currentAvatar.name}</div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Trading Stats */}
-                        <div className="grid grid-cols-3 gap-4 md:gap-6">
-                            <div className="text-center">
-                                <div className="text-2xl font-black text-amber-500 mb-1">0</div>
-                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Listings</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-black text-emerald-500 mb-1">0</div>
-                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Sold</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-black text-blue-500 mb-1">0</div>
-                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Bought</div>
-                            </div>
+                        {/* Top Portfolio Stats Card */}
+                        <div className="w-full lg:w-auto min-w-[280px] bg-white text-slate-950 p-8 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative overflow-hidden group">
+                           <div className="absolute top-0 right-0 w-32 h-32 bg-slate-100 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-110 transition-transform duration-700" />
+                           <div className="relative z-10">
+                              <div className="flex items-center justify-between mb-4">
+                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 italic">Estimated Worth</span>
+                                 <div className="flex bg-slate-950/5 rounded-lg p-0.5">
+                                    <button onClick={() => setCurrency('USD')} className={`px-2 py-0.5 rounded-md text-[8px] font-black transition-all ${currency === 'USD' ? 'bg-slate-950 text-white' : 'text-slate-500'}`}>USD</button>
+                                    <button onClick={() => setCurrency('INR')} className={`px-2 py-0.5 rounded-md text-[8px] font-black transition-all ${currency === 'INR' ? 'bg-slate-950 text-white' : 'text-slate-500'}`}>INR</button>
+                                 </div>
+                              </div>
+                              <div className="text-4xl font-black tracking-tighter mb-1 tabular-nums">
+                                 {formatPrice(portfolioStats.currentValue, currency, USD_TO_INR)}
+                              </div>
+                              <div className={`flex items-center gap-2 text-[11px] font-black uppercase ${portfolioStats.totalProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                 {portfolioStats.totalProfit >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                                 {portfolioStats.profitPercent !== 0 ? `${portfolioStats.profitPercent.toFixed(2)}%` : 'Active Performance'}
+                              </div>
+                           </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Avatar Selector Modal */}
+                {/* Avatar Selector Drawer */}
                 {showAvatarSelector && (
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 mb-6 animate-in fade-in slide-in-from-top-2 duration-200">
-                        <h3 className="text-xl font-black text-white uppercase tracking-tight mb-4">Choose Your Character</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                    <div className="mb-8 p-8 bg-slate-900 border border-white/5 rounded-3xl animate-in slide-in-from-top-4 duration-500">
+                        <div className="flex items-center justify-between mb-8">
+                             <h3 className="text-xl font-black text-white uppercase tracking-widest italic">Identity Configuration</h3>
+                             <button onClick={() => setShowAvatarSelector(false)} className="text-slate-500 hover:text-white uppercase text-[10px] font-black tracking-widest transition-colors">Dismiss</button>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                             {CHARACTER_AVATARS.map((avatar) => (
                                 <button
                                     key={avatar.id}
                                     onClick={() => handleAvatarChange(avatar.id)}
-                                    className={`group relative p-4 rounded-2xl border-2 transition-all ${
-                                        selectedAvatar === avatar.id 
-                                            ? 'border-amber-500 bg-amber-500/10' 
-                                            : 'border-white/10 bg-slate-950/50 hover:border-amber-500/50'
-                                    }`}
+                                    className={`group relative p-6 rounded-2xl border transition-all ${selectedAvatar === avatar.id ? 'bg-white border-white scale-105 shadow-2xl' : 'bg-black/40 border-white/5 hover:border-white/20'}`}
                                 >
-                                    <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/20 p-1">
-                                        <img 
-                                            src={avatar.image} 
-                                            alt={avatar.name} 
-                                            className="w-full h-full rounded-full bg-slate-800"
-                                        />
+                                    <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-slate-950 shadow-inner group-hover:scale-105 transition-transform">
+                                        <img src={avatar.image} alt={avatar.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="text-center">
-                                        <div className="text-xs font-black text-white mb-1">{avatar.name.split(' ').pop()}</div>
-                                        <div className="text-[10px] font-bold text-slate-500">{avatar.role}</div>
+                                        <div className={`text-xs font-black uppercase tracking-tight mb-0.5 ${selectedAvatar === avatar.id ? 'text-slate-950' : 'text-white'}`}>{avatar.name.split(' ').pop()}</div>
+                                        <div className={`text-[9px] font-bold uppercase tracking-widest ${selectedAvatar === avatar.id ? 'text-slate-500' : 'text-slate-500'}`}>{avatar.role}</div>
                                     </div>
-                                    {selectedAvatar === avatar.id && (
-                                        <div className="absolute top-2 right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
-                                            <svg className="w-4 h-4 text-slate-950" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    )}
                                 </button>
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* Portfolio Summary */}
-                {purchases.length > 0 && (
-                    <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 rounded-2xl p-6 mb-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2.5 bg-purple-500/10 border border-purple-500/20 rounded-xl">
-                                <Activity className="w-5 h-5 text-purple-500" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-black text-white uppercase tracking-tight">Portfolio Summary</h2>
-                                <p className="text-xs text-slate-500">Your investment performance</p>
-                            </div>
-                        </div>
+                {/* 2. Main Dashboard Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    {/* LEFT: Sidebar Navigation (Desktop) */}
+                    <div className="lg:col-span-3 space-y-3">
+                        {[
+                            { id: 'portfolio', label: 'Portfolio Hub', icon: LayoutDashboard, color: 'text-amber-500' },
+                            { id: 'history', label: 'Trade History', icon: History, color: 'text-emerald-500' },
+                            { id: 'listings', label: 'My Listings', icon: Tag, color: 'text-purple-500' },
+                            { id: 'support', label: 'Support & Help', icon: HelpCircle, color: 'text-blue-500' },
+                            { id: 'settings', label: 'Preferences', icon: Settings, color: 'text-slate-500' },
+                        ].map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id)}
+                                className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all active:scale-[0.98] ${activeTab === item.id ? 'bg-white border-white' : 'bg-slate-900 border-white/5 text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-slate-950' : item.color}`} />
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${activeTab === item.id ? 'text-slate-950' : ''}`}>{item.label}</span>
+                                </div>
+                                <ChevronRight className={`w-4 h-4 opacity-30 ${activeTab === item.id ? 'text-slate-950' : ''}`} />
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* RIGHT: Content Area */}
+                    <div className="lg:col-span-9">
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-slate-950/50 border border-white/5 rounded-xl p-4">
-                                <div className="text-xs font-bold text-slate-500 uppercase mb-2">Total Invested</div>
-                                <div className="text-2xl font-black text-white font-mono">{formatPrice(portfolioStats.totalInvested, currency, USD_TO_INR)}</div>
-                            </div>
-                            
-                            <div className="bg-slate-950/50 border border-white/5 rounded-xl p-4">
-                                <div className="text-xs font-bold text-slate-500 uppercase mb-2">Current Value</div>
-                                <div className="text-2xl font-black text-white font-mono">{formatPrice(portfolioStats.currentValue, currency, USD_TO_INR)}</div>
-                            </div>
-                            
-                            <div className={`border rounded-xl p-4 ${
-                                portfolioStats.totalProfit >= 0 
-                                    ? 'bg-emerald-500/10 border-emerald-500/30' 
-                                    : 'bg-red-500/10 border-red-500/30'
-                            }`}>
-                                <div className="text-xs font-bold text-slate-500 uppercase mb-2">Total Profit/Loss</div>
-                                <div className="flex items-center gap-2">
-                                    <div className={`text-2xl font-black font-mono ${
-                                        portfolioStats.totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'
-                                    }`}>
-                                        {portfolioStats.totalProfit >= 0 ? '+' : ''}{formatPrice(portfolioStats.totalProfit, currency, USD_TO_INR)}
+                        {/* TAB: Portfolio Hub */}
+                        {activeTab === 'portfolio' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-700">
+                                {/* Insights Row */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="p-6 bg-slate-900 border border-white/5 rounded-2xl">
+                                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Capital Invested</div>
+                                        <div className="text-2xl font-black text-white tabular-nums mb-1">{formatPrice(portfolioStats.totalInvested, currency, USD_TO_INR)}</div>
+                                        <div className="text-[10px] font-bold text-slate-600">Total Buy Volume</div>
                                     </div>
-                                    {portfolioStats.totalProfit >= 0 ? (
-                                        <TrendingUp className="w-5 h-5 text-emerald-400" />
+                                    <div className="p-6 bg-slate-900 border border-white/5 rounded-2xl">
+                                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Active Positions</div>
+                                        <div className="text-2xl font-black text-white tabular-nums mb-1">{portfolioStats.activePurchases.length}</div>
+                                        <div className="text-[10px] font-bold text-slate-600">Unique Assets Owned</div>
+                                    </div>
+                                    <div className="p-6 bg-slate-900 border border-white/5 rounded-2xl relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-4">P/L Performance</div>
+                                        <div className={`text-2xl font-black tabular-nums mb-1 ${portfolioStats.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                            {portfolioStats.totalProfit >= 0 ? '+' : ''}{formatPrice(portfolioStats.totalProfit, currency, USD_TO_INR)}
+                                        </div>
+                                        <div className="text-[10px] font-bold text-slate-600 tracking-wider">Unrealized Momentum</div>
+                                    </div>
+                                </div>
+
+                                {/* Active Assets Feed */}
+                                <div className="bg-slate-900 border border-white/5 rounded-3xl overflow-hidden shadow-xl">
+                                    <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Package className="w-5 h-5 text-amber-500" />
+                                            <h3 className="text-sm font-black text-white uppercase tracking-widest italic">Inventory Holdings</h3>
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{portfolioStats.activePurchases.length} Assets</span>
+                                    </div>
+                                    
+                                    {portfolioStats.activePurchases.length === 0 ? (
+                                        <div className="p-20 text-center">
+                                            <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
+                                                <ShoppingBag className="w-8 h-8 text-slate-800" />
+                                            </div>
+                                            <p className="text-slate-500 text-xs font-black uppercase tracking-[0.2em] mb-4">Zero Inventory Detected</p>
+                                            <button onClick={() => window.location.href='/marketplace'} className="px-6 py-3 bg-white text-slate-950 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/5">Browse Market</button>
+                                        </div>
                                     ) : (
-                                        <TrendingDown className="w-5 h-5 text-red-400" />
+                                        <div className="divide-y divide-white/5">
+                                            {portfolioStats.activePurchases.map((purchase) => {
+                                                const marketChange = getDeterministicChange(purchase.card.id, user.email);
+                                                const currentVal = purchase.total * marketChange;
+                                                const profit = currentVal - purchase.total;
+                                                const percent = ((profit / purchase.total) * 100);
+                                                
+                                                return (
+                                                    <div key={purchase.id} className="p-6 flex flex-col md:flex-row items-center gap-6 group hover:bg-white/[0.02] transition-all">
+                                                        <div className="relative flex-shrink-0">
+                                                            <div className="absolute inset-0 bg-white/10 blur-[20px] rounded-full opacity-0 group-hover:opacity-40 transition-opacity" />
+                                                            <img src={purchase.card.image} alt={purchase.card.name} className="w-16 h-22 rounded-xl bg-black border border-white/10 shadow-2xl relative z-10 transition-transform group-hover:scale-105 group-hover:-rotate-2" />
+                                                        </div>
+                                                        <div className="flex-1 text-center md:text-left">
+                                                            <div className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1">{purchase.card.id}</div>
+                                                            <h4 className="text-lg font-black text-white uppercase tracking-tight leading-none mb-2">{purchase.card.name}</h4>
+                                                            <div className="flex flex-wrap justify-center md:justify-start items-center gap-4 text-[10px] font-bold text-slate-500 uppercase">
+                                                                <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Acquired {new Date(purchase.timestamp).toLocaleDateString()}</span>
+                                                                <span className="flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5" /> Entry: {formatPrice(purchase.total, currency, USD_TO_INR)}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right flex flex-col items-center md:items-end gap-1.5">
+                                                            <div className="text-xl font-black text-white tabular-nums tracking-tighter">{formatPrice(currentVal, currency, USD_TO_INR)}</div>
+                                                            <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5 ${profit >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                                                {profit >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                                                                {percent >= 0 ? '+' : ''}{percent.toFixed(2)}%
+                                                            </div>
+                                                        </div>
+                                                        <div className="pl-4 hidden md:block">
+                                                            <button className="p-3 bg-white/5 border border-white/10 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90"><ExternalLink className="w-4 h-4" /></button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     )}
                                 </div>
-                                <div className={`text-sm font-bold mt-1 ${
-                                    portfolioStats.totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'
-                                }}`}>
-                                    {portfolioStats.profitPercent >= 0 ? '+' : ''}{portfolioStats.profitPercent.toFixed(2)}%
-                                </div>
                             </div>
-                        </div>
-                    </div>
-                )}
+                        )}
 
-                {/* Trading Sections */}
-                <div className="grid md:grid-cols-2 gap-6">
-                    
-                    {/* Selling History */}
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                                <ShoppingBag className="w-5 h-5 text-amber-500" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-black text-white uppercase tracking-tight">Selling History</h2>
-                                <p className="text-xs text-slate-500">Cards you've sold or are selling</p>
-                            </div>
-                        </div>
-                        <div className="text-center py-12">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-950/50 border border-white/5 flex items-center justify-center">
-                                <ShoppingBag className="w-8 h-8 text-slate-700" />
-                            </div>
-                            <p className="text-sm font-bold text-slate-600">No selling history</p>
-                            <p className="text-xs text-slate-700 mt-1">List cards on the marketplace to start selling</p>
-                        </div>
-                    </div>
-
-                    {/* Purchase History */}
-                    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                                <TrendingUp className="w-5 h-5 text-emerald-500" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-black text-white uppercase tracking-tight">Purchase History</h2>
-                                <p className="text-xs text-slate-500">Cards you've bought</p>
-                            </div>
-                        </div>
-                        
-                        {purchases.length === 0 ? (
-                            <div className="text-center py-12">
-                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-950/50 border border-white/5 flex items-center justify-center">
-                                    <TrendingUp className="w-8 h-8 text-slate-700" />
+                        {/* TAB: Trade History */}
+                        {activeTab === 'history' && (
+                             <div className="bg-slate-900 border border-white/5 rounded-3xl overflow-hidden shadow-xl animate-in fade-in slide-in-from-right-4 duration-700">
+                                <div className="p-6 border-b border-white/5 flex items-center gap-3">
+                                    <History className="w-5 h-5 text-emerald-500" />
+                                    <h3 className="text-sm font-black text-white uppercase tracking-widest italic">Full Transaction Log</h3>
                                 </div>
-                                <p className="text-sm font-bold text-slate-600">No purchases yet</p>
-                                <p className="text-xs text-slate-700 mt-1">Browse the marketplace to start collecting</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                                {purchases.map((purchase) => {
-                                    const marketChange = getDeterministicChange(purchase.card.id, user.email);
-                                    const currentValue = purchase.total * marketChange;
-                                    const profit = currentValue - purchase.total;
-                                    const profitPercent = ((profit / purchase.total) * 100);
+                                {allTransactions.length === 0 ? (
+                                    <div className="p-20 text-center text-slate-600 font-bold uppercase text-[9px] tracking-widest italic">No trades executed in current session</div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left">
+                                            <thead>
+                                                <tr className="bg-black/20 text-[9px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5">
+                                                    <th className="py-5 px-8">Transaction ID</th>
+                                                    <th className="py-5 px-8">Type</th>
+                                                    <th className="py-5 px-8">Asset</th>
+                                                    <th className="py-5 px-8 text-right">Value</th>
+                                                    <th className="py-5 px-8 text-right">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5">
+                                                {allTransactions.map((tx) => (
+                                                    <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors">
+                                                        <td className="py-5 px-8 text-[10px] font-mono text-slate-500 uppercase">#{tx.id.slice(-6)}</td>
+                                                        <td className="py-5 px-8">
+                                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${tx.type === 'buy' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-500'}`}>{tx.type}</span>
+                                                        </td>
+                                                        <td className="py-5 px-8 text-xs font-bold text-white uppercase tracking-tight">{tx.card.name}</td>
+                                                        <td className="py-5 px-8 text-right font-black font-mono text-white tracking-tighter text-sm">{formatPrice(tx.total, currency, USD_TO_INR)}</td>
+                                                        <td className="py-5 px-8 text-right">
+                                                            <div className="flex items-center justify-end gap-2 text-[9px] font-black uppercase tracking-widest text-emerald-500">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" /> Completed
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                             </div>
+                        )}
+
+                        {/* TAB: Support */}
+                        {activeTab === 'support' && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-700">
+                                <div className="p-10 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white relative overflow-hidden shadow-2xl">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -mr-32 -mt-32 pointer-events-none" />
+                                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                                        <div className="text-center md:text-left">
+                                            <h2 className="text-3xl font-black uppercase tracking-tighter mb-2">Concierge Support</h2>
+                                            <p className="text-blue-100 text-sm font-medium max-w-sm leading-relaxed opacity-80">Our specialized trading support team is available 24/7 to assist with your asset management and contract inquiries.</p>
+                                        </div>
+                                        <button onClick={() => setShowSupportModal(true)} className="px-8 py-4 bg-white text-indigo-700 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Open Support Ticket</button>
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-900 border border-white/5 rounded-3xl overflow-hidden shadow-xl">
+                                    <div className="p-6 border-b border-white/5 flex justify-between items-center bg-black/20">
+                                        <div className="flex items-center gap-3">
+                                            <HelpCircle className="w-4 h-4 text-slate-400" />
+                                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recent Inquiries</h3>
+                                        </div>
+                                    </div>
                                     
-                                    return (
-                                        <div key={purchase.id} className={`border rounded-xl p-4 transition-all ${
-                                            profit >= 0 
-                                                ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40' 
-                                                : 'bg-red-500/5 border-red-500/20 hover:border-red-500/40'
-                                        }`}>
-                                            <div className="flex gap-3">
-                                                <img 
-                                                    src={purchase.card.image} 
-                                                    alt={purchase.card.name} 
-                                                    className="w-12 h-16 rounded bg-slate-800 object-cover flex-shrink-0"
-                                                />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-bold text-white text-sm mb-1 truncate">{purchase.card.name}</div>
-                                                    <div className="text-[10px] text-slate-500 font-mono">{purchase.card.id}</div>
-                                                    
-                                                    <div className="mt-2 space-y-1">
-                                                        <div className="flex justify-between text-xs">
-                                                            <span className="text-slate-500">Purchase:</span>
-                                                            <span className="text-slate-300 font-mono">{formatPrice(purchase.total, currency, USD_TO_INR)}</span>
+                                    {userTickets.length === 0 ? (
+                                        <div className="p-16 text-center">
+                                            <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
+                                                <Info className="w-6 h-6 text-slate-800" />
+                                            </div>
+                                            <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest">No active support interactions</p>
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-white/5">
+                                            {userTickets.map((ticket) => (
+                                                <div key={ticket.id} className="p-6 hover:bg-white/[0.02] transition-colors group">
+                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-3 mb-2">
+                                                                <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${ticket.priority === 'critical' ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400'}`}>{ticket.priority}</span>
+                                                                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{ticket.category}</span>
+                                                            </div>
+                                                            <h4 className="text-base font-black text-white uppercase tracking-tight group-hover:text-amber-500 transition-colors">{ticket.subject}</h4>
+                                                            <p className="text-xs text-slate-500 mt-1 line-clamp-1">{ticket.description}</p>
                                                         </div>
-                                                        <div className="flex justify-between text-xs">
-                                                            <span className="text-slate-500">Current:</span>
-                                                            <span className="text-white font-mono font-bold">{formatPrice(currentValue, currency, USD_TO_INR)}</span>
+                                                        <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-4 flex-shrink-0">
+                                                            <div className={`px-4 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-widest ${
+                                                                ticket.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                            }`}>
+                                                                {ticket.status}
+                                                            </div>
+                                                            <span className="text-[9px] text-slate-600 font-mono italic">{new Date(ticket.createdAt).toLocaleDateString()}</span>
                                                         </div>
-                                                        <div className={`flex justify-between items-center text-xs font-bold ${
-                                                            profit >= 0 ? 'text-emerald-400' : 'text-red-400'
-                                                        }`}>
-                                                            <span>Profit/Loss:</span>
-                                                            <span className="flex items-center gap-1">
-                                                                {profit >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                                                                {profit >= 0 ? '+' : ''}{formatPrice(profit, currency, USD_TO_INR)} 
-                                                                ({profit >= 0 ? '+' : ''}{profitPercent.toFixed(2)}%)
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="mt-2 flex items-center gap-2">
-                                                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
-                                                            purchase.status === 'active' 
-                                                                ? 'bg-emerald-500/20 text-emerald-400' 
-                                                                : 'bg-slate-700 text-slate-400'
-                                                        }`}>
-                                                            {purchase.status}
-                                                        </span>
-                                                        <span className="text-[9px] text-slate-600">
-                                                            {new Date(purchase.timestamp).toLocaleDateString()}
-                                                        </span>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            ))}
                                         </div>
-                                    );
-                                })}
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Other Placeholder Tabs */}
+                        {(activeTab === 'listings' || activeTab === 'settings') && (
+                            <div className="p-20 bg-slate-900 border border-white/5 rounded-3xl text-center animate-in fade-in duration-500">
+                                <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 animate-pulse">
+                                    <Settings className="w-8 h-8 text-slate-800" />
+                                </div>
+                                <h3 className="text-xl font-black text-white uppercase tracking-widest mb-3 italic">Encrypted Module</h3>
+                                <p className="text-slate-500 text-xs font-bold leading-relaxed max-w-xs mx-auto">This interface is currently under construction for security auditing. Access will be granted in the next release cycle.</p>
                             </div>
                         )}
                     </div>
-                </div>
-
-                {/* Support & Help Section */}
-                <div className="mt-6 bg-slate-900 border border-white/10 rounded-2xl p-5 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                                <Shield className="w-5 h-5 text-blue-500" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-black text-white uppercase tracking-tight">Support & Help</h2>
-                                <p className="text-xs text-slate-500">Report issues or request assistance</p>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={() => setShowSupportModal(true)}
-                            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all border border-white/5 shadow-lg shadow-black/20 active:scale-95"
-                        >
-                            Report an Issue
-                        </button>
-                    </div>
-
-                    {userTickets.length === 0 ? (
-                        <div className="text-center py-8 bg-slate-950/30 rounded-xl border border-white/5 border-dashed">
-                            <p className="text-sm font-bold text-slate-600">No support tickets yet</p>
-                            <p className="text-xs text-slate-700 mt-1">If you encounter any problems, let us know!</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {userTickets.map((ticket) => (
-                                <div key={ticket.id} className="bg-slate-950/50 border border-white/5 rounded-xl p-4 hover:border-white/10 transition-all group">
-                                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                                        
-                                        {/* Status Icon & Info */}
-                                        <div className="flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-3 sm:w-32 flex-shrink-0">
-                                            <div className={`px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider w-fit ${
-                                                ticket.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                                ticket.status === 'closed' ? 'bg-slate-700/30 text-slate-400 border-slate-700/50' :
-                                                ticket.status === 'in-progress' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                                                'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                            }`}>
-                                                {ticket.status.replace('-', ' ')}
-                                            </div>
-                                            <span className="text-[10px] text-slate-600 font-mono">
-                                                {new Date(ticket.createdAt).toLocaleDateString()}
-                                            </span>
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded ${
-                                                    ticket.priority === 'critical' ? 'bg-red-500/20 text-red-400' :
-                                                    ticket.priority === 'high' ? 'bg-amber-500/20 text-amber-400' :
-                                                    ticket.priority === 'medium' ? 'bg-blue-500/20 text-blue-400' :
-                                                    'bg-slate-500/20 text-slate-400'
-                                                }`}>
-                                                    {ticket.priority}
-                                                </span>
-                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                                    • {ticket.category}
-                                                </span>
-                                            </div>
-                                            
-                                            <h3 className="text-sm font-bold text-white truncate mb-1 group-hover:text-amber-500 transition-colors">
-                                                {ticket.subject}
-                                            </h3>
-                                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                                                {ticket.description}
-                                            </p>
-                                            
-                                            {/* Admin Response Preview */}
-                                            {ticket.responses && ticket.responses.length > 0 && (
-                                                <div className="mt-3 pl-3 border-l-2 border-amber-500/30 bg-amber-500/5 p-2 rounded-r-lg">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <div className="w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center text-[8px] font-black text-slate-950">
-                                                            {ticket.responses[ticket.responses.length - 1].adminName.charAt(0)}
-                                                        </div>
-                                                        <span className="text-[10px] text-amber-500 font-bold">
-                                                            {ticket.responses[ticket.responses.length - 1].adminName}
-                                                        </span>
-                                                        <span className="text-[9px] text-slate-600">
-                                                            {new Date(ticket.responses[ticket.responses.length - 1].timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-slate-400 line-clamp-1 italic">
-                                                        "{ticket.responses[ticket.responses.length - 1].text}"
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
             </div>
 
