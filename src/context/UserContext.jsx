@@ -5,16 +5,17 @@ const UserContext = createContext();
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [wishlist, setWishlist] = useState([]);
     const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'login' });
     const [transactions, setTransactions] = useState([]);
 
     useEffect(() => {
         const savedUser = localStorage.getItem('op_user');
         const savedTransactions = localStorage.getItem('op_transactions');
+        const savedWishlist = localStorage.getItem('op_wishlist');
         
         if (savedUser) {
             const userData = JSON.parse(savedUser);
-            // Ensure default avatar ID (not URL - that's handled in Profile.jsx)
             if (!userData.selectedAvatar) {
                 userData.selectedAvatar = 'luffy';
             }
@@ -24,9 +25,22 @@ export const UserProvider = ({ children }) => {
         if (savedTransactions) {
             setTransactions(JSON.parse(savedTransactions));
         }
+
+        if (savedWishlist) {
+            setWishlist(JSON.parse(savedWishlist));
+        }
         
         setLoading(false);
     }, []);
+
+    const toggleWishlist = (cardId) => {
+        const updatedWishlist = wishlist.includes(cardId)
+            ? wishlist.filter(id => id !== cardId)
+            : [...wishlist, cardId];
+        
+        setWishlist(updatedWishlist);
+        localStorage.setItem('op_wishlist', JSON.stringify(updatedWishlist));
+    };
 
     const login = (userData) => {
         // Ensure default avatar ID for new users (not URL)
@@ -42,8 +56,10 @@ export const UserProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         setTransactions([]);
+        setWishlist([]);
         localStorage.removeItem('op_user');
         localStorage.removeItem('op_transactions');
+        localStorage.removeItem('op_wishlist');
     };
 
     const openAuth = (mode = 'login') => setAuthModal({ isOpen: true, mode });
@@ -96,7 +112,9 @@ export const UserProvider = ({ children }) => {
             updateAvatar,
             transactions,
             addTransaction,
-            getTransactions
+            getTransactions,
+            wishlist,
+            toggleWishlist
         }}>
             {children}
         </UserContext.Provider>

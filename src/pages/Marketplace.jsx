@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap, Info, SlidersHorizontal, Globe, Coins, Diamond, ShoppingCart, Tag } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap, Info, SlidersHorizontal, Globe, Coins, Diamond, ShoppingCart, Tag, Heart } from 'lucide-react';
 import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 import { useUser } from '../context/UserContext';
@@ -72,6 +72,9 @@ const Sparkline = ({ data, color }) => {
 };
 
 const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale, onBuy, onSell }) => {
+  const { wishlist, toggleWishlist } = useUser();
+  const isWishlisted = card ? wishlist.includes(card.id) : false;
+
   useEffect(() => {
     if (isOpen) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = 'unset';
@@ -103,7 +106,7 @@ const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale,
                 <div className="font-mono text-[10px] text-slate-600 uppercase tracking-widest">{card.id}</div>
              </div>
 
-             <div className="space-y-4 sm:space-y-6 border-t border-white/5 pt-4 sm:pt-6">
+             <div className="flex-1 flex flex-col space-y-4 sm:space-y-6 border-t border-white/5 pt-4 sm:pt-6">
                 <div className="flex justify-between items-end">
                     <div>
                         <div className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-0.5">Asset Value</div>
@@ -120,19 +123,35 @@ const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale,
                     </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/5 mt-auto">
-                    <div className="text-center px-1">
-                        <div className="text-[8px] font-medium text-slate-500 uppercase tracking-widest mb-1.5">1 Hour</div>
-                        <div className={`text-[10px] font-medium font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1h >= 0 ? '+' : ''}{card.change1h}%</div>
+                <div className="flex-1 flex flex-col justify-end gap-6">
+                    <div className="grid grid-cols-3 gap-2 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/5">
+                        <div className="text-center px-1">
+                            <div className="text-[8px] font-medium text-slate-500 uppercase tracking-widest mb-1.5">1 Hour</div>
+                            <div className={`text-[10px] font-medium font-mono ${card.change1h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1h >= 0 ? '+' : ''}{card.change1h}%</div>
+                        </div>
+                        <div className="text-center px-1 border-x border-white/5">
+                            <div className="text-[8px] font-medium text-slate-500 uppercase tracking-widest mb-1.5">1 Month</div>
+                            <div className={`text-[10px] font-medium font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1m >= 0 ? '+' : ''}{card.change1m}%</div>
+                        </div>
+                        <div className="text-center px-1">
+                            <div className="text-[8px] font-medium text-slate-500 uppercase tracking-widest mb-1.5">Volume</div>
+                            <div className="text-[10px] font-medium text-white font-mono italic whitespace-nowrap">${(card.volume || 0)}K</div>
+                        </div>
                     </div>
-                    <div className="text-center px-1 border-x border-white/5">
-                        <div className="text-[8px] font-medium text-slate-500 uppercase tracking-widest mb-1.5">1 Month</div>
-                        <div className={`text-[10px] font-medium font-mono ${card.change1m >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{card.change1m >= 0 ? '+' : ''}{card.change1m}%</div>
-                    </div>
-                    <div className="text-center px-1">
-                        <div className="text-[8px] font-medium text-slate-500 uppercase tracking-widest mb-1.5">Volume</div>
-                        <div className="text-[10px] font-medium text-white font-mono italic whitespace-nowrap">${(card.volume || 0)}K</div>
-                    </div>
+
+                    <button 
+                        onClick={() => toggleWishlist(card.id)}
+                        className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 border ${
+                            isWishlisted 
+                                ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' 
+                                : 'bg-white/5 border-white/10 text-white hover:bg-white hover:text-slate-950'
+                        }`}
+                    >
+                        <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">
+                            {isWishlisted ? 'Saved to Wishlist' : 'Add to Wishlist'}
+                        </span>
+                    </button>
                 </div>
              </div>
           </div>
