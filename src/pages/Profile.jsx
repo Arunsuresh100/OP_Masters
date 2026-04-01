@@ -271,50 +271,65 @@ const Profile = () => {
                                         <button onClick={() => window.location.href='/cards'} className="px-10 py-4 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl">Discover Cards</button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+                                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-10">
                                         {allCards.filter(card => (ownedCards[card.id] || 0) > 0).map((card) => {
                                             const qty = ownedCards[card.id] || 0;
                                             const cardWorth = (card.priceEnglish || 50) * qty;
                                             return (
                                                 <div 
                                                     key={card.id} 
-                                                    className="group relative flex flex-col p-4 sm:p-5 rounded-[2rem] sm:rounded-[2.5rem] border bg-white/[0.02] border-white/10 hover:border-white/30 transition-all duration-500 shadow-2xl hover:-translate-y-2"
+                                                    className="group relative flex flex-col bg-slate-900 border border-white/5 rounded-[3rem] overflow-hidden hover:border-white/20 transition-all duration-700 shadow-[0_30px_100px_rgba(0,0,0,0.8)] hover:-translate-y-4"
                                                 >
-                                                    <div className="relative aspect-[1/1.4] rounded-[1.2rem] sm:rounded-[1.5rem] overflow-hidden mb-5 bg-black shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/5">
+                                                    {/* Background Glow */}
+                                                    <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                                                    
+                                                    {/* Asset Case (Image Container) */}
+                                                    <div className="relative aspect-[0.7/1] sm:aspect-[1/1.4] overflow-hidden">
                                                         <img 
                                                             src={getCardImageUrl(card.image)} 
                                                             alt={card.name} 
-                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-125"
                                                         />
-                                                        <div className="absolute top-2 left-2 px-2.5 py-1 bg-black/80 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-1.5 translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-                                                            <div className="w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-                                                            <span className="text-[7px] font-black text-white uppercase tracking-widest">Rate {formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</span>
+                                                        
+                                                        {/* Digital Status Overlays */}
+                                                        <div className="absolute top-4 left-4 flex flex-col gap-2">
+                                                            <div className="px-3 py-1.5 bg-black/80 backdrop-blur-xl rounded-xl border border-white/10 flex items-center gap-2 shadow-2xl">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                                                <span className="text-[8px] font-black text-white uppercase tracking-widest">{formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</span>
+                                                            </div>
                                                         </div>
-                                                        <div className="absolute bottom-2 right-2 bg-white text-slate-950 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xl">
-                                                            <span className="text-[10px] font-black leading-none">{qty}</span>
-                                                            <span className="text-[7px] font-black uppercase tracking-tighter opacity-50">Units</span>
+
+                                                        <div className="absolute top-4 right-4 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
+                                                            <div className="w-12 h-12 bg-white text-slate-950 rounded-2xl flex flex-col items-center justify-center shadow-2xl">
+                                                                <span className="text-[14px] font-black leading-none">{qty}</span>
+                                                                <span className="text-[7px] font-black uppercase tracking-tighter opacity-50">Units</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Integrated Valuation (Bottom of Image) */}
+                                                        <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black via-black/80 to-transparent">
+                                                            <div className="text-[9px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1 opacity-60">{card.id}</div>
+                                                            <h4 className="text-sm sm:text-base font-black text-white uppercase tracking-tight line-clamp-1 mb-2 italic">{card.name}</h4>
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Global Worth</div>
+                                                                <div className="text-xs font-black text-white font-mono tracking-tighter">{formatPrice(cardWorth, currency, USD_TO_INR)}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div className="px-1 flex flex-col h-full">
-                                                        <div className="flex justify-between items-start gap-2 mb-1">
-                                                            <h4 className="text-[11px] sm:text-[12px] font-black text-white uppercase tracking-tight line-clamp-1">{card.name}</h4>
+                                                    {/* Control Console (Static at Bottom) */}
+                                                    <div className="p-4 bg-black/40 border-t border-white/5 flex items-center gap-3">
+                                                        <div className="flex-1 flex items-center justify-between px-4 py-3 bg-white/5 border border-white/5 rounded-2xl">
+                                                            <button onClick={() => updateOwnedCard(card.id, qty - 1)} className="p-1 text-slate-600 hover:text-rose-500 transition-colors"><Minus className="w-4 h-4" /></button>
+                                                            <span className="text-xs font-black text-white font-mono">{qty}</span>
+                                                            <button onClick={() => updateOwnedCard(card.id, qty + 1)} className="p-1 text-slate-600 hover:text-emerald-500 transition-colors"><Plus className="w-4 h-4" /></button>
                                                         </div>
-                                                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-4">Worth: <span className="text-white">{formatPrice(cardWorth, currency, USD_TO_INR)}</span></div>
-                                                        
-                                                        <div className="mt-auto flex items-center gap-2">
-                                                            <div className="flex-1 flex items-center justify-between px-3 py-1.5 bg-black/60 border border-white/5 rounded-xl">
-                                                                <button onClick={() => updateOwnedCard(card.id, qty - 1)} className="p-1 text-slate-500 hover:text-rose-500 transition-colors"><Minus className="w-3.5 h-3.5" /></button>
-                                                                <span className="text-[9px] font-black text-white font-mono">{qty}</span>
-                                                                <button onClick={() => updateOwnedCard(card.id, qty + 1)} className="p-1 text-slate-500 hover:text-emerald-500 transition-colors"><Plus className="w-3.5 h-3.5" /></button>
-                                                            </div>
-                                                            <button 
-                                                                onClick={() => updateOwnedCard(card.id, 0)}
-                                                                className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95"
-                                                            >
-                                                                <X className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
+                                                        <button 
+                                                            onClick={() => updateOwnedCard(card.id, 0)}
+                                                            className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );
@@ -337,27 +352,27 @@ const Profile = () => {
                                         <button onClick={() => window.location.href='/marketplace'} className="px-10 py-4 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Open Marketplace</button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
                                         {allCards.filter(c => wishlist.includes(c.id)).map(card => (
-                                            <div key={card.id} className="group relative bg-white/[0.02] border border-white/10 p-5 rounded-[2.5rem] hover:border-amber-500/30 transition-all duration-500 flex items-center gap-5 overflow-hidden shadow-2xl">
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl rounded-full -mr-12 -mt-12 pointer-events-none" />
-                                                <div className="w-20 h-28 rounded-2xl overflow-hidden bg-black flex-shrink-0 shadow-2xl border border-white/5">
-                                                    <img src={getCardImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                            <div key={card.id} className="group relative bg-white/[0.01] border border-white/10 p-5 rounded-[3rem] hover:border-amber-500/30 transition-all duration-700 flex items-center gap-6 overflow-hidden shadow-2xl hover:bg-white/[0.03]">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[50px] rounded-full -mr-16 -mt-16 pointer-events-none" />
+                                                <div className="w-24 h-32 sm:w-28 sm:h-40 rounded-2xl overflow-hidden bg-black flex-shrink-0 shadow-2xl border border-white/5">
+                                                    <img src={getCardImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" />
                                                 </div>
                                                 <div className="flex-1 py-1 relative z-10 min-w-0">
-                                                    <div className="text-[7px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1 opacity-60 line-clamp-1">{card.id}</div>
-                                                    <h4 className="text-[11px] font-black text-white uppercase tracking-tight mb-4 line-clamp-1">{card.name}</h4>
+                                                    <div className="text-[8px] font-black text-amber-500 uppercase tracking-[0.3em] mb-1.5 opacity-60 line-clamp-1">{card.id}</div>
+                                                    <h4 className="text-sm sm:text-base font-black text-white uppercase tracking-tight mb-6 line-clamp-2 leading-tight italic">{card.name}</h4>
                                                     
                                                     <div className="flex items-center justify-between gap-4">
                                                         <div>
-                                                            <div className="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Market Rate</div>
-                                                            <div className="text-[10px] font-black text-white font-mono tracking-tighter">{formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</div>
+                                                            <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">Market Equilibrium</div>
+                                                            <div className="text-sm font-black text-white font-mono tracking-tighter">{formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</div>
                                                         </div>
                                                         <button 
                                                             onClick={() => toggleWishlist(card.id)}
-                                                            className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95 group/x"
+                                                            className="p-3 bg-white text-slate-950 rounded-2xl hover:bg-rose-500 hover:text-white transition-all active:scale-95 group/x"
                                                         >
-                                                            <X className="w-3.5 h-3.5 group-hover/x:rotate-90 transition-transform" />
+                                                            <X className="w-4 h-4 group-hover:rotate-90 transition-transform" />
                                                         </button>
                                                     </div>
                                                 </div>
