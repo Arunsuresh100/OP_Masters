@@ -98,6 +98,12 @@ export const UserProvider = ({ children }) => {
         localStorage.setItem('op_user', JSON.stringify(updatedUser));
     };
 
+    const updateName = (newName) => {
+        const updatedUser = { ...user, name: newName };
+        setUser(updatedUser);
+        localStorage.setItem('op_user', JSON.stringify(updatedUser));
+    };
+
     const addTransaction = (transaction) => {
         const newTransaction = {
             ...transaction,
@@ -137,6 +143,7 @@ export const UserProvider = ({ children }) => {
             openAuth, 
             closeAuth, 
             updateAvatar,
+            updateName,
             transactions,
             addTransaction,
             getTransactions,

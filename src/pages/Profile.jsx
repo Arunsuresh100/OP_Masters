@@ -56,8 +56,11 @@ const Profile = () => {
     const [currency, setCurrency] = useState('INR');
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
     const [showSupportModal, setShowSupportModal] = useState(false);
-    const [vaultSearch, setVaultSearch] = useState('');
     const [vaultFilter, setVaultFilter] = useState('all');
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [tempName, setTempName] = useState(user?.name || user?.username || '');
+    
+    const { updateName } = useUser();
     
     const { getUserTickets } = useSupport();
     const userTickets = user ? getUserTickets(user.email) : [];
@@ -133,24 +136,45 @@ const Profile = () => {
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
                         <div className="flex items-center gap-6">
                             <div className="relative group">
-                                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-slate-900 to-black p-[1px] border border-white/10 overflow-hidden transition-transform group-hover:scale-105">
-                                    <img src={currentAvatar.image} alt="Profile" className="w-full h-full object-cover" />
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-950 p-[2px] border border-white/10 overflow-hidden transition-transform group-hover:scale-105 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+                                    <div className="w-full h-full rounded-full overflow-hidden">
+                                        <img src={currentAvatar.image} alt="Profile" className="w-full h-full object-cover" />
+                                    </div>
                                 </div>
                                 <button 
                                     onClick={() => setShowAvatarSelector(!showAvatarSelector)}
-                                    className="absolute -bottom-2 -right-2 p-2 bg-white text-slate-950 rounded-xl shadow-2xl hover:scale-110 transition-all border border-white/10"
+                                    className="absolute bottom-0 right-0 p-2 bg-white text-slate-950 rounded-full shadow-2xl hover:scale-110 transition-all border border-white/10 z-10"
                                 >
-                                    <Camera className="w-4 h-4" />
+                                    <Camera className="w-3 h-3.5" />
                                 </button>
                             </div>
                             <div>
-                                <div className="flex items-center gap-3 mb-2">
-                                    <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight italic">{user.username}</h1>
-                                    <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[8px] font-black uppercase tracking-widest rounded-md">Elite Member</span>
+                                <div className="flex flex-col gap-1 mb-2">
+                                    {isEditingName ? (
+                                        <input 
+                                            type="text" 
+                                            value={tempName}
+                                            onChange={(e) => setTempName(e.target.value)}
+                                            onBlur={() => { setIsEditingName(false); if(tempName.trim()) updateName(tempName); }}
+                                            onKeyDown={(e) => { if(e.key === 'Enter') { setIsEditingName(false); if(tempName.trim()) updateName(tempName); }}}
+                                            autoFocus
+                                            className="bg-white/5 border border-white/20 rounded-lg px-3 py-1 text-2xl sm:text-3xl font-black text-white uppercase tracking-tight italic focus:outline-none focus:border-amber-500/50 w-full max-w-xs"
+                                        />
+                                    ) : (
+                                        <h1 
+                                            onClick={() => setIsEditingName(true)}
+                                            className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight italic cursor-pointer hover:text-amber-500 transition-colors flex items-center gap-3 group/name"
+                                        >
+                                            {user.name || user.username}
+                                            <Settings className="w-4 h-4 opacity-0 group-hover/name:opacity-50" />
+                                        </h1>
+                                    )}
                                 </div>
-                                <div className="flex items-center gap-4 text-xs font-medium text-slate-500 italic">
-                                    <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 opacity-50" /> {user.email}</span>
-                                    <span className="hidden sm:inline border-l border-white/10 pl-4">Rank: Super Rookie</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2 px-1.5 py-1 bg-white/5 border border-white/10 rounded-lg">
+                                        <Mail className="w-3 h-3 text-slate-500" />
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{user.email}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
