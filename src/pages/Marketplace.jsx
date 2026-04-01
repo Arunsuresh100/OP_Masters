@@ -197,12 +197,28 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
 
   const fetchMarketRates = async (isRefresh = false) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/market-rates`);
-      const data = await res.json();
-      const rawCards = data?.cards || [];
+      let rawCards = [];
+
+      // Try live market-rates endpoint first
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/market-rates`);
+        if (res.ok) {
+          const data = await res.json();
+          rawCards = data?.cards || [];
+          if (data.lastTick) setLastTick(data.lastTick);
+        }
+      } catch (_) {}
+
+      // Fallback: if market-rates returned nothing, use /api/cards
+      if (rawCards.length === 0) {
+        const res2 = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
+        const data2 = await res2.json();
+        rawCards = data2?.cards || (Array.isArray(data2) ? data2 : []);
+      }
+
+      if (rawCards.length === 0) return;
 
       if (isRefresh && cards.length > 0) {
-        // Detect price direction changes for flash animation
         const flashes = {};
         rawCards.forEach(nc => {
           const old = cards.find(c => c.id === nc.id);
@@ -215,7 +231,7 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
         });
         if (Object.keys(flashes).length > 0) {
           setPriceFlash(flashes);
-          setTimeout(() => setPriceFlash({}), 1200); // clear flash after 1.2s
+          setTimeout(() => setPriceFlash({}), 1200);
         }
       }
 
@@ -224,7 +240,6 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
         (marketLocale === 'EN' ? b.priceEnglish : b.priceJapanese) -
         (marketLocale === 'EN' ? a.priceEnglish : a.priceJapanese)
       ));
-      if (data.lastTick) setLastTick(data.lastTick);
     } catch (err) {
       console.error('Market fetch error', err);
     } finally {
