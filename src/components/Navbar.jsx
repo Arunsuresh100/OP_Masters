@@ -84,10 +84,19 @@ const Navbar = ({
           <div className="flex-1"></div>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center gap-1.5 min-[850px]:gap-3 lg:gap-6 mx-2 md:mx-4">
-            <Link to="/" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Home</Link>
-            <Link to="/cards" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Cards</Link>
-            <Link to="/marketplace" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">Marketplace</Link>
+          <div className="hidden md:flex items-center gap-6 lg:gap-10 mx-6">
+            <Link to="/" className="relative text-sm font-bold text-slate-400 hover:text-orange-500 transition-colors group">
+              Home
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            <Link to="/cards" className="relative text-sm font-bold text-slate-400 hover:text-orange-500 transition-colors group">
+              Cards
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            <Link to="/marketplace" className="relative text-sm font-bold text-slate-400 hover:text-orange-500 transition-colors group">
+              Marketplace
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
           </div>
               
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
@@ -183,7 +192,7 @@ const Navbar = ({
             ) : (
                 <button 
                     onClick={() => openAuth('login')}
-                    className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black text-xs md:text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all transform hover:scale-105"
+                    className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs md:text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all transform hover:scale-105"
                 >
                     <User className="w-4 h-4" />
                     <span className="hidden sm:inline">LOGIN</span>
