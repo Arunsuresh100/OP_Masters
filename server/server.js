@@ -645,7 +645,7 @@ app.get('/api/market-rates', (req, res) => {
                 priceDirection: live.priceEn > live.prevEn ? 'up' : live.priceEn < live.prevEn ? 'down' : 'neutral'
             };
         });
-        res.json({ ready: true, lastTick: Date.now(), cards: liveCards });
+        res.json({ ready: true, lastTick: Date.now(), rates: liveCards });
     } catch (err) {
         res.status(500).json({ error: 'Market engine error' });
     }

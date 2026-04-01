@@ -205,7 +205,7 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/market-rates`);
         if (res.ok) {
           const data = await res.json();
-          rawCards = data?.cards || [];
+          rawCards = data?.rates || [];
           if (data.lastTick) setLastTick(data.lastTick);
         }
       } catch (_) {}
