@@ -188,7 +188,8 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
     const change24h = Number(card.percentChange ?? 0);
     const change1h = Number((change24h / 24 + (Math.random() * 0.2 - 0.1)).toFixed(2));
     const volume = card.volume || 50;
-    const marketCap = volume * price * 1000;
+    // marketCap = realistic estimated circulation value (no ×1000 multiplier)
+    const marketCap = volume * price;
     const baseTrend = Array.from({ length: 7 }, (_, i) =>
       price * (1 + (i / 7) * (change24h / 100) + (Math.random() * 0.02 - 0.01))
     );
