@@ -136,9 +136,6 @@ const MarketplaceDetailModal = ({ isOpen, onClose, card, currency, marketLocale,
                 </div>
              </div>
 
-             <div className="mt-auto pt-6 border-t border-white/5 shrink-0">
-                 <button onClick={onClose} className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-slate-950 transition-all active:scale-95">Dismiss Dashboard</button>
-             </div>
           </div>
         </div>
       </div>

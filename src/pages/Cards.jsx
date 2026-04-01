@@ -579,7 +579,6 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
                     <div className="flex justify-between border-b border-white/5 pb-2 sm:pb-3"><span className="text-[9px] sm:text-[10px] text-slate-500 font-black uppercase tracking-widest">Rarity</span><span className="text-[11px] sm:text-xs font-black text-white uppercase italic">{selectedCard.rarity}</span></div>
                     <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 text-slate-500 text-[9px] sm:text-[10px] font-bold border border-white/5 leading-relaxed">Dynamic market estimates based on recent exchange data.</div>
                  </div>
-                 <button onClick={() => setSelectedCard(null)} className="w-full py-3 rounded-lg bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-slate-950 transition-all active:scale-95">Dismiss</button>
               </div>
             </div>
           </div>
