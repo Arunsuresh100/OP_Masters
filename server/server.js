@@ -203,6 +203,72 @@ let memoryNews = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
+// ============================================================
+// LIVE MARKET VOLATILITY ENGINE (60-second price ticks)
+// Each card gets micro-volatility applied every minute.
+// This simulates real market movement without hitting an API.
+// Architecture: Bloomberg/Binance-style in-memory state store.
+// ============================================================
+let marketState = {}; // { cardId: { priceEn, priceJp, change24h, prevEn, prevJp, lastTick } }
+let marketStateReady = false;
+
+// Volatility ranges by rarity (% per tick, max 0.8% for common, up to 2% for Manga)
+const RARITY_VOLATILITY = {
+    C: 0.003, UC: 0.004, R: 0.005, SR: 0.006,
+    L: 0.008, SEC: 0.012, TR: 0.015, SP: 0.013, Manga: 0.020
+};
+
+const initMarketState = () => {
+    try {
+        const raw = JSON.parse(fs.readFileSync(path.join(__dirname, 'cards.json'), 'utf8'));
+        const cards = raw.cards || (Array.isArray(raw) ? raw : []);
+        cards.forEach(c => {
+            marketState[c.id] = {
+                priceEn: c.priceEnglish,
+                priceJp: c.priceJapanese,
+                baseEn: c.priceEnglish,
+                baseJp: c.priceJapanese,
+                change24h: c.percentChange || 0,
+                prevEn: c.priceEnglish,
+                prevJp: c.priceJapanese,
+                rarity: c.rarity,
+                lastTick: Date.now()
+            };
+        });
+        marketStateReady = true;
+        console.log(`[MARKET ENGINE] Initialized with ${cards.length} instruments. 60s tick active.`);
+    } catch (e) {
+        console.warn('[MARKET ENGINE] cards.json not ready yet, will retry in 30s');
+        setTimeout(initMarketState, 30000);
+    }
+};
+
+const tickMarket = () => {
+    const now = Date.now();
+    Object.keys(marketState).forEach(id => {
+        const s = marketState[id];
+        const vol = RARITY_VOLATILITY[s.rarity] || 0.004;
+        // Small random walk: ±vol per tick
+        const enDelta = s.priceEn * vol * (Math.random() * 2 - 1);
+        const jpDelta = s.priceJp * vol * (Math.random() * 2 - 1);
+        s.prevEn = s.priceEn;
+        s.prevJp = s.priceJp;
+        // Clamp to ±30% of base to prevent runaway drift
+        s.priceEn = Math.max(s.baseEn * 0.70, Math.min(s.baseEn * 1.30, parseFloat((s.priceEn + enDelta).toFixed(2))));
+        s.priceJp = Math.max(s.baseJp * 0.70, Math.min(s.baseJp * 1.30, parseFloat((s.priceJp + jpDelta).toFixed(2))));
+        // Recalculate 24h change relative to base
+        s.change24h = parseFloat((((s.priceEn - s.baseEn) / s.baseEn) * 100).toFixed(2));
+        s.lastTick = now;
+    });
+};
+
+// Start market engine after 2 seconds (allow server to fully boot)
+setTimeout(() => {
+    initMarketState();
+    setInterval(tickMarket, 60 * 1000); // tick every 60 seconds
+}, 2000);
+
+
 // Initialize persistent cache if it doesn't exist
 if (!fs.existsSync(NEWS_CACHE_FILE)) {
     fs.writeFileSync(NEWS_CACHE_FILE, JSON.stringify({ news: [] }, null, 2));
@@ -558,6 +624,33 @@ app.get('/api/stats', authenticateAdmin, (req, res) => {
 app.get('/api/cards', (req, res) => {
     res.json(readCards());
 });
+
+// LIVE MARKET RATES — serves real-time price state with 60s volatility ticks
+// Merges static card metadata with live in-memory market prices
+app.get('/api/market-rates', (req, res) => {
+    try {
+        const cards = readCards();
+        if (!marketStateReady || Object.keys(marketState).length === 0) {
+            // Engine not ready — return static prices
+            return res.json({ ready: false, cards });
+        }
+        const liveCards = cards.map(c => {
+            const live = marketState[c.id];
+            if (!live) return c;
+            return {
+                ...c,
+                priceEnglish: live.priceEn,
+                priceJapanese: live.priceJp,
+                percentChange: live.change24h,
+                priceDirection: live.priceEn > live.prevEn ? 'up' : live.priceEn < live.prevEn ? 'down' : 'neutral'
+            };
+        });
+        res.json({ ready: true, lastTick: Date.now(), cards: liveCards });
+    } catch (err) {
+        res.status(500).json({ error: 'Market engine error' });
+    }
+});
+
 
 // Endpoint to post a new card (Protected with Middleware)
 app.post('/api/cards', authenticateAdmin, validateCard, (req, res) => {

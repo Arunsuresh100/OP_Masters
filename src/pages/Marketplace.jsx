@@ -179,27 +179,77 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
   const { user, openAuth } = useUser();
   const itemsPerPage = 12;
 
-  useEffect(() => {
-    const fetchCards = async () => {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
-        const data = await res.json();
-        let rawCards = data?.cards || (Array.isArray(data) ? data : []);
-        const augmentedCards = rawCards.map(card => {
-            const price = marketLocale === 'EN' ? (Number(card.priceEnglish) || 0) : (Number(card.priceJapanese) || 0);
-            const change24h = card.percentChange !== undefined ? Number(card.percentChange) : (Math.random() * 4 - 2);
-            const change1h = Number((change24h / 24 + (Math.random() * 0.2 - 0.1)).toFixed(2));
-            const change1m = Number((change1h / 60 + (Math.random() * 0.05 - 0.025)).toFixed(3));
-            const volume = card.volume || Math.floor(Math.random() * 500) + 50;
-            const marketCap = volume * price * 1000;
-            const baseTrend = Array.from({ length: 7 }, (_, i) => price * (1 + (i / 7) * (change24h / 100) + (Math.random() * 0.02 - 0.01)));
-            return { ...card, price, change24h: Number(change24h.toFixed(2)), change1h, change1m, volume, marketCap, trendData: baseTrend };
+  const [priceFlash, setPriceFlash] = useState({}); // { cardId: 'up' | 'down' }
+  const [lastTick, setLastTick] = useState(null);
+  const [tickCountdown, setTickCountdown] = useState(60);
+
+  const buildCards = (rawCards, locale) => rawCards.map(card => {
+    const price = locale === 'EN' ? (Number(card.priceEnglish) || 0) : (Number(card.priceJapanese) || 0);
+    const change24h = Number(card.percentChange ?? 0);
+    const change1h = Number((change24h / 24 + (Math.random() * 0.2 - 0.1)).toFixed(2));
+    const volume = card.volume || 50;
+    const marketCap = volume * price * 1000;
+    const baseTrend = Array.from({ length: 7 }, (_, i) =>
+      price * (1 + (i / 7) * (change24h / 100) + (Math.random() * 0.02 - 0.01))
+    );
+    return { ...card, price, change24h, change1h, volume, marketCap, trendData: baseTrend };
+  });
+
+  const fetchMarketRates = async (isRefresh = false) => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/market-rates`);
+      const data = await res.json();
+      const rawCards = data?.cards || [];
+
+      if (isRefresh && cards.length > 0) {
+        // Detect price direction changes for flash animation
+        const flashes = {};
+        rawCards.forEach(nc => {
+          const old = cards.find(c => c.id === nc.id);
+          if (old) {
+            const oldP = marketLocale === 'EN' ? old.priceEnglish : old.priceJapanese;
+            const newP = marketLocale === 'EN' ? nc.priceEnglish : nc.priceJapanese;
+            if (newP > oldP) flashes[nc.id] = 'up';
+            else if (newP < oldP) flashes[nc.id] = 'down';
+          }
         });
-        setCards(augmentedCards.sort((a,b) => (marketLocale === 'EN' ? b.priceEnglish : b.priceJapanese) - (marketLocale === 'EN' ? a.priceEnglish : a.priceJapanese)));
-      } catch (err) { console.error("Market fetch error", err); } finally { setLoading(false); }
-    };
-    fetchCards();
+        if (Object.keys(flashes).length > 0) {
+          setPriceFlash(flashes);
+          setTimeout(() => setPriceFlash({}), 1200); // clear flash after 1.2s
+        }
+      }
+
+      const built = buildCards(rawCards, marketLocale);
+      setCards(built.sort((a, b) =>
+        (marketLocale === 'EN' ? b.priceEnglish : b.priceJapanese) -
+        (marketLocale === 'EN' ? a.priceEnglish : a.priceJapanese)
+      ));
+      if (data.lastTick) setLastTick(data.lastTick);
+    } catch (err) {
+      console.error('Market fetch error', err);
+    } finally {
+      if (!isRefresh) setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchMarketRates(false);
   }, [marketLocale]);
+
+  // 60-second polling
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchMarketRates(true);
+      setTickCountdown(60);
+    }, 60000);
+    // Countdown timer
+    const countdown = setInterval(() => {
+      setTickCountdown(prev => (prev <= 1 ? 60 : prev - 1));
+    }, 1000);
+    return () => { clearInterval(interval); clearInterval(countdown); };
+  }, [marketLocale, cards]);
+
 
   const filteredCards = useMemo(() => {
     let result = cards.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.id.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -273,6 +323,18 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
       />
       
       <div className="px-4 sm:px-6 max-w-7xl mx-auto">
+         {/* Live Market Status Bar */}
+         <div className="mb-4 flex items-center gap-3 flex-wrap">
+             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Live Market Engine</span>
+             </div>
+             <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                 <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Next Tick in {tickCountdown}s</span>
+             </div>
+             {lastTick && <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest hidden sm:inline">Last Update: {new Date(lastTick).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'})}</span>}
+         </div>
+
          {/* App-Style Compact Stats Bar */}
          <div className="mb-6 grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
              <div className="p-3 sm:p-4 rounded-xl bg-slate-900 border border-white/5 shadow-lg">
@@ -371,7 +433,7 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
                         {currentListings.map((card, index) => (
                             <tr 
                                 key={card.id} onClick={() => { setSelectedCard(card); setIsDetailModalOpen(true); }} 
-                                className="group hover:bg-white/[0.02] transition-all cursor-pointer animate-in fade-in" 
+                                className={`group transition-all cursor-pointer animate-in fade-in ${priceFlash[card.id] === 'up' ? 'bg-emerald-500/5' : priceFlash[card.id] === 'down' ? 'bg-rose-500/5' : 'hover:bg-white/[0.02]'}`}
                                 style={{ animationDelay: `${index * 30}ms` }}
                             >
                                 <td className="py-4 px-10">
@@ -384,7 +446,10 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
                                     </div>
                                 </td>
                                 <td className="py-4 px-8 text-right">
-                                    <div className="text-base font-bold text-white font-mono tracking-tighter leading-none group-hover:text-white transition-colors">
+                                    <div className={`text-base font-bold font-mono tracking-tighter leading-none transition-colors duration-300 ${
+                                        priceFlash[card.id] === 'up' ? 'text-emerald-400' :
+                                        priceFlash[card.id] === 'down' ? 'text-rose-400' : 'text-white'
+                                    }`}>
                                         {formatPrice(marketLocale === 'EN' ? card.priceEnglish : card.priceJapanese, currency, USD_TO_INR)}
                                     </div>
                                 </td>
