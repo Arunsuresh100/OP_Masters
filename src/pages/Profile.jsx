@@ -237,77 +237,55 @@ const Profile = () => {
                     {/* Content Stage */}
                     <div className="lg:col-span-9">
                         
-                        {/* TAB: THE VAULT (Collection Manager) */}
+                        {/* TAB: THE VAULT (Collection Manager - Simplified to Owned Items) */}
                         {activeTab === 'vault' && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-3xl">
-                                    <div className="relative w-full sm:w-72">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search Card Vault..." 
-                                            value={vaultSearch}
-                                            onChange={(e) => setVaultSearch(e.target.value)}
-                                            className="w-full bg-slate-950/50 border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-xs text-white placeholder-slate-700 focus:outline-none focus:border-amber-500/30 transition-all font-medium"
-                                        />
-                                    </div>
-                                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto">
-                                        {['all', 'owned', 'SECRET RARE', 'SUPER RARE'].map(f => (
-                                            <button 
-                                                key={f}
-                                                onClick={() => setVaultFilter(f)}
-                                                className={`px-4 py-2.5 rounded-xl whitespace-nowrap text-[9px] font-black uppercase tracking-widest transition-all ${vaultFilter === f ? 'bg-white text-slate-950' : 'bg-white/5 text-slate-500 border border-white/5'}`}
-                                            >
-                                                {f}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {loadingCards ? (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                                        {[...Array(8)].map((_, i) => (
-                                            <div key={i} className="aspect-[1/1.4] bg-white/5 rounded-2xl animate-pulse" />
-                                        ))}
+                            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {portfolioStats.ownedCount === 0 ? (
+                                    <div className="py-24 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
+                                        <div className="w-20 h-20 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
+                                            <Package className="w-8 h-8 text-slate-800" />
+                                        </div>
+                                        <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Vault is Empty</h3>
+                                        <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest mb-8">You haven't listed any digital assets in your personal vault yet.</p>
+                                        <button onClick={() => window.location.href='/cards'} className="px-10 py-4 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl">Discover Cards</button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-                                        {filteredVaultCards.map((card) => {
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
+                                        {allCards.filter(card => (ownedCards[card.id] || 0) > 0).map((card) => {
                                             const qty = ownedCards[card.id] || 0;
                                             return (
                                                 <div 
                                                     key={card.id} 
-                                                    className={`group relative flex flex-col p-3 rounded-[2rem] border transition-all duration-500 ${
-                                                        qty > 0 ? 'bg-amber-500/5 border-amber-500/20' : 'bg-slate-900/40 border-white/5 hover:border-white/20'
-                                                    }`}
+                                                    className="group relative flex flex-col p-5 rounded-[2.5rem] border bg-white/[0.02] border-white/10 hover:border-white/30 transition-all duration-500 shadow-2xl hover:-translate-y-2"
                                                 >
-                                                    <div className="relative aspect-[1/1.4] rounded-2xl overflow-hidden mb-4 bg-black/40">
+                                                    <div className="relative aspect-[1/1.4] rounded-[1.5rem] overflow-hidden mb-6 bg-black shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                                                         <img 
                                                             src={getCardImageUrl(card.image)} 
                                                             alt={card.name} 
-                                                            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${qty > 0 ? '' : 'grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                                         />
-                                                        {qty > 0 && (
-                                                            <div className="absolute top-2 right-2 bg-amber-500 text-slate-950 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-slate-950 shadow-2xl">
-                                                                {qty}x
-                                                            </div>
-                                                        )}
+                                                        <div className="absolute top-3 right-3 bg-white text-slate-950 w-10 h-10 rounded-2xl flex flex-col items-center justify-center shadow-2xl border border-white/20">
+                                                            <span className="text-[10px] font-black leading-none">{qty}</span>
+                                                            <span className="text-[7px] font-black uppercase tracking-tighter opacity-50">PCS</span>
+                                                        </div>
                                                     </div>
-                                                    <div className="px-1 text-center">
-                                                        <h4 className={`text-[10px] font-black uppercase tracking-tight line-clamp-1 mb-2 ${qty > 0 ? 'text-white' : 'text-slate-600'}`}>{card.name}</h4>
-                                                        <div className="flex items-center justify-center gap-2">
+                                                    
+                                                    <div className="px-1">
+                                                        <div className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1.5 opacity-60">{card.id}</div>
+                                                        <h4 className="text-sm font-black text-white uppercase tracking-tight line-clamp-1 mb-5">{card.name}</h4>
+                                                        
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex-1 flex items-center justify-between px-4 py-3 bg-black/40 border border-white/5 rounded-2xl">
+                                                                <button onClick={() => updateOwnedCard(card.id, qty - 1)} className="p-1 text-slate-500 hover:text-rose-500 transition-colors"><Minus className="w-4 h-4" /></button>
+                                                                <span className="text-xs font-black text-white font-mono">{qty}</span>
+                                                                <button onClick={() => updateOwnedCard(card.id, qty + 1)} className="p-1 text-slate-500 hover:text-emerald-500 transition-colors"><Plus className="w-4 h-4" /></button>
+                                                            </div>
                                                             <button 
-                                                                onClick={() => updateOwnedCard(card.id, qty - 1)}
-                                                                className={`p-2 rounded-lg transition-all ${qty > 0 ? 'bg-white/10 text-white hover:bg-rose-500/20 hover:text-rose-400' : 'text-slate-800'}`}
-                                                                disabled={qty === 0}
+                                                                onClick={() => updateOwnedCard(card.id, 0)}
+                                                                className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all active:scale-90"
+                                                                title="Remove from Vault"
                                                             >
-                                                                <Minus className="w-3.5 h-3.5" />
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => updateOwnedCard(card.id, qty + 1)}
-                                                                className={`p-2 rounded-lg transition-all ${qty > 0 ? 'bg-amber-500 text-slate-950 hover:scale-110' : 'bg-white/5 text-slate-600 hover:text-white hover:bg-white/10'}`}
-                                                            >
-                                                                <Plus className="w-3.5 h-3.5" />
+                                                                <X className="w-4 h-4" />
                                                             </button>
                                                         </div>
                                                     </div>
