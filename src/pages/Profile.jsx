@@ -278,17 +278,17 @@ const Profile = () => {
                                             return (
                                                 <div 
                                                     key={card.id} 
-                                                    className="group relative flex flex-col bg-slate-900 border border-white/5 rounded-[3rem] overflow-hidden hover:border-white/20 transition-all duration-700 shadow-[0_30px_100px_rgba(0,0,0,0.8)] hover:-translate-y-4"
+                                                    className="group relative flex flex-col bg-slate-900 border border-white/5 rounded-[15px] overflow-hidden hover:border-white/20 transition-all duration-700 shadow-[0_30px_100px_rgba(0,0,0,0.8)] hover:-translate-y-2"
                                                 >
                                                     {/* Background Glow */}
                                                     <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
                                                     
                                                     {/* Asset Case (Image Container) */}
-                                                    <div className="relative aspect-[0.7/1] sm:aspect-[1/1.4] overflow-hidden">
+                                                    <div className="relative aspect-[0.7/1] sm:aspect-[1/1.4] overflow-hidden rounded-t-[15px]">
                                                         <img 
                                                             src={getCardImageUrl(card.image)} 
                                                             alt={card.name} 
-                                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-125"
+                                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                                                         />
                                                         
                                                         {/* Digital Status Overlays */}
@@ -318,17 +318,17 @@ const Profile = () => {
                                                     </div>
                                                     
                                                     {/* Control Console (Static at Bottom) */}
-                                                    <div className="p-4 bg-black/40 border-t border-white/5 flex items-center gap-3">
-                                                        <div className="flex-1 flex items-center justify-between px-4 py-3 bg-white/5 border border-white/5 rounded-2xl">
-                                                            <button onClick={() => updateOwnedCard(card.id, qty - 1)} className="p-1 text-slate-600 hover:text-rose-500 transition-colors"><Minus className="w-4 h-4" /></button>
+                                                    <div className="p-3 bg-black/40 border-t border-white/5 flex items-center gap-3">
+                                                        <div className="flex-1 flex items-center justify-between px-3 py-2 bg-white/5 border border-white/5 rounded-xl">
+                                                            <button onClick={() => updateOwnedCard(card.id, qty - 1)} className="p-1 text-slate-600 hover:text-rose-500 transition-colors"><Minus className="w-3.5 h-3.5" /></button>
                                                             <span className="text-xs font-black text-white font-mono">{qty}</span>
-                                                            <button onClick={() => updateOwnedCard(card.id, qty + 1)} className="p-1 text-slate-600 hover:text-emerald-500 transition-colors"><Plus className="w-4 h-4" /></button>
+                                                            <button onClick={() => updateOwnedCard(card.id, qty + 1)} className="p-1 text-slate-600 hover:text-emerald-500 transition-colors"><Plus className="w-3.5 h-3.5" /></button>
                                                         </div>
                                                         <button 
                                                             onClick={() => updateOwnedCard(card.id, 0)}
-                                                            className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+                                                            className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95"
                                                         >
-                                                            <X className="w-4 h-4" />
+                                                            <X className="w-3.5 h-3.5" />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -354,10 +354,10 @@ const Profile = () => {
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
                                         {allCards.filter(c => wishlist.includes(c.id)).map(card => (
-                                            <div key={card.id} className="group relative bg-white/[0.01] border border-white/10 p-5 rounded-[3rem] hover:border-amber-500/30 transition-all duration-700 flex items-center gap-6 overflow-hidden shadow-2xl hover:bg-white/[0.03]">
+                                            <div key={card.id} className="group relative bg-white/[0.01] border border-white/10 p-4 rounded-[15px] hover:border-amber-500/30 transition-all duration-700 flex items-center gap-6 overflow-hidden shadow-2xl hover:bg-white/[0.03]">
                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[50px] rounded-full -mr-16 -mt-16 pointer-events-none" />
-                                                <div className="w-24 h-32 sm:w-28 sm:h-40 rounded-2xl overflow-hidden bg-black flex-shrink-0 shadow-2xl border border-white/5">
-                                                    <img src={getCardImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000" />
+                                                <div className="w-24 h-32 sm:w-28 sm:h-40 rounded-xl overflow-hidden bg-black flex-shrink-0 shadow-2xl border border-white/5">
+                                                    <img src={getCardImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
                                                 </div>
                                                 <div className="flex-1 py-1 relative z-10 min-w-0">
                                                     <div className="text-[8px] font-black text-amber-500 uppercase tracking-[0.3em] mb-1.5 opacity-60 line-clamp-1">{card.id}</div>
@@ -370,9 +370,9 @@ const Profile = () => {
                                                         </div>
                                                         <button 
                                                             onClick={() => toggleWishlist(card.id)}
-                                                            className="p-3 bg-white text-slate-950 rounded-2xl hover:bg-rose-500 hover:text-white transition-all active:scale-95 group/x"
+                                                            className="p-2.5 bg-white text-slate-950 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95 group/x"
                                                         >
-                                                            <X className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+                                                            <X className="w-3.5 h-3.5 group-hover/x:rotate-90 transition-transform" />
                                                         </button>
                                                     </div>
                                                 </div>
