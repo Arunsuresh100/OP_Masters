@@ -7,7 +7,7 @@ import {
   Shield, DollarSign, Activity, ArrowUpRight, ArrowDownRight, 
   Wallet, History, Tag, ChevronRight, LayoutDashboard, Settings, 
   HelpCircle, Package, ExternalLink, Info, Heart, Search, Filter, 
-  User, CheckCircle2, AlertCircle, Plus, Minus, X
+  User, CheckCircle2, AlertCircle, Plus, Minus, X, Trash2
 } from 'lucide-react';
 import { formatPrice } from '../utils';
 import { USD_TO_INR, RARITIES } from '../constants';
@@ -62,8 +62,14 @@ const Profile = () => {
     
     const { updateName } = useUser();
     
-    const { getUserTickets } = useSupport();
+    const { getUserTickets, createTicket, addUserResponse, deleteTicket } = useSupport();
     const userTickets = user ? getUserTickets(user.email) : [];
+    const [showSupportSuccess, setShowSupportSuccess] = useState(false);
+    const [selectedTicketId, setSelectedTicketId] = useState(null);
+    const [replyText, setReplyText] = useState('');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Removed auto-select useEffect as per user suggestion: "when click the message then only open"
 
     // Fetch all cards for Vault selection
     useEffect(() => {
@@ -121,29 +127,29 @@ const Profile = () => {
 
 
     return (
-        <div className="min-h-screen bg-slate-950 pt-20 pb-12 sm:pt-28">
+        <div className="min-h-screen bg-slate-950 pt-24 pb-12 sm:pt-28" style={{ fontFamily: 'Arial, sans-serif' }}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 
                 {/* 1. Dashboard Header (Condensed & High Impact) */}
                 <div className="relative mb-10 overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full -mr-32 -mt-32 pointer-events-none" />
                     
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-                        <div className="flex items-center gap-6">
+                    <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6 md:gap-8 text-center md:text-left pt-6 md:pt-0">
+                        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
                             <div className="relative group">
-                                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-950 p-[2px] border border-white/10 overflow-hidden transition-transform group-hover:scale-105 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+                                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-950 p-[2px] border border-white/10 overflow-hidden transition-transform group-hover:scale-105 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
                                     <div className="w-full h-full rounded-full overflow-hidden">
                                         <img src={currentAvatar.image} alt="Profile" className="w-full h-full object-cover" />
                                     </div>
                                 </div>
                                 <button 
                                     onClick={() => setShowAvatarSelector(!showAvatarSelector)}
-                                    className="absolute bottom-0 right-0 p-2 bg-white text-slate-950 rounded-full shadow-2xl hover:scale-110 transition-all border border-white/10 z-10"
+                                    className="absolute bottom-1 right-1 w-8 h-8 bg-amber-500 text-slate-950 rounded-full flex items-center justify-center shadow-lg border-4 border-slate-950 hover:scale-110 active:scale-90 transition-all pointer-events-auto z-20"
                                 >
-                                    <Camera className="w-3 h-3.5" />
+                                    <Plus className="w-4 h-4" />
                                 </button>
                             </div>
-                            <div>
+                            <div className="flex flex-col items-center md:items-start">
                                 <div className="flex flex-col gap-1 mb-2">
                                     {isEditingName ? (
                                         <input 
@@ -153,31 +159,31 @@ const Profile = () => {
                                             onBlur={() => { setIsEditingName(false); if(tempName.trim()) updateName(tempName); }}
                                             onKeyDown={(e) => { if(e.key === 'Enter') { setIsEditingName(false); if(tempName.trim()) updateName(tempName); }}}
                                             autoFocus
-                                            className="bg-white/5 border border-white/20 rounded-lg px-3 py-1 text-2xl sm:text-3xl font-black text-white uppercase tracking-tight italic focus:outline-none focus:border-amber-500/50 w-full max-w-xs"
+                                            className="bg-white/5 border border-white/20 rounded-lg px-3 py-1 text-2xl font-black text-white capitalize tracking-tight focus:outline-none focus:border-amber-500/50 w-full max-w-xs text-center md:text-left"
                                         />
                                     ) : (
                                         <h1 
                                             onClick={() => setIsEditingName(true)}
-                                            className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight italic cursor-pointer hover:text-amber-500 transition-colors flex items-center gap-3 group/name"
+                                            className="text-2xl sm:text-4xl font-black text-white capitalize tracking-tight flex items-center gap-3 group/name cursor-pointer"
                                         >
                                             {user.name || user.username}
-                                            <Settings className="w-4 h-4 opacity-0 group-hover/name:opacity-50" />
+                                            <Settings className="w-4 h-4 opacity-0 group-hover/name:opacity-50 transition-opacity" />
                                         </h1>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-2 px-1.5 py-1 bg-white/5 border border-white/10 rounded-lg">
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl">
                                         <Mail className="w-3 h-3 text-slate-500" />
-                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{user.email}</span>
+                                        <span className="text-[12px] font-bold text-slate-400 lowercase tracking-tight">{user.email}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex flex-row items-center gap-4 sm:gap-6 w-full lg:w-auto">
-                            <div className="flex-1 lg:flex-none p-5 rounded-3xl bg-white/[0.03] border border-white/5 backdrop-blur-md">
-                                <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Estimated Vault Value</div>
-                                <div className="flex items-end gap-3">
+                        <div className="flex flex-row items-center gap-4 w-full md:w-auto">
+                            <div className="flex-1 md:flex-none p-5 sm:p-6 rounded-3xl bg-white/[0.03] border border-white/5 backdrop-blur-md" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 capitalize tracking-tight mb-1.5">Estimated Vault Value</div>
+                                <div className="flex items-end justify-center md:justify-start gap-3">
                                     <span className="text-2xl sm:text-3xl font-black text-white font-mono leading-none tracking-tighter">
                                         {formatPrice(portfolioStats.totalWorth, currency, USD_TO_INR)}
                                     </span>
@@ -186,34 +192,38 @@ const Profile = () => {
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex lg:flex-col gap-2">
-                                <button onClick={() => setCurrency('USD')} className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${currency === 'USD' ? 'bg-white text-slate-950' : 'bg-white/5 text-slate-500 border border-white/5'}`}>USD</button>
-                                <button onClick={() => setCurrency('INR')} className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${currency === 'INR' ? 'bg-white text-slate-950' : 'bg-white/5 text-slate-500 border border-white/5'}`}>INR</button>
+                            <div className="flex flex-col gap-2">
+                                <button onClick={() => setCurrency('USD')} className={`px-3 py-1.5 rounded-lg text-[9px] font-bold transition-all ${currency === 'USD' ? 'bg-white text-slate-950' : 'bg-white/5 text-slate-500 border border-white/5'}`}>USD</button>
+                                <button onClick={() => setCurrency('INR')} className={`px-3 py-1.5 rounded-lg text-[9px] font-bold transition-all ${currency === 'INR' ? 'bg-white text-slate-950' : 'bg-white/5 text-slate-500 border border-white/5'}`}>INR</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Avatar Selector Panel */}
+                {/* Compact Professional Avatar Selector */}
                 {showAvatarSelector && (
-                    <div className="mb-10 p-8 bg-slate-900 border border-white/5 rounded-[2rem] animate-in zoom-in-95 duration-300">
-                        <div className="flex items-center justify-between mb-8">
-                             <h3 className="text-base font-black text-white uppercase tracking-widest italic">Character Identity Selector</h3>
-                             <button onClick={() => setShowAvatarSelector(false)} className="text-slate-500 hover:text-white uppercase text-[10px] font-black italic">Dismiss</button>
+                    <div className="mb-10 p-6 bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-3xl animate-in fade-in zoom-in-95 duration-300 shadow-2xl relative overflow-hidden group">
+                        <div className="flex items-center justify-between mb-6 relative z-10">
+                             <div className="flex items-center gap-3">
+                                 <div className="w-1 h-4 bg-amber-500 rounded-full" />
+                                 <h3 className="text-sm font-bold text-white tracking-tight uppercase">Update Identity</h3>
+                             </div>
+                             <button onClick={() => setShowAvatarSelector(false)} className="p-1 text-slate-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                        <div className="flex flex-wrap items-center gap-4 relative z-10">
                             {CHARACTER_AVATARS.map((avatar) => (
                                 <button
                                     key={avatar.id}
                                     onClick={() => { updateAvatar(avatar.id); setShowAvatarSelector(false); }}
-                                    className={`group relative p-4 rounded-2xl border transition-all ${user.selectedAvatar === avatar.id ? 'bg-amber-500 border-amber-500' : 'bg-black/40 border-white/5 hover:border-white/20'}`}
+                                    className={`group relative w-16 h-16 rounded-2xl transition-all duration-300 ${user.selectedAvatar === avatar.id ? 'ring-2 ring-amber-500 ring-offset-4 ring-offset-slate-950' : 'opacity-60 hover:opacity-100 hover:scale-105'}`}
+                                    title={avatar.name}
                                 >
-                                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 rounded-xl overflow-hidden bg-slate-950 shadow-inner group-hover:scale-105 transition-transform">
+                                    <div className="w-full h-full rounded-2xl overflow-hidden bg-slate-950 border border-white/10 shadow-inner">
                                         <img src={avatar.image} alt={avatar.name} className="w-full h-full object-cover" />
                                     </div>
-                                    <div className="text-center">
-                                        <div className={`text-[10px] font-black uppercase tracking-tight ${user.selectedAvatar === avatar.id ? 'text-white' : 'text-slate-400'}`}>{avatar.name.split(' ').pop()}</div>
-                                    </div>
+                                    {user.selectedAvatar === avatar.id && (
+                                        <div className="absolute -top-2 -right-2 bg-amber-500 text-slate-950 rounded-full p-0.5 shadow-lg"><CheckCircle2 className="w-3 h-3" /></div>
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -223,55 +233,50 @@ const Profile = () => {
                 {/* 2. Command Dashboard Layout */}
                 <div className="relative h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-10" />
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-12 items-start">
                     
-                    {/* Navigation Rail */}
-                    <div className="lg:col-span-3 space-y-2 lg:sticky lg:top-32">
-                        {[
-                            { id: 'vault', label: 'My Vault', icon: Package, count: portfolioStats.ownedCount },
-                            { id: 'wishlist', label: 'Wishlist', icon: Heart, count: wishlist.length },
-                            { id: 'history', label: 'Activity', icon: History, count: null },
-                            { id: 'support', label: 'Support', icon: HelpCircle, count: userTickets.length },
-                        ].map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => setActiveTab(item.id)}
-                                className={`w-full flex items-center justify-between p-4.5 px-6 rounded-2xl border transition-all ${
-                                    activeTab === item.id 
-                                        ? 'bg-white border-white text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.05)]' 
-                                        : 'bg-transparent border-transparent text-slate-500 hover:text-white hover:bg-white/5'
-                                }`}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <item.icon className="w-4.5 h-4.5" />
-                                    <span className="text-[11px] font-black uppercase tracking-widest">{item.label}</span>
-                                </div>
-                                {item.count !== null && item.count > 0 && (
-                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black ${
-                                        activeTab === item.id ? 'bg-slate-900 text-white' : 'bg-white/5 text-slate-400'
-                                    }`}>{item.count}</span>
-                                )}
-                            </button>
-                        ))}
+                    {/* Navigation Rail - App-Style horizontal on mobile */}
+                    <div className="md:col-span-3 md:sticky md:top-32 h-fit mb-8 md:mb-0">
+                        <div className="flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0 scroll-smooth snap-x px-1">
+                            {[
+                                { id: 'vault', label: 'My Vault', icon: Package },
+                                { id: 'wishlist', label: 'Wishlist', icon: Heart },
+                                { id: 'history', label: 'View Messages', icon: History },
+                                { id: 'support', label: 'Support', icon: HelpCircle },
+                            ].map((item) => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setActiveTab(item.id)}
+                                    className={`flex-none md:w-full flex items-center gap-3 md:gap-4 p-3.5 px-6 md:p-4.5 md:px-6 rounded-xl md:rounded-2xl border transition-all snap-start ${
+                                        activeTab === item.id 
+                                            ? 'bg-white border-white text-slate-950 shadow-xl' 
+                                            : 'bg-transparent border-transparent text-slate-500 hover:text-white hover:bg-white/5'
+                                    }`}
+                                >
+                                    <item.icon className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                                    <span className="text-xs md:text-[15px] font-extrabold capitalize tracking-tight whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>{item.label}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Content Stage */}
-                    <div className="lg:col-span-9">
+                    <div className="md:col-span-9">
                         
                         {/* TAB: THE VAULT (Collection Manager - Simplified to Owned Items) */}
                         {activeTab === 'vault' && (
                             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {portfolioStats.ownedCount === 0 ? (
-                                    <div className="py-24 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
-                                        <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
-                                            <Package className="w-8 h-8 text-slate-800" />
+                                    <div className="py-20 md:py-24 text-center bg-white/[0.02] border border-white/5 rounded-3xl md:rounded-[3rem] px-6">
+                                        <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
+                                            <Package className="w-6 h-6 md:w-8 md:h-8 text-slate-800" />
                                         </div>
-                                        <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Vault is Empty</h3>
-                                        <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest mb-8">You haven't listed any digital assets in your personal vault yet.</p>
-                                        <button onClick={() => window.location.href='/cards'} className="px-10 py-4 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl">Discover Cards</button>
+                                        <h3 className="text-base md:text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Vault is Empty</h3>
+                                        <p className="text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-8 max-w-[200px] mx-auto md:max-w-none">You haven't listed any digital assets in your personal vault yet.</p>
+                                        <button onClick={() => window.location.href='/cards'} className="px-8 md:px-10 py-3.5 md:py-4 bg-white text-slate-950 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl">Discover Cards</button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-10">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6 lg:gap-10">
                                         {allCards.filter(card => (ownedCards[card.id] || 0) > 0).map((card) => {
                                             const qty = ownedCards[card.id] || 0;
                                             const cardWorth = (card.priceEnglish || 50) * qty;
@@ -343,16 +348,16 @@ const Profile = () => {
                         {activeTab === 'wishlist' && (
                             <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
                                 {wishlist.length === 0 ? (
-                                    <div className="py-24 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
-                                        <div className="w-16 h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
-                                            <Heart className="w-8 h-8 text-slate-800" />
+                                    <div className="py-20 md:py-24 text-center bg-white/[0.02] border border-white/5 rounded-3xl md:rounded-[3rem] px-6">
+                                        <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
+                                            <Heart className="w-6 h-6 md:w-8 md:h-8 text-slate-800" />
                                         </div>
-                                        <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Watchlist Static</h3>
-                                        <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest mb-8">Save upcoming assets to monitor their daily valuation metrics.</p>
-                                        <button onClick={() => window.location.href='/marketplace'} className="px-10 py-4 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Open Marketplace</button>
+                                        <h3 className="text-base md:text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Watchlist Static</h3>
+                                        <p className="text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-8 max-w-[200px] mx-auto md:max-w-none">Save upcoming assets to monitor their daily valuation metrics.</p>
+                                        <button onClick={() => window.location.href='/marketplace'} className="px-8 md:px-10 py-3.5 md:py-4 bg-white text-slate-950 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all">Open Marketplace</button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                                         {allCards.filter(c => wishlist.includes(c.id)).map(card => (
                                             <div key={card.id} className="group relative bg-white/[0.01] border border-white/10 p-4 rounded-[15px] hover:border-amber-500/30 transition-all duration-700 flex items-center gap-6 overflow-hidden shadow-2xl hover:bg-white/[0.03]">
                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[50px] rounded-full -mr-16 -mt-16 pointer-events-none" />
@@ -383,109 +388,152 @@ const Profile = () => {
                             </div>
                         )}
 
-                        {/* TAB: ACTIVITY Log (Trade History Split-Sector) */}
-                        {activeTab === 'history' && (
-                             <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-700">
-                                {getTransactions().length === 0 ? (
-                                    <div className="py-24 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
-                                        <History className="w-16 h-16 text-slate-800 mx-auto mb-6 opacity-30" />
-                                        <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.3em] italic">No digital records found for active session</p>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 gap-12">
-                                        {/* ACQUISITIONS (BUYING) */}
-                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] sm:rounded-[3.5rem] overflow-hidden shadow-2xl">
-                                            <div className="p-6 sm:p-8 border-b border-white/5 bg-black/40 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                                                        <ArrowDownRight className="w-5 h-5 text-emerald-500" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-widest italic leading-none mb-1">Acquisitions</h3>
-                                                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest opacity-60">Asset Inflow History</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="overflow-x-auto no-scrollbar">
-                                                <table className="w-full text-left">
-                                                    <thead>
-                                                        <tr className="bg-black/20 text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] border-b border-white/5 whitespace-nowrap">
-                                                            <th className="py-5 px-6 sm:px-10">Record ID</th>
-                                                            <th className="py-5 px-6 sm:px-10">Asset Detail</th>
-                                                            <th className="py-5 px-6 sm:px-10 text-right">Settlement</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-white/5">
-                                                        {getTransactions('buy').map((tx) => (
-                                                            <tr key={tx.id} className="hover:bg-white/[0.03] transition-colors group">
-                                                                <td className="py-5 px-6 sm:px-10 text-[10px] font-mono text-slate-600 uppercase italic opacity-60 group-hover:opacity-100 transition-opacity">#{tx.id.toString().slice(-8)}</td>
-                                                                <td className="py-5 px-6 sm:px-10">
-                                                                    <div className="flex items-center gap-4">
-                                                                        <div className="w-8 h-10 rounded bg-black overflow-hidden flex-shrink-0 border border-white/5">
-                                                                            <img src={getCardImageUrl(tx.card.image)} className="w-full h-full object-cover" />
-                                                                        </div>
-                                                                        <span className="text-xs font-black text-white uppercase tracking-tight line-clamp-1">{tx.card.name}</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="py-5 px-6 sm:px-10 text-right font-black font-mono text-emerald-400 tracking-widest text-sm whitespace-nowrap">{formatPrice(tx.total, currency, USD_TO_INR)}</td>
-                                                            </tr>
-                                                        ))}
-                                                        {getTransactions('buy').length === 0 && (
-                                                            <tr><td colSpan="3" className="py-12 text-center text-[10px] font-black text-slate-700 uppercase tracking-widest">No Acquisitions Recorded</td></tr>
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
+                         {/* TAB: EXACT VISUAL MATCH MESSAGE CENTER (FLIPPED ALIGNMENT & COMPACT) */}
+                         {activeTab === 'history' && (
+                              <div className="flex flex-col md:flex-row h-[600px] md:h-[650px] bg-[#0a0f1c] border border-white/5 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden animate-in fade-in zoom-in-95 duration-500 shadow-2xl" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                 
+                                 {/* Sidebar (List of Reports) - Hidden on smaller screens if a ticket is selected */}
+                                 <div className={`w-full md:w-80 flex flex-col border-r border-white/5 bg-[#0a0f1c] ${selectedTicketId ? 'hidden md:flex' : 'flex'}`}>
+                                     <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
+                                         {userTickets.length === 0 ? (
+                                             <div className="py-20 text-center px-4">
+                                                 <History className="w-10 h-10 text-slate-800 mx-auto mb-4 opacity-20" />
+                                                 <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">No Records Found</p>
+                                             </div>
+                                         ) : (
+                                             userTickets.map((ticket) => (
+                                                 <button
+                                                     key={ticket.id}
+                                                     onClick={() => setSelectedTicketId(ticket.id)}
+                                                     className={`w-full p-5 rounded-xl text-left transition-all border ${
+                                                         selectedTicketId === ticket.id 
+                                                             ? 'bg-[#131b2d] border-[#3b82f6]/50' 
+                                                             : 'bg-[#131b2d]/40 border-white/5 hover:bg-[#131b2d]/60'
+                                                     }`}
+                                                 >
+                                                     <div className="flex justify-between items-start mb-3">
+                                                         <span className={`text-[13px] font-bold ${selectedTicketId === ticket.id ? 'text-white' : 'text-slate-300'}`}>User Report #{ticket.id.toString().slice(-4)}</span>
+                                                         <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">2H AGO</span>
+                                                     </div>
+                                                     <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed opacity-80">
+                                                         "{ticket.message}"
+                                                     </p>
+                                                 </button>
+                                             ))
+                                         )}
+                                     </div>
+                                 </div>
 
-                                        {/* LIQUIDATIONS (SELLING) */}
-                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] sm:rounded-[3.5rem] overflow-hidden shadow-2xl">
-                                            <div className="p-6 sm:p-8 border-b border-white/5 bg-black/40 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                                                        <ArrowUpRight className="w-5 h-5 text-amber-500" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-widest italic leading-none mb-1">Liquidations</h3>
-                                                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest opacity-60">Asset Outflow History</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="overflow-x-auto no-scrollbar">
-                                                <table className="w-full text-left">
-                                                    <thead>
-                                                        <tr className="bg-black/20 text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] border-b border-white/5 whitespace-nowrap">
-                                                            <th className="py-5 px-6 sm:px-10">Record ID</th>
-                                                            <th className="py-5 px-6 sm:px-10">Asset Detail</th>
-                                                            <th className="py-5 px-6 sm:px-10 text-right">Settlement</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-white/5">
-                                                        {getTransactions('sell').map((tx) => (
-                                                            <tr key={tx.id} className="hover:bg-white/[0.03] transition-colors group">
-                                                                <td className="py-5 px-6 sm:px-10 text-[10px] font-mono text-slate-600 uppercase italic opacity-60 group-hover:opacity-100 transition-opacity">#{tx.id.toString().slice(-8)}</td>
-                                                                <td className="py-5 px-6 sm:px-10">
-                                                                    <div className="flex items-center gap-4">
-                                                                        <div className="w-8 h-10 rounded bg-black overflow-hidden flex-shrink-0 border border-white/5">
-                                                                            <img src={getCardImageUrl(tx.card.image)} className="w-full h-full object-cover" />
-                                                                        </div>
-                                                                        <span className="text-xs font-black text-white uppercase tracking-tight line-clamp-1">{tx.card.name}</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="py-5 px-6 sm:px-10 text-right font-black font-mono text-amber-400 tracking-widest text-sm whitespace-nowrap">{formatPrice(tx.total, currency, USD_TO_INR)}</td>
-                                                            </tr>
-                                                        ))}
-                                                        {getTransactions('sell').length === 0 && (
-                                                            <tr><td colSpan="3" className="py-12 text-center text-[10px] font-black text-slate-700 uppercase tracking-widest">No Liquidations Recorded</td></tr>
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                             </div>
-                        )}
+                                 {/* Main Conversation Pane - Full width on mobile/tablet if selected */}
+                                 <div className={`flex-1 flex flex-col bg-[#0b1222] ${!selectedTicketId ? 'hidden md:flex' : 'flex'}`}>
+                                     {selectedTicketId ? (
+                                         (() => {
+                                             const activeTicket = userTickets.find(t => t.id === selectedTicketId);
+                                             if (!activeTicket) return null;
+                                             return (
+                                                 <>
+                                                     {/* Pane Header */}
+                                                     <div className="p-4 md:p-8 border-b border-white/5 flex items-center justify-between">
+                                                         <div className="flex items-center gap-3 md:gap-5">
+                                                             <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-[#2563eb] flex items-center justify-center text-white font-bold text-base md:text-xl shadow-lg border border-white/10 shrink-0">
+                                                                 {user.name?.charAt(0).toUpperCase()}
+                                                             </div>
+                                                             <div className="min-w-0">
+                                                                 <h3 className="text-sm md:text-lg font-bold text-white tracking-tight truncate">
+                                                                     {user.name} <span className="hidden md:inline text-slate-400 font-medium normal-case text-sm">(User ID: {user.username})</span>
+                                                                 </h3>
+                                                                 <p className="text-[10px] md:text-xs font-medium text-slate-500 mt-0.5 truncate">
+                                                                     {new Date(activeTicket.createdAt).toLocaleDateString()} @ {new Date(activeTicket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                 </p>
+                                                             </div>
+                                                         </div>
+                                                         <div className="flex items-center gap-2">
+                                                             <button 
+                                                                onClick={() => setShowDeleteConfirm(true)} 
+                                                                className="p-2 text-slate-600 hover:text-rose-500 transition-colors"
+                                                             >
+                                                                 <Trash2 className="w-5 h-5" /> 
+                                                             </button>
+                                                             <button onClick={() => setSelectedTicketId(null)} className="p-2 text-slate-600 hover:text-white transition-colors">
+                                                                 <X className="w-5 h-5" /> 
+                                                             </button>
+                                                         </div>
+                                                     </div>
+
+                                                     {/* Chat Messages Feed (Reduced Gaps) */}
+                                                     <div className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-10 space-y-4">
+                                                         
+                                                         {/* Initial Inquiry (Right aligned for User) */}
+                                                         <div className="flex justify-end">
+                                                             <div className="max-w-[85%] sm:max-w-[75%] bg-[#1e293b]/60 border border-white/5 rounded-2xl rounded-tr-none p-4 text-xs sm:text-sm text-slate-200 font-medium leading-relaxed shadow-lg">
+                                                                 {activeTicket.message}
+                                                             </div>
+                                                         </div>
+
+                                                         {/* Response Stream */}
+                                                         {activeTicket.responses.map((reply, rid) => (
+                                                             <div key={rid} className={`flex ${reply.isUser ? 'justify-end' : 'justify-start'}`}>
+                                                                 <div className={`max-w-[85%] sm:max-w-[75%] p-4 text-xs sm:text-sm font-medium leading-relaxed shadow-xl rounded-2xl ${
+                                                                     reply.isUser 
+                                                                         ? 'bg-[#1e293b]/60 border border-white/5 rounded-tr-none text-slate-200' 
+                                                                         : 'bg-[#1e3a8a]/40 border border-indigo-500/30 rounded-tl-none text-indigo-50'
+                                                                 }`}>
+                                                                     {reply.text}
+                                                                 </div>
+                                                             </div>
+                                                         ))}
+
+                                                         {/* Demo Placeholder (Admin Reply on left if no replays) */}
+                                                         {activeTicket.responses.length === 0 && (
+                                                             <div className="flex justify-start opacity-40">
+                                                                 <div className="max-w-[85%] sm:max-w-[75%] p-4 text-[10px] sm:text-xs font-bold leading-relaxed shadow-xl rounded-2xl bg-[#1e3a8a]/20 border border-indigo-500/10 rounded-tl-none text-indigo-300 italic tracking-widest uppercase">
+                                                                     Protocol Initialized: Awaiting Agent Link...
+                                                                 </div>
+                                                             </div>
+                                                         )}
+                                                     </div>
+
+                                                     {/* Message Input (Full Rounded Pill) */}
+                                                     <div className="p-4 sm:p-10">
+                                                         <form 
+                                                            className="relative max-w-4xl mx-auto"
+                                                            onSubmit={(e) => {
+                                                                e.preventDefault();
+                                                                if (replyText.trim()) {
+                                                                    addUserResponse(activeTicket.id, replyText, user.name);
+                                                                    setReplyText('');
+                                                                }
+                                                            }}
+                                                         >
+                                                             <input 
+                                                                type="text" 
+                                                                value={replyText}
+                                                                onChange={(e) => setReplyText(e.target.value)}
+                                                                placeholder="Type your reply to admin..." 
+                                                                className="w-full bg-[#131b2d] border border-white/10 rounded-full px-8 py-5 pr-20 text-sm font-medium text-white placeholder-slate-600 focus:outline-none focus:border-[#3b82f6]/50 transition-all shadow-inner" 
+                                                             />
+                                                             <button 
+                                                                type="submit"
+                                                                disabled={!replyText.trim()}
+                                                                className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-[#3b82f6] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20"
+                                                             >
+                                                                 <ArrowUpRight className="w-5 h-5 pointer-events-none" />
+                                                             </button>
+                                                         </form>
+                                                     </div>
+                                                 </>
+                                             );
+                                         })()
+                                     ) : (
+                                         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-30">
+                                             <History className="w-12 h-12 text-slate-500 mb-6" />
+                                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest italic">Initialize Protocol</h3>
+                                         </div>
+                                     )}
+                                 </div>
+
+                              </div>
+                         )}
 
                         {/* TAB: SUPPORT (Compact Full-Width Terminal) */}
                         {activeTab === 'support' && (
@@ -501,8 +549,8 @@ const Profile = () => {
                                                     <Mail className="w-5 h-5 text-indigo-400" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-xl font-black text-white uppercase tracking-tighter italic leading-none mb-1">Direct Secure Uplink</h3>
-                                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] opacity-60">Authorized Response Encrypted to Email</p>
+                                                    <h3 className="text-xl font-bold text-white tracking-tight leading-none mb-1">support hub</h3>
+                                                    <p className="text-[10px] font-medium text-slate-500 tracking-tight opacity-70">We'll get back to you as soon as possible</p>
                                                 </div>
                                             </div>
                                             <div className="px-5 py-2.5 bg-black/40 border border-white/5 rounded-xl flex items-center gap-3">
@@ -521,36 +569,40 @@ const Profile = () => {
                                                 priority: formData.get('priority'),
                                                 category: 'General Inquiry'
                                             });
-                                            alert('Secure Transmission Initiated. Final reply arriving in your registered email.');
+                                            setShowSupportSuccess(true);
                                             e.target.reset();
+                                            setTimeout(() => setShowSupportSuccess(false), 5000);
                                         }}>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5" style={{ fontFamily: 'Arial, sans-serif' }}>
                                                 <div className="space-y-1.5">
-                                                    <label className="text-[8px] font-black text-slate-600 uppercase tracking-widest ml-1">Protocol Tier</label>
-                                                    <select name="priority" className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-5 py-3 text-xs font-black text-white focus:outline-none focus:border-indigo-500/50 transition-all uppercase appearance-none cursor-pointer">
-                                                        <option value="low">Standard Signal</option>
-                                                        <option value="high">Urgent Transmission</option>
-                                                        <option value="critical">Critical Anomaly</option>
-                                                    </select>
+                                                    <label className="text-xs font-bold text-slate-500 capitalize tracking-tight ml-1">Issue</label>
+                                                    <input name="priority" required type="text" placeholder="Type of issue..." className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 sm:px-5 py-3 text-sm font-bold text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all" />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <label className="text-[8px] font-black text-slate-600 uppercase tracking-widest ml-1">Reference Subject</label>
-                                                    <input name="subject" required type="text" placeholder="Specify context..." className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-5 py-3 text-xs font-black text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all" />
+                                                    <label className="text-xs font-bold text-slate-500 capitalize tracking-tight ml-1">Subject</label>
+                                                    <input name="subject" required type="text" placeholder="Specify context..." className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 sm:px-5 py-3 text-sm font-bold text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all" />
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-1.5">
-                                                <label className="text-[8px] font-black text-slate-600 uppercase tracking-widest ml-1">Encrypted Log Content</label>
-                                                <textarea name="message" required rows="2" placeholder="Input parameters for admin analysis..." className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-5 py-4 text-xs font-black text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
+                                            <div className="space-y-1.5" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                                <label className="text-xs font-bold text-slate-500 capitalize tracking-tight ml-1">Message</label>
+                                                <textarea name="message" required rows="3" placeholder="Input parameters for admin analysis..." className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 sm:px-5 py-4 text-sm font-bold text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
                                             </div>
+
+                                            {showSupportSuccess && (
+                                                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                    <span className="text-[10px] font-bold text-emerald-400 capitalize">Secure transmission initiated. Protocol recorded.</span>
+                                                </div>
+                                            )}
 
                                             <div className="pt-2 flex flex-col md:flex-row items-center justify-between gap-6">
-                                                <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic opacity-60">
+                                                <p className="text-[8px] font-black text-slate-600 capitalize tracking-widest italic opacity-60">
                                                     Authorizing response broadcast to: <span className="text-indigo-400 font-mono tracking-tight">{user.email}</span>
                                                 </p>
-                                                <button type="submit" className="w-full md:w-auto px-10 py-3.5 bg-white text-slate-950 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl hover:bg-amber-400 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group/send whitespace-nowrap">
-                                                    Authorize Blast
-                                                    <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                                <button type="submit" className="w-full md:w-auto px-12 py-4 bg-white text-slate-950 rounded-2xl font-bold capitalize text-[13px] tracking-tight shadow-2xl hover:bg-amber-400 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group/send whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                                    Send
+                                                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                                 </button>
                                             </div>
                                         </form>
@@ -563,6 +615,50 @@ const Profile = () => {
             </div>
 
             <SupportTicketModal isOpen={showSupportModal} onClose={() => setShowSupportModal(false)} />
+            {/* DELETE CONFIRMATION MODAL (PROFESSIONAL POPUP) */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div 
+                        className="w-full max-w-[90%] sm:max-w-md bg-[#0a0f1c] border border-white/10 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500 relative"
+                        style={{ fontFamily: 'Arial, sans-serif' }}
+                    >
+                        {/* Decorative Background Glow */}
+                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-rose-500/10 rounded-full blur-[80px] pointer-events-none" />
+                        
+                        <div className="relative">
+                            <div className="w-16 h-16 rounded-3xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-8 shadow-inner">
+                                <AlertCircle className="w-8 h-8 text-rose-500" />
+                            </div>
+
+                            <h3 className="text-xl font-bold text-white mb-3 tracking-tight uppercase italic">Delete Report?</h3>
+                            <p className="text-slate-400 text-xs font-medium leading-relaxed mb-8 opacity-80">
+                                Are you sure you want to delete this report? This action cannot be undone.
+                            </p>
+
+                            <div className="flex flex-col gap-3">
+                                <button 
+                                    onClick={() => {
+                                        if (selectedTicketId) {
+                                            deleteTicket(selectedTicketId);
+                                            setSelectedTicketId(null);
+                                        }
+                                        setShowDeleteConfirm(false);
+                                    }}
+                                    className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-rose-900/20 transition-all"
+                                >
+                                    Delete
+                                </button>
+                                <button 
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    className="w-full py-4 bg-slate-900/50 border border-white/5 hover:border-white/10 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

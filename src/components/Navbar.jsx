@@ -81,7 +81,18 @@ const Navbar = ({
           
           <div className="flex-1 min-[1100px]:hidden"></div>
 
-          <div className="flex-1"></div>
+           <div className="hidden min-[1100px]:flex flex-[1.5] justify-start ml-20 px-8">
+             <div className="relative w-full max-w-[400px] group">
+               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-amber-500 transition-colors" />
+               <input 
+                 type="text" 
+                 placeholder="Search cards, accessories..." 
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-11 pr-4 text-sm font-medium text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 transition-all hover:bg-white/[0.07]"
+               />
+             </div>
+           </div>
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-6 lg:gap-10 mx-6">

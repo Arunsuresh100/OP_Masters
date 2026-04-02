@@ -83,6 +83,27 @@ export const SupportProvider = ({ children }) => {
         ));
     };
 
+    // Add user response to ticket
+    const addUserResponse = (ticketId, responseText, userName) => {
+        const response = {
+            id: Date.now() + Math.random(),
+            text: responseText,
+            userName: userName || 'User',
+            timestamp: new Date().toISOString(),
+            isUser: true
+        };
+
+        setTickets(prev => prev.map(ticket => 
+            ticket.id === ticketId 
+                ? { 
+                    ...ticket, 
+                    responses: [...ticket.responses, response],
+                    updatedAt: new Date().toISOString()
+                }
+                : ticket
+        ));
+    };
+
     // Delete ticket
     const deleteTicket = (ticketId) => {
         setTickets(prev => prev.filter(ticket => ticket.id !== ticketId));
@@ -111,6 +132,7 @@ export const SupportProvider = ({ children }) => {
             updateTicketStatus,
             updateTicketPriority,
             addResponse,
+            addUserResponse,
             deleteTicket,
             getStats
         }}>
