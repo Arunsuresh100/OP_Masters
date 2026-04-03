@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import { useSupport } from '../context/SupportContext';
 import SupportTicketModal from '../components/SupportTicketModal';
 import { 
@@ -50,6 +51,7 @@ const Profile = () => {
         wishlist, toggleWishlist, 
         ownedCards, updateOwnedCard 
     } = useUser();
+    const navigate = useNavigate();
     const [allCards, setAllCards] = useState([]);
     const [loadingCards, setLoadingCards] = useState(true);
     const [activeTab, setActiveTab] = useState('vault');
@@ -266,14 +268,19 @@ const Profile = () => {
                         {/* TAB: THE VAULT (Collection Manager - Simplified to Owned Items) */}
                         {activeTab === 'vault' && (
                             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                {portfolioStats.ownedCount === 0 ? (
+                                {loadingCards ? (
+                                    <div className="py-20 flex flex-col items-center justify-center">
+                                        <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Accessing Vault Data...</p>
+                                    </div>
+                                ) : portfolioStats.ownedCount === 0 ? (
                                     <div className="py-20 md:py-24 text-center bg-white/[0.02] border border-white/5 rounded-3xl md:rounded-[3rem] px-6">
                                         <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
                                             <Package className="w-6 h-6 md:w-8 md:h-8 text-slate-800" />
                                         </div>
                                         <h3 className="text-base md:text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Vault is Empty</h3>
                                         <p className="text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-8 max-w-[200px] mx-auto md:max-w-none">You haven't listed any digital assets in your personal vault yet.</p>
-                                        <button onClick={() => window.location.href='/cards'} className="px-8 md:px-10 py-3.5 md:py-4 bg-white text-slate-950 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl">Discover Cards</button>
+                                        <button onClick={() => navigate('/cards')} className="px-8 md:px-10 py-3.5 md:py-4 bg-white text-slate-950 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl">Discover Cards</button>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6 lg:gap-10">
@@ -347,14 +354,19 @@ const Profile = () => {
                         {/* TAB: WISHLIST HUB */}
                         {activeTab === 'wishlist' && (
                             <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-                                {wishlist.length === 0 ? (
+                                {loadingCards ? (
+                                    <div className="py-20 flex flex-col items-center justify-center">
+                                        <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Scanning Watchlist...</p>
+                                    </div>
+                                ) : wishlist.length === 0 ? (
                                     <div className="py-20 md:py-24 text-center bg-white/[0.02] border border-white/5 rounded-3xl md:rounded-[3rem] px-6">
                                         <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
                                             <Heart className="w-6 h-6 md:w-8 md:h-8 text-slate-800" />
                                         </div>
                                         <h3 className="text-base md:text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Watchlist Static</h3>
                                         <p className="text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-8 max-w-[200px] mx-auto md:max-w-none">Save upcoming assets to monitor their daily valuation metrics.</p>
-                                        <button onClick={() => window.location.href='/marketplace'} className="px-8 md:px-10 py-3.5 md:py-4 bg-white text-slate-950 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all">Open Marketplace</button>
+                                        <button onClick={() => navigate('/marketplace')} className="px-8 md:px-10 py-3.5 md:py-4 bg-white text-slate-950 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all">Open Marketplace</button>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
