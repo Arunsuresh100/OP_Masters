@@ -9,6 +9,7 @@ import Cards from './pages/Cards';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
 import AuthModals from './components/AuthModals';
+import ScrollToTop from './components/ScrollToTop';
 import { useUser } from './context/UserContext';
 import { CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS } from './constants';
 import { parseDuration, timeAgo, formatDuration, formatCompactNumber } from './utils';
@@ -140,7 +141,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans overflow-x-hidden selection:bg-amber-500/30">
-      
+      <ScrollToTop />
       <AuthModals 
         isOpen={authModal.isOpen} 
         onClose={closeAuth} 

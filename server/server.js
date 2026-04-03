@@ -195,13 +195,17 @@ const authenticateAdmin = (req, res, next) => {
     }
 };
 
-const CARDS_FILE = path.join(__dirname, 'cards.json');
-const NEWS_CACHE_FILE = path.join(__dirname, 'news_cache.json');
-
-// Memory cache for runtime performance
-let memoryNews = null;
-let lastFetchTime = 0;
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
+const YOUTUBE_CACHE_FILE = path.join(__dirname, 'youtube_cache.json');
+let memoryYoutube = {
+    channel: null,
+    videos: null,
+    stats: null,
+    lastFetch: { channel: 0, videos: 0, stats: 0 }
+};
+
+const YT_CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 
 // ============================================================
 // LIVE MARKET VOLATILITY ENGINE (60-second price ticks)
@@ -661,47 +665,93 @@ app.post('/api/cards', authenticateAdmin, validateCard, (req, res) => {
     res.status(201).json(newCard);
 });
 
-// Proxy for Channel details
+// Proxy for Channel details with Caching
 app.get('/api/youtube/channel', async (req, res) => {
+    const now = Date.now();
+    if (memoryYoutube.channel && (now - memoryYoutube.lastFetch.channel < YT_CACHE_DURATION)) {
+        return res.json(memoryYoutube.channel);
+    }
+
     try {
         const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&id=${CHANNEL_ID}&key=${API_KEY}`;
         const response = await axios.get(url);
+        
+        memoryYoutube.channel = response.data;
+        memoryYoutube.lastFetch.channel = now;
+        
+        // Async write to disk
+        fs.writeFile(YOUTUBE_CACHE_FILE, JSON.stringify(memoryYoutube), () => {});
+        
         res.json(response.data);
     } catch (error) {
         console.error('Error fetching channel data:', error.message);
+        // Fallback to memory if existing, else error
+        if (memoryYoutube.channel) return res.json(memoryYoutube.channel);
         res.status(500).json({ error: 'Failed to fetch channel data' });
     }
 });
 
-// Proxy for Latest Videos
+// Proxy for Latest Videos with Caching
 app.get('/api/youtube/videos', async (req, res) => {
-    try {
-        const uploadsPlaylistId = req.query.playlistId;
-        if (!uploadsPlaylistId) return res.status(400).json({ error: 'Playlist ID required' });
+    const now = Date.now();
+    const uploadsPlaylistId = req.query.playlistId;
+    if (!uploadsPlaylistId) return res.status(400).json({ error: 'Playlist ID required' });
 
+    if (memoryYoutube.videos && (now - memoryYoutube.lastFetch.videos < YT_CACHE_DURATION)) {
+         return res.json(memoryYoutube.videos);
+    }
+
+    try {
         const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=20&key=${API_KEY}`;
         const response = await axios.get(url);
+        
+        memoryYoutube.videos = response.data;
+        memoryYoutube.lastFetch.videos = now;
+        
         res.json(response.data);
     } catch (error) {
         console.error('Error fetching playlist items:', error.message);
+        if (memoryYoutube.videos) return res.json(memoryYoutube.videos);
         res.status(500).json({ error: 'Failed to fetch videos' });
     }
 });
 
-// Proxy for Video Stats (Duration/Views)
+// Proxy for Video Stats (Duration/Views) with Caching
 app.get('/api/youtube/stats', async (req, res) => {
-    try {
-        const videoIds = req.query.ids;
-        if (!videoIds) return res.status(400).json({ error: 'Video IDs required' });
+    const now = Date.now();
+    const videoIds = req.query.ids;
+    if (!videoIds) return res.status(400).json({ error: 'Video IDs required' });
 
+    // Stats change more frequently, but we can still cache them for a bit
+    if (memoryYoutube.stats && (now - memoryYoutube.lastFetch.stats < YT_CACHE_DURATION)) {
+        return res.json(memoryYoutube.stats);
+    }
+
+    try {
         const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${API_KEY}`;
         const response = await axios.get(url);
+        
+        memoryYoutube.stats = response.data;
+        memoryYoutube.lastFetch.stats = now;
+        
         res.json(response.data);
     } catch (error) {
         console.error('Error fetching video stats:', error.message);
+        if (memoryYoutube.stats) return res.json(memoryYoutube.stats);
         res.status(500).json({ error: 'Failed to fetch video stats' });
     }
 });
+
+// Load YouTube Cache on startup
+try {
+    if (fs.existsSync(YOUTUBE_CACHE_FILE)) {
+        const data = JSON.parse(fs.readFileSync(YOUTUBE_CACHE_FILE, 'utf8'));
+        memoryYoutube = data;
+        console.log('[CACHE] Loaded YouTube data from disk');
+    }
+} catch (e) {
+    console.warn('[CACHE] Failed to load YouTube cache');
+}
 
 app.use((err, req, res, next) => {
     console.error('[SERVER ERROR]:', err);
