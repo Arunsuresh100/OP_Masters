@@ -14,6 +14,8 @@ import { fetchLatestNews } from './scraper.js';
 import { OAuth2Client } from 'google-auth-library';
 import Joi from 'joi';
 import { exec } from 'child_process';
+import bcrypt from 'bcrypt';
+import nodemailer from 'nodemailer';
 
 // Google Client Init
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -90,6 +92,39 @@ const JWT_SECRET = process.env.JWT_SECRET;
 if (!ADMIN_SECRET || !JWT_SECRET) {
     console.warn('⚠️ WARNING: ADMIN_SECRET or JWT_SECRET is missing in .env! Security is COMPROMISED.');
 }
+
+// --- EMAIL CONFIGURATION ---
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+// Temporary storage for OTPs (In-memory for now)
+const otps = new Map(); // email -> { otp, userData, expires }
+
+const sendOTPEmail = async (email, otp) => {
+    const mailOptions = {
+        from: `"OP Master Support" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: '🔒 Your One Piece Trade Verification Code',
+        html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                <h2 style="color: #f59e0b; text-align: center;">Identity Verification</h2>
+                <p>Welcome to <strong>OP Master</strong>! To complete your registration and secure your collection, please enter the following verification code:</p>
+                <div style="background: #fdf2f2; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
+                    <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #b91c1c;">${otp}</span>
+                </div>
+                <p style="color: #666; font-size: 12px; text-align: center;">This code will expire in 10 minutes. If you didn't request this, please ignore this email.</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="font-size: 10px; color: #999; text-align: center;">Mastering the Grand Line of Card Trading.</p>
+            </div>
+        `
+    };
+    return transporter.sendMail(mailOptions);
+};
 
 // --- SECURITY MIDDLEWARE ---
 
@@ -505,25 +540,129 @@ app.post('/api/trade/transaction', (req, res) => {
 
 // --- AUTH ENDPOINTS ---
 
-app.post('/api/auth/login', (req, res) => {
-    const { password } = req.body;
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
     
+    // Admin login fallback
     if (password === ADMIN_SECRET) {
-        // Generate Token
-        const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '2h' });
-        
-        // Set HttpOnly Cookie
+        const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
         res.cookie('admin_token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // true in prod
+            secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 2 * 60 * 60 * 1000 // 2 hours
+            maxAge: 24 * 60 * 60 * 1000
+        });
+        return res.json({ success: true, message: 'Admin Authenticated' });
+    }
+
+    // Standard User Login
+    const users = readUsers();
+    const user = users.find(u => u.email === email);
+
+    if (!user || !user.password) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    try {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        const sessionToken = jwt.sign({ 
+            id: user.id || user.email,
+            email: user.email,
+            name: user.name,
+            role: user.role || 'user'
+        }, JWT_SECRET, { expiresIn: '24h' });
+
+        res.cookie('auth_token', sessionToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000
         });
 
-        res.json({ success: true, message: 'Authenticated' });
-    } else {
-        res.status(401).json({ error: 'Invalid Credentials' });
+        res.json({ 
+            success: true, 
+            user: { email: user.email, name: user.name } 
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Login failed' });
     }
+});
+
+// --- SIGNUP ENDPOINTS ---
+app.post('/api/auth/signup/init', async (req, res) => {
+    const { name, email, phone, password } = req.body;
+    
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: 'Please provide all required fields' });
+    }
+
+    const users = readUsers();
+    if (users.find(u => u.email === email)) {
+        return res.status(400).json({ error: 'Email already exists' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Save temporary data
+    otps.set(email, { 
+        otp, 
+        userData: { name, email, phone, password }, 
+        expires 
+    });
+
+    try {
+        await sendOTPEmail(email, otp);
+        res.json({ success: true, message: 'Verification code sent to your email' });
+    } catch (err) {
+        console.error('Email sending failed:', err);
+        res.status(500).json({ error: 'Failed to send verification email. Check server config.' });
+    }
+});
+
+app.post('/api/auth/signup/verify', async (req, res) => {
+    const { email, otp } = req.body;
+    
+    if (!email || !otp) {
+        return res.status(400).json({ error: 'Email and OTP are required' });
+    }
+
+    const record = otps.get(email);
+    if (!record || record.otp !== otp) {
+        return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    if (Date.now() > record.expires) {
+        otps.delete(email);
+        return res.status(400).json({ error: 'Verification code expired' });
+    }
+
+    // Finalize user creation
+    const users = readUsers();
+    const hashedPassword = await bcrypt.hash(record.userData.password, 10);
+    
+    const newUser = {
+        id: 'user_' + Date.now(),
+        name: record.userData.name,
+        email: record.userData.email,
+        phone: record.userData.phone,
+        password: hashedPassword,
+        role: 'user',
+        joinedAt: new Date().toISOString(),
+        ownedCards: {},
+        wishlist: []
+    };
+
+    users.push(newUser);
+    writeUsers(users);
+    otps.delete(email);
+
+    res.json({ success: true, message: 'Account created successfully! You can now log in.' });
 });
 
 app.post('/api/auth/logout', (req, res) => {

@@ -94,6 +94,8 @@ export const UserProvider = ({ children }) => {
         localStorage.removeItem('op_transactions');
         localStorage.removeItem('op_wishlist');
         localStorage.removeItem('op_owned_cards');
+        localStorage.removeItem('auth_view'); // CLEAR AUTH MEMORY
+        closeAuth(); // ENSURE MODAL CLOSES ON LOGOUT
     };
 
     const openAuth = (mode = 'login') => setSearchParams({ auth: mode });
