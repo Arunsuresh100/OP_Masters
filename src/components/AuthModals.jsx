@@ -211,12 +211,9 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
 
     if (!isOpen) return null;
 
-    // Responsive positioning: Mobile (60px) vs Desktop (50px/10px)
-    const mobileTop = (view === 'login' || view === 'otp') ? 'md:top-[50px] top-[60px]' : 'top-[10px]';
-
     return (
-        <div className="fixed inset-0 z-[3000] flex items-start justify-center p-4 bg-black animate-in fade-in duration-200 pt-24 uppercase">
-            <div className={`bg-slate-900 w-full ${view === 'signup' ? 'max-w-xl' : 'max-w-md'} rounded-[10px] border border-white/10 shadow-2xl overflow-hidden relative ${mobileTop} pointer-events-auto transition-all duration-300`}>
+        <div className="fixed inset-0 z-[3000] flex items-start justify-center p-4 bg-black animate-in fade-in duration-200 pt-0 uppercase">
+            <div className={`bg-slate-900 w-full ${view === 'signup' ? 'max-w-xl' : 'max-w-md'} rounded-[10px] border border-white/10 shadow-2xl overflow-hidden relative top-[100px] pointer-events-auto transition-all duration-300`}>
                 
                 <button 
                     onClick={() => onClose()} 
@@ -285,12 +282,18 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     </svg>
                                     Continue with Google
                                 </button>
+                                
+                                <div className="mt-4 text-center md:pb-0 pb-[20px]">
+                                    <button onClick={() => setView('signup')} className="text-white text-sm hover:underline transition-all tracking-wider font-bold">
+                                        Wait, I'm new here
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     )}
 
                     {view === 'signup' && (
-                        <div className="max-h-[70vh] overflow-y-auto pr-1 pb-24">
+                        <div className="max-h-[70vh] overflow-y-auto pr-1">
                             <form className="space-y-4" onSubmit={handleSignupInit}>
                                 <div className="space-y-1">
                                     <label className="text-xs text-white uppercase tracking-widest ml-1">Full Name</label>
@@ -349,6 +352,12 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     )}
                                 </div>
                                 <button type="submit" disabled={loading} className="w-full bg-white text-slate-950 font-black py-4 rounded-[10px] uppercase text-[10px] tracking-widest hover:bg-amber-500 transition-all mt-4 shadow-xl">Create Account</button>
+                                
+                                <div className="mt-4 text-center md:pb-0 pb-[20px]">
+                                    <button onClick={() => setView('login')} className="text-white text-sm hover:underline transition-all tracking-wider font-bold">
+                                        I already have access
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     )}
@@ -396,14 +405,6 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     <button onClick={() => setView('signup')} className="text-[11px] text-amber-500 font-bold uppercase hover:underline tracking-widest">Change Email</button>
                                 )}
                             </div>
-                        </div>
-                    )}
-
-                    {view !== 'otp' && (
-                        <div className="mt-2 text-center">
-                            <button onClick={() => setView(view === 'login' ? 'signup' : 'login')} className="text-white text-sm hover:underline transition-all tracking-wider font-bold">
-                                {view === 'login' ? "Wait, I'm new here" : "I already have access"}
-                            </button>
                         </div>
                     )}
                 </div>
