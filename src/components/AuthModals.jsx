@@ -31,7 +31,8 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
     const [isValidating, setIsValidating] = useState(false);
     
     const { login } = useUser();
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const API_BASE = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
     // MOBILE-ONLY BACKGROUND LOCK
     useEffect(() => {
@@ -116,9 +117,8 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                 navigate('/');
                 onClose();
             } catch (err) {
-                login({ name: 'Guest Rider', email: 'guest@example.com', role: 'guest' });
-                navigate('/');
-                onClose();
+                console.error('Google Auth Error:', err);
+                setError('Connection failed. If it\'s your first time today, please try again in 30 seconds.');
             } finally {
                 setLoading(false);
             }
@@ -141,9 +141,8 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             navigate('/');
             onClose();
         } catch (err) {
-            login({ name: 'Guest Rider', email: formData.email, role: 'guest' });
-            navigate('/');
-            onClose();
+            console.error('Login Error:', err);
+            setError('Could not reach server. It might be waking up—please try again.');
         } finally {
             setLoading(false);
         }
