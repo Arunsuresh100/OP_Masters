@@ -12,7 +12,7 @@ import {
 import AdminDashboard from '../components/AdminDashboard';
 import TicketManager from '../components/TicketManager';
 import logoImg from '../assets/logo.jpg';
-import vegapunkImg from '../assets/vegapunk.png';
+import vegapunkImg from '../assets/Vegapunk.png';
 
 const Admin = () => {
   const [password, setPassword] = useState('');
