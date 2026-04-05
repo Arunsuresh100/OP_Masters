@@ -587,18 +587,18 @@ const Profile = () => {
                                         }}>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5" style={{ fontFamily: 'Arial, sans-serif' }}>
                                                 <div className="space-y-1.5">
-                                                    <label className="text-xs font-bold text-slate-500 capitalize tracking-tight ml-1">Issue</label>
-                                                    <input name="priority" required type="text" placeholder="Type of issue..." className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 sm:px-5 py-3 text-sm font-bold text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all" />
+                                                    <label className="text-xs font-bold text-white/70 capitalize tracking-tight ml-1">Issue</label>
+                                                    <input name="priority" required type="text" placeholder="Type of issue..." className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 sm:px-5 py-3 text-sm font-medium text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 transition-all" />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <label className="text-xs font-bold text-slate-500 capitalize tracking-tight ml-1">Subject</label>
-                                                    <input name="subject" required type="text" placeholder="Specify context..." className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 sm:px-5 py-3 text-sm font-bold text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all" />
+                                                    <label className="text-xs font-bold text-white/70 capitalize tracking-tight ml-1">Subject</label>
+                                                    <input name="subject" required type="text" placeholder="Specify context..." className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 sm:px-5 py-3 text-sm font-medium text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 transition-all" />
                                                 </div>
                                             </div>
 
                                             <div className="space-y-1.5" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                                <label className="text-xs font-bold text-slate-500 capitalize tracking-tight ml-1">Message</label>
-                                                <textarea name="message" required rows="3" placeholder="Input parameters for admin analysis..." className="w-full bg-slate-950/50 border border-white/5 rounded-xl px-4 sm:px-5 py-4 text-sm font-bold text-white placeholder-slate-700 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
+                                                <label className="text-xs font-bold text-white/70 capitalize tracking-tight ml-1">Message</label>
+                                                <textarea name="message" required rows="3" placeholder="Input parameters for admin analysis..." className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 sm:px-5 py-4 text-sm font-medium text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
                                             </div>
 
                                             {showSupportSuccess && (
@@ -609,7 +609,7 @@ const Profile = () => {
                                             )}
 
                                             <div className="pt-2 flex flex-col md:flex-row items-center justify-between gap-6">
-                                                <p className="text-[8px] font-black text-slate-600 capitalize tracking-widest italic opacity-60">
+                                                <p className="text-[10px] font-bold text-white/60 capitalize tracking-widest italic">
                                                     Authorizing response broadcast to: <span className="text-indigo-400 font-mono tracking-tight">{user.email}</span>
                                                 </p>
                                                 <button type="submit" className="w-full md:w-auto px-12 py-4 bg-white text-slate-950 rounded-2xl font-bold capitalize text-[13px] tracking-tight shadow-2xl hover:bg-amber-400 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group/send whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>

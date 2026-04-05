@@ -135,8 +135,10 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
     }, []);
 
     useEffect(() => {
-      if (isOpen && inputRef.current) {
-        inputRef.current.focus();
+      if (isOpen) {
+        if (inputRef.current) inputRef.current.focus();
+        // Optional: Scroll into view if it's potentially off-screen
+        dropdownRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }, [isOpen]);
 
@@ -156,7 +158,7 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
         </button>
 
         {isOpen && (
-          <div className="absolute z-[200] mt-3 w-full bg-slate-950/98 backdrop-blur-3xl border border-white/15 rounded-2xl shadow-[0_30px_70px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 ring-1 ring-white/5">
+          <div className="absolute z-[1000] lg:left-[calc(100%+1.5rem)] lg:bottom-[-90px] lg:top-auto lg:mt-0 lg:w-[320px] w-full mt-3 bg-slate-950 border border-white/15 rounded-2xl shadow-[0_30px_70px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in zoom-in-95 lg:slide-in-from-left-2 slide-in-from-top-2 duration-500 cubic-bezier(0.19, 1, 0.22, 1) ring-1 ring-white/5">
             <div className="p-3 border-b border-white/5 bg-slate-950/20">
               <div className="relative">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
@@ -170,7 +172,7 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
                 />
               </div>
             </div>
-            <div className="max-h-72 overflow-y-auto overflow-x-hidden custom-scrollbar py-1">
+            <div className="max-h-[30vh] sm:max-h-[500px] overflow-y-auto overflow-x-hidden custom-scrollbar py-1 overscroll-contain">
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((opt) => (
                   <button
@@ -281,8 +283,8 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
       
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:block lg:col-span-1 space-y-6 lg:pt-[170px]">
-           <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 space-y-6 sticky top-24">
+         <div className="hidden lg:block lg:col-span-1 space-y-6 lg:pt-[170px]">
+            <div className="bg-slate-900 border border-white/5 rounded-2xl p-5 space-y-6 relative top-[20px] z-40">
               <div className="pt-2">
                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Find Card</h3>
                 <div className="relative">
@@ -337,10 +339,10 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
         </div>
 
         {/* Professional Bottom Sheet (Mobile Filter Drawer) */}
-        <div className={`lg:hidden fixed inset-0 z-50 transition-all duration-300 ${mobileFilterOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+        <div className={`lg:hidden fixed inset-0 z-[1000] transition-all duration-300 ${mobileFilterOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
           <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${mobileFilterOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setMobileFilterOpen(false)} />
           
-          <div className={`absolute top-0 right-0 bottom-0 w-full max-w-xs bg-slate-950 border-l border-white/10 transition-transform duration-500 cubic-bezier(0.19, 1, 0.22, 1) flex flex-col ${mobileFilterOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className={`absolute top-0 right-0 bottom-0 w-full max-w-xs bg-slate-950 border-l border-white/10 transition-transform duration-500 cubic-bezier(0.19, 1, 0.22, 1) flex flex-col z-10 ${mobileFilterOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             {/* Drawer Header - Traditional Professional Sidebar */}
             <div className="flex-shrink-0 bg-slate-950 px-6 py-6 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -427,11 +429,11 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
         {/* Right Content */}
         <div className="lg:col-span-3 pt-0">
                  {/* Clean Rarity Filter - No Scrolling, Professional Wrapping */}
-           <div className="mb-12 flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto px-4">
+           <div className="mb-6 lg:mb-12 flex items-center justify-start lg:justify-center gap-2 max-w-4xl mx-auto px-4 overflow-x-auto no-scrollbar scroll-smooth">
                 {/* 'All' Selector */}
                 <button 
                     onClick={() => { setSelectedRarity('all'); setCurrentPage(1); }} 
-                    className={`h-10 px-6 flex items-center justify-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedRarity === 'all' ? 'bg-white text-slate-950 border-white shadow-[0_0_20px_rgba(255,255,255,0.15)]' : 'bg-slate-900 text-slate-500 border-white/10 hover:border-white/20 hover:text-white hover:bg-slate-800'}`}
+                    className={`h-8 sm:h-10 px-4 sm:px-6 flex-shrink-0 flex items-center justify-center rounded-lg sm:rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedRarity === 'all' ? 'bg-white text-slate-950 border-white shadow-[0_0_20px_rgba(255,255,255,0.15)]' : 'bg-slate-900 text-slate-500 border-white/10 hover:border-white/20 hover:text-white hover:bg-slate-800'}`}
                 >
                     All
                 </button>
@@ -441,7 +443,7 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
                     <button 
                         key={r.id} 
                         onClick={() => { setSelectedRarity(r.code); setCurrentPage(1); }} 
-                        className={`h-10 px-6 flex items-center justify-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent shadow-lg scale-105` : 'bg-slate-900 text-slate-500 border-white/10 hover:border-white/20 hover:text-white hover:bg-slate-800'}`}
+                        className={`h-8 sm:h-10 px-4 sm:px-6 flex-shrink-0 flex items-center justify-center rounded-lg sm:rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent shadow-lg scale-105` : 'bg-slate-900 text-slate-500 border-white/10 hover:border-white/20 hover:text-white hover:bg-slate-800'}`}
                     >
                         {r.code}
                     </button>

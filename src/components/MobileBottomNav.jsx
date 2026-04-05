@@ -23,7 +23,7 @@ const MobileBottomNav = () => {
   const { user, openAuth } = useUser();
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-lg border-t border-white/10">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-[2000] bg-slate-950/80 backdrop-blur-lg border-t border-white/10">
       <nav className="grid grid-cols-4 h-16">
           {/* Home */}
           <Link 
