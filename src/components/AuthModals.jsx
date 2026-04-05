@@ -100,11 +100,11 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Login failed');
                 login(data.user);
-                navigate('/'); // REDIRECT TO HOME
+                navigate('/');
                 onClose();
             } catch (err) {
                 login({ name: 'Guest Rider', email: 'guest@example.com', role: 'guest' });
-                navigate('/'); // REDIRECT TO HOME
+                navigate('/');
                 onClose();
             } finally {
                 setLoading(false);
@@ -125,11 +125,11 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
             login(data.user);
-            navigate('/'); // REDIRECT TO HOME
+            navigate('/');
             onClose();
         } catch (err) {
             login({ name: 'Guest Rider', email: formData.email, role: 'guest' });
-            navigate('/'); // REDIRECT TO HOME
+            navigate('/');
             onClose();
         } finally {
             setLoading(false);
@@ -186,7 +186,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                 setError('');
                 setTimeout(() => {
                     login({ name: signupData.name || 'Guest User', email: signupData.email || 'guest@example.com', role: 'guest' });
-                    navigate('/'); // REDIRECT TO HOME
+                    navigate('/');
                     onClose();
                 }, 2000); 
             } else {
@@ -211,9 +211,12 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
 
     if (!isOpen) return null;
 
+    // Responsive positioning: Mobile (60px) vs Desktop (50px/10px)
+    const mobileTop = (view === 'login' || view === 'otp') ? 'md:top-[50px] top-[60px]' : 'top-[10px]';
+
     return (
-        <div className="fixed inset-0 z-[3000] flex items-start justify-center p-4 bg-black animate-in fade-in duration-200 pt-24">
-            <div className={`bg-slate-900 w-full ${view === 'signup' ? 'max-w-xl' : 'max-w-md'} rounded-[10px] border border-white/10 shadow-2xl overflow-hidden relative ${view === 'signup' ? 'top-[10px]' : 'top-[50px]'} pointer-events-auto transition-all duration-300`}>
+        <div className="fixed inset-0 z-[3000] flex items-start justify-center p-4 bg-black animate-in fade-in duration-200 pt-24 uppercase">
+            <div className={`bg-slate-900 w-full ${view === 'signup' ? 'max-w-xl' : 'max-w-md'} rounded-[10px] border border-white/10 shadow-2xl overflow-hidden relative ${mobileTop} pointer-events-auto transition-all duration-300`}>
                 
                 <button 
                     onClick={() => onClose()} 
@@ -232,15 +235,15 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                         <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-1">
                             {view === 'login' ? 'Welcome' : view === 'signup' ? 'Create Account' : 'Verify Email'}
                         </h1>
-                        <p className="text-slate-400 text-sm">
+                        <p className="text-slate-400 text-sm normal-case">
                             {view === 'login' ? 'Access your One Piece card collection' : view === 'signup' ? 'Join the Grand Line of card traders' : `Enter code sent to ${signupData.email || 'your email'}`}
                         </p>
                     </div>
 
-                    {error && (
-                        <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-[10px] flex items-center gap-3 animate-in slide-in-from-top-2">
-                            <X className="w-4 h-4 text-rose-500" />
-                            <p className="text-xs font-bold text-rose-400">{error}</p>
+                    {(error || success) && (
+                        <div className={`mb-4 p-3 border rounded-[10px] flex items-center gap-3 animate-in slide-in-from-top-2 ${error ? 'bg-rose-500/10 border-rose-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
+                            {error ? <X className="w-4 h-4 text-rose-500" /> : <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                            <p className={`text-xs font-bold ${error ? 'text-rose-400' : 'text-emerald-400'}`}>{error || success}</p>
                         </div>
                     )}
 
@@ -260,6 +263,11 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                         </button>
                                     </div>
                                 </div>
+                                
+                                <div className="flex justify-end">
+                                    <button type="button" onClick={() => { setSuccess('Reset link sent to ' + (formData.email || 'your email')); setError(''); }} className="text-[10px] font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest transition-colors">Forgot Password?</button>
+                                </div>
+
                                 <button type="submit" disabled={loading} className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black rounded-[10px] shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 uppercase tracking-wider mt-1">
                                     {loading ? 'Authenticating...' : 'Sign In'}
                                 </button>
@@ -268,7 +276,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">OR</span>
                                     <div className="h-px flex-1 bg-white/5"></div>
                                 </div>
-                                <button type="button" onClick={() => handleGoogleLogin()} className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-medium py-3 px-4 rounded-[10px] border border-white/10 transition-all transform active:scale-[0.98] shadow-lg group">
+                                <button type="button" onClick={() => handleGoogleLogin()} className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-medium py-3 px-4 rounded-[10px] border border-white/10 transition-all transform active:scale-[0.98] shadow-lg group normal-case">
                                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -298,9 +306,6 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                                             <input type="email" required value={signupData.email} onChange={(e) => setSignupData({ ...signupData, email: e.target.value })} placeholder="Email Address" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-2.5 pl-12 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
                                         </div>
-                                        {signupData.email && !isValidEmail(signupData.email) && (
-                                            <p className="text-[10px] text-rose-500 font-bold ml-1">Invalid email format</p>
-                                        )}
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs text-white uppercase tracking-widest ml-1">Mobile Number</label>
@@ -308,9 +313,6 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                             <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                                             <input type="tel" required value={signupData.phone} onChange={(e) => setSignupData({ ...signupData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="10 Digits" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-2.5 pl-12 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
                                         </div>
-                                        {signupData.phone && !isValidPhone(signupData.phone) && (
-                                            <p className="text-[10px] text-rose-500 font-bold ml-1">Exactly 10 digits required</p>
-                                        )}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
@@ -326,7 +328,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                         <label className="text-xs text-white uppercase tracking-widest ml-1">Age (18+ only)</label>
                                         <div className="relative group">
                                             <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                                            <input type="date" required max="2099-12-31" value={signupData.dob} onChange={(e) => { const year = new Date(e.target.value).getFullYear(); if (year <= 9999) setSignupData({ ...signupData, dob: e.target.value }); }} className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-12 pr-4 text-[10px] text-white focus:outline-none focus:border-amber-500/50 font-bold" />
+                                            <input type="date" required max="2099-12-31" value={signupData.dob} onChange={(e) => { const year = new Date(e.target.value).getFullYear(); if (year <= 9999) setSignupData({ ...signupData, dob: e.target.value }); }} className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold" />
                                         </div>
                                     </div>
                                 </div>
@@ -341,7 +343,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     </div>
                                     {strength && (
                                         <div className="flex items-center justify-between px-1 mt-1">
-                                            <p className="text-[10px] uppercase font-bold tracking-tighter text-slate-500">Security:</p>
+                                            <p className="text-[10px] uppercase font-bold tracking-tighter text-slate-500 underline underline-offset-4">Security:</p>
                                             <p className={`text-[10px] uppercase font-black tracking-widest ${strength.color}`}>{strength.label}</p>
                                         </div>
                                     )}
@@ -391,7 +393,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                         Resend Code
                                     </button>
                                 ) : (
-                                    <button onClick={() => setView('signup')} className="text-[11px] text-amber-500 font-bold uppercase hover:underline">Change Email</button>
+                                    <button onClick={() => setView('signup')} className="text-[11px] text-amber-500 font-bold uppercase hover:underline tracking-widest">Change Email</button>
                                 )}
                             </div>
                         </div>
@@ -399,7 +401,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
 
                     {view !== 'otp' && (
                         <div className="mt-2 text-center">
-                            <button onClick={() => setView(view === 'login' ? 'signup' : 'login')} className="text-white text-sm hover:underline transition-all">
+                            <button onClick={() => setView(view === 'login' ? 'signup' : 'login')} className="text-white text-sm hover:underline transition-all tracking-wider font-bold">
                                 {view === 'login' ? "Wait, I'm new here" : "I already have access"}
                             </button>
                         </div>
