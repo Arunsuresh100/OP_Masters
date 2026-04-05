@@ -1,31 +1,31 @@
 import React, { useState } from 'react';
-import { Send, Plus, Trash2, ShieldCheck, AlertCircle, LayoutDashboard, Ticket, Users, CreditCard, Box, LogOut } from 'lucide-react';
+import { 
+  Users, 
+  PlusCircle, 
+  Newspaper, 
+  MessageSquare, 
+  LayoutDashboard,
+  LogOut,
+  ShieldCheck,
+  AlertCircle
+} from 'lucide-react';
 import AdminDashboard from '../components/AdminDashboard';
 import TicketManager from '../components/TicketManager';
+import logoImg from '../assets/logo.jpg';
+import vegapunkImg from '../assets/vegapunk.png';
 
 const Admin = () => {
   const [password, setPassword] = useState('');
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    rarity: 'SR',
-    set: 'OP09',
-    image: '',
-    price: '',
-    character: '',
-    description: '',
-    condition: 'Near Mint'
-  });
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [status, setStatus] = useState({ type: '', message: '' });
 
   // Check auth status on mount
   React.useEffect(() => {
     const checkAuth = async () => {
       try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, { credentials: 'include' });
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, { credentials: 'include' });
         if (res.ok) {
           setAuthorized(true);
         }
@@ -66,57 +66,37 @@ const Admin = () => {
     setPassword('');
   };
 
-  const handleCardSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include', // Send cookies
-        body: JSON.stringify(formData)
-      });
-
-      if (res.ok) {
-        setStatus({ type: 'success', message: 'Card posted successfully!' });
-        setFormData({ ...formData, id: '', name: '', image: '', price: '', character: '' });
-      } else {
-        const err = await res.json();
-        setStatus({ type: 'error', message: err.error || 'Failed to post card.' });
-      }
-    } catch (err) {
-      setStatus({ type: 'error', message: 'Server connection failed.' });
-    }
-  };
-
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading Security Module...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-[#020618] flex items-center justify-center text-white font-sans antialiased text-sm uppercase tracking-widest font-black">
+      Synchronizing Network...
+    </div>
+  );
 
   if (!authorized) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 pt-32 bg-slate-950">
-        <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-3xl p-8 space-y-6 shadow-2xl shadow-amber-500/5">
+      <div className="min-h-screen flex items-center justify-center p-6 bg-[#020618]">
+        <div className="w-full max-w-md bg-[#0f172a]/50 border border-white/5 rounded-2xl p-8 space-y-6 shadow-2xl backdrop-blur-sm">
           <div className="text-center space-y-2">
-            <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
-                <ShieldCheck className="w-8 h-8 text-amber-500" />
+            <div className="w-16 h-16 rounded-2xl bg-orange-600/10 border border-orange-500/20 flex items-center justify-center mx-auto mb-4">
+                <ShieldCheck className="w-8 h-8 text-orange-500" />
             </div>
-            <h2 className="text-2xl font-black text-white uppercase tracking-tight">Admin Access</h2>
-            <p className="text-slate-400 text-sm">Enter secret key to manage the platform.</p>
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight">Admin Terminal</h2>
+            <p className="text-slate-400 text-sm">Enter credential key to access global controls.</p>
           </div>
           <div className="space-y-4">
             <input 
               type="password" 
-              placeholder="Admin Secret..."
-              className="w-full bg-slate-950 border border-white/10 rounded-xl py-4 px-6 text-white focus:outline-none focus:border-amber-500 transition-all placeholder-slate-600"
+              placeholder="Authorization Key..."
+              className="w-full bg-[#1e293b] border border-white/10 rounded-xl py-4 px-6 text-white focus:outline-none focus:border-orange-500 transition-all placeholder-slate-600"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAuth()}
             />
             <button 
               onClick={handleAuth}
-              className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 font-black rounded-xl hover:shadow-lg hover:shadow-amber-500/20 transition-all uppercase tracking-wide text-sm"
+              className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-black rounded-xl hover:shadow-lg hover:shadow-orange-600/20 transition-all uppercase tracking-wide text-sm"
             >
-              Unlock Terminal
+              Access Command Center
             </button>
           </div>
           {status.message && (
@@ -130,120 +110,93 @@ const Admin = () => {
     );
   }
 
-  const NavItem = ({ id, label, icon: Icon, isMobile = false }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={isMobile 
-        ? `flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
-            activeTab === id 
-              ? 'text-amber-500 scale-105' 
-              : 'text-slate-500 hover:text-slate-400'
-          }`
-        : `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-            activeTab === id 
-              ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20' 
-              : 'text-slate-400 hover:text-white hover:bg-white/5'
-          }`
-      }
-    >
-      <Icon className={isMobile ? "w-6 h-6 mb-1" : "w-5 h-5"} />
-      <span className={isMobile ? "text-[10px] font-bold uppercase tracking-wide" : "text-sm font-bold uppercase tracking-wide text-left"}>
-        {label}
-      </span>
-      {!isMobile && id === 'tickets' && (
-        <span className="ml-auto bg-slate-950 px-2 py-0.5 rounded text-[10px] text-amber-500 font-black border border-amber-500/20">
-          !
-        </span>
-      )}
-    </button>
-  );
-
   return (
-    <div className="min-h-screen bg-slate-950 lg:pt-24 pt-20 pb-24 lg:pb-12 px-4">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Desktop Sidebar Navigation (Hidden on Mobile) */}
-        <div className="hidden lg:block lg:col-span-3 space-y-6">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl p-4 space-y-2 sticky top-24">
-            <h3 className="px-4 py-2 text-xs font-black text-slate-500 uppercase tracking-widest">Dashboard</h3>
-            <NavItem id="overview" label="Overview" icon={LayoutDashboard} />
-            <NavItem id="tickets" label="Support Tickets" icon={Ticket} />
-            
-            <div className="h-px bg-white/5 my-2"></div>
-            
-            <h3 className="px-4 py-2 text-xs font-black text-slate-500 uppercase tracking-widest">Management</h3>
-            <NavItem id="cards" label="Card Manager" icon={Box} />
-            <NavItem id="users" label="Users" icon={Users} />
-            <NavItem id="transactions" label="Transactions" icon={CreditCard} />
-            
-            <div className="h-px bg-white/5 my-2"></div>
-            
-            <button 
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all font-bold text-sm uppercase tracking-wide"
-            >
-              <LogOut className="w-5 h-5" />
-              <span>Logout</span>
-            </button>
+    <div className="min-h-screen bg-[#020618] text-white flex font-sans antialiased">
+      
+      {/* Sidebar Navigation */}
+      <aside className="w-64 border-r border-white/5 flex flex-col sticky top-0 h-screen hidden lg:flex">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-10 px-2 group cursor-pointer">
+            <div className="relative flex-shrink-0">
+              <img src={logoImg} alt="Logo" className="w-10 h-10 rounded-full object-cover bg-black border border-white/10 group-hover:scale-110 transition-transform" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-black tracking-tight bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent uppercase">OP MASTER</span>
+              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em] -mt-1">Admin Panel</span>
+            </div>
           </div>
-        </div>
-
-        {/* Mobile Bottom Navigation (Visible only on Mobile/Tablet) */}
-        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl flex justify-around items-center">
-            <NavItem id="overview" label="Home" icon={LayoutDashboard} isMobile={true} />
-            <NavItem id="tickets" label="Support" icon={Ticket} isMobile={true} />
-            <NavItem id="cards" label="Cards" icon={Box} isMobile={true} />
-            <button 
-                onClick={handleLogout}
-                className="flex flex-col items-center justify-center p-2 text-red-400 rounded-xl"
-            >
-                <LogOut className="w-6 h-6 mb-1" />
-                <span className="text-[10px] font-bold uppercase tracking-wide">Exit</span>
-            </button>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="lg:col-span-9 space-y-6">
           
-          {/* Header */}
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-tight">
-                {activeTab === 'overview' && 'Dashboard Overview'}
-                {activeTab === 'tickets' && 'Support Tickets'}
-                {activeTab === 'cards' && 'Card Management'}
-                {activeTab === 'users' && 'User Management'}
-                {activeTab === 'transactions' && 'Transaction History'}
-              </h1>
-              <p className="hidden sm:block text-slate-500 text-sm mt-1">
-                Welcome back, Admin. System is running optimally.
-              </p>
-            </div>
-            <div className="hidden sm:block">
-               <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs font-bold text-emerald-400 flex items-center gap-2">
-                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                 System Online
-               </span>
-            </div>
-          </div>
-
-          {/* Content Rendering */}
-          {(activeTab === 'overview' || activeTab === 'users') && <AdminDashboard activeTab={activeTab} />}
-
-
-          {activeTab === 'transactions' && (
-             <div className="bg-slate-900 border border-white/10 rounded-2xl p-12 text-center">
-                <CreditCard className="w-16 h-16 text-slate-700 mx-auto mb-4" />
-                <h3 className="text-xl font-black text-white uppercase tracking-tight">Transaction History</h3>
-                <p className="text-slate-500 mt-2">Module under development. Coming in Phase 3.</p>
-             </div>
-          )}
-
+          <nav className="space-y-1">
+            {[
+              { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+              { id: 'users', label: 'User Directory', icon: Users },
+              { id: 'inventory', label: 'Card Inventory', icon: PlusCircle },
+              { id: 'news', label: 'News Center', icon: Newspaper },
+              { id: 'reports', label: 'Reports', icon: MessageSquare, badge: 1 }, // Hardcoded for demo matching user code
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all group ${
+                  activeTab === item.id 
+                  ? 'bg-orange-600/10 text-orange-500 border border-orange-500/20' 
+                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <item.icon className="w-4 h-4" />
+                  <span className="text-sm font-medium">{item.label}</span>
+                </div>
+                {item.badge > 0 && (
+                  <span className="bg-orange-600 text-[10px] px-1.5 py-0.5 rounded text-white font-bold">{item.badge}</span>
+                )}
+              </button>
+            ))}
+          </nav>
         </div>
-      </div>
+
+        <div className="mt-auto p-6 border-t border-white/5">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 text-slate-500 hover:text-red-400 text-sm transition-colors w-full px-2"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Terminate Session</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Panel */}
+      <main className="flex-1 p-8 overflow-y-auto">
+        <header className="flex justify-between items-end mb-8">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight capitalize">{activeTab.replace('-', ' ')}</h2>
+            <p className="text-slate-500 text-sm">System Administration & Global Management</p>
+          </div>
+          <div className="flex items-center gap-4">
+             <div className="text-right mr-2">
+                <p className="text-xs font-bold text-white uppercase tracking-wider">Vegapunk</p>
+                <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center justify-end gap-1">
+                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Network Stable
+                </p>
+             </div>
+             <div className="w-10 h-10 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden shadow-lg shadow-orange-500/10">
+                <img src="https://static.beebom.com/wp-content/uploads/2024/08/Vegapunk.jpg?w=1024" alt="Vegapunk" className="w-full h-full object-cover" />
+             </div>
+          </div>
+        </header>
+
+        {/* Content Modules */}
+        <div className="space-y-6">
+           {activeTab === 'reports' ? (
+             <TicketManager />
+           ) : (
+             <AdminDashboard activeTab={activeTab} />
+           )}
+        </div>
+      </main>
     </div>
   );
 };
 
 export default Admin;
-

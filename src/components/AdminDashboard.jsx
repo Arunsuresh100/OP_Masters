@@ -1,285 +1,571 @@
-import React from 'react';
-import { useSupport } from '../context/SupportContext';
-import { Users, ShoppingBag, AlertCircle, DollarSign, TrendingUp, Activity, ArrowUpRight } from 'lucide-react';
-import { formatCompactNumber } from '../utils';
+import React, { useState, useRef } from 'react';
+import { 
+  Users, 
+  PlusCircle, 
+  Newspaper, 
+  Trash2, 
+  Upload, 
+  Search,
+  Package,
+  Calendar,
+  Clock,
+  Globe,
+  Link as LinkIcon,
+  AlertCircle,
+  CheckCircle2
+} from 'lucide-react';
+import { 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from 'recharts';
 
-const AdminDashboard = ({ activeTab = 'overview' }) => {
-    const { getStats } = useSupport();
-    const ticketStats = getStats();
-    const [stats, setStats] = React.useState({
-        totalRevenue: 0,
-        totalUsers: 0,
-        activeListings: 0,
-        revenueGrowth: 0,
-        userGrowth: 0,
-        listingsGrowth: 0,
-        recentActivity: []
-    });
+// Professional Analytics Data - April 2024
+const monthlyUserData = [
+  { name: 'Apr 01', users: 1200 },
+  { name: 'Apr 05', users: 1900 },
+  { name: 'Apr 10', users: 1500 },
+  { name: 'Apr 15', users: 2800 },
+  { name: 'Apr 20', users: 2400 },
+  { name: 'Apr 25', users: 3200 },
+  { name: 'Apr 30', users: 3100 },
+];
 
-    React.useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/stats`, {
-                    credentials: 'include' // Important for admin_token cookie
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setStats(data);
-                }
-            } catch (err) {
-                console.error("Failed to fetch admin stats", err);
-            }
-        };
-        fetchStats();
-    }, []);
+const mockUsers = [
+  { id: 1, name: 'Monkey D. Luffy', email: 'luffy@opmasters.com', active: true, created: '2023-10-12', lastActive: '2 mins ago', loginType: 'google' },
+  { id: 2, name: 'Roronoa Zoro', email: 'zoro@swords.jp', active: false, created: '2023-11-05', lastActive: '3 days ago', loginType: 'email' },
+  { id: 3, name: 'Nami', email: 'nami@weather.org', active: true, created: '2023-12-01', lastActive: 'Active', loginType: 'google' },
+  { id: 4, name: 'Vinsmoke Sanji', email: 'sanji@allblue.fr', active: true, created: '2024-01-15', lastActive: '1 hour ago', loginType: 'email' },
+  { id: 5, name: 'Nico Robin', email: 'robin@ohara.gov', active: false, created: '2024-02-20', lastActive: '5 days ago', loginType: 'google' },
+];
 
-    const StatCard = ({ title, value, icon: Icon, color, trend }) => (
-        <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 relative overflow-hidden group hover:border-white/20 transition-all">
-            <div className={`absolute top-0 right-0 w-24 h-24 bg-${color}-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110`}></div>
-            
-            <div className="relative z-10">
-                <div className="flex justify-between items-start mb-4">
-                    <div className={`p-3 rounded-xl bg-${color}-500/10 border border-${color}-500/20`}>
-                        <Icon className={`w-6 h-6 text-${color}-500`} />
-                    </div>
-                    {trend !== undefined && (
-                        <div className="flex items-center gap-1 text-emerald-400 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
-                            <TrendingUp className="w-3 h-3" />
-                            <span>+{trend}%</span>
-                        </div>
-                    )}
-                </div>
-                
-                <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{title}</h3>
-                <div className="text-2xl font-black text-white">{value}</div>
+const AdminDashboard = ({ activeTab = 'dashboard' }) => {
+  const [users, setUsers] = useState(mockUsers);
+  const [userLoginFilter, setUserLoginFilter] = useState('all');
+  const [userStatusFilter, setUserStatusFilter] = useState('all');
+  const [showDeleteModal, setShowDeleteModal] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // Form States
+  const [cardForm, setCardForm] = useState({ name: '', type: '', valuation: '', expansion: '', customExpansion: '' });
+  const [newsForm, setNewsForm] = useState({ headline: '', url: '', content: '' });
+  const [errors, setErrors] = useState([]);
+  const [formStatus, setFormStatus] = useState({ type: '', message: '' });
+
+  // Design Tokens
+  const theme = {
+    bg: 'bg-[#020618]',
+    card: 'bg-[#0f172a]/50 backdrop-blur-sm border border-white/5 rounded-xl',
+    input: 'w-full bg-[#1e293b] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-orange-500 transition-all text-sm outline-none',
+    label: 'text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block',
+    buttonPrimary: 'bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2',
+    accentText: 'text-orange-500'
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesLogin = userLoginFilter === 'all' || user.loginType === userLoginFilter;
+    const matchesStatus = userStatusFilter === 'all' || 
+                          (userStatusFilter === 'online' && user.active) || 
+                          (userStatusFilter === 'offline' && !user.active);
+    return matchesLogin && matchesStatus;
+  });
+
+  const confirmDelete = () => {
+    setUsers(users.filter(u => u.id !== showDeleteModal));
+    setShowDeleteModal(null);
+  };
+
+  const handleAssetClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setErrors(prev => prev.filter(err => err !== 'image'));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const validateCardForm = () => {
+    const newErrors = [];
+    if (!cardForm.name) newErrors.push('name');
+    if (!cardForm.type) newErrors.push('type');
+    if (!cardForm.valuation) newErrors.push('valuation');
+    if (!cardForm.expansion) newErrors.push('expansion');
+    if (cardForm.expansion === 'others' && !cardForm.customExpansion) newErrors.push('customExpansion');
+    if (!imagePreview) newErrors.push('image');
+    
+    setErrors(newErrors);
+    return newErrors.length === 0;
+  };
+
+  const handleCommitCard = () => {
+    if (validateCardForm()) {
+      setFormStatus({ type: 'success', message: 'Card data successfully committed to ledger.' });
+      setTimeout(() => setFormStatus({ type: '', message: '' }), 5000);
+      // Reset form
+      setCardForm({ name: '', type: '', valuation: '', expansion: '', customExpansion: '' });
+      setImagePreview(null);
+      setErrors([]);
+    } else {
+      setFormStatus({ type: 'error', message: 'Incomplete card registration. All fields and scan are mandatory.' });
+    }
+  };
+
+  const validateNewsForm = () => {
+    const newErrors = [];
+    if (!newsForm.headline) newErrors.push('headline');
+    if (!newsForm.url) newErrors.push('url');
+    if (!newsForm.content) newErrors.push('content');
+    
+    setErrors(newErrors);
+    return newErrors.length === 0;
+  };
+
+  const handleBroadcastNews = () => {
+    if (validateNewsForm()) {
+      setFormStatus({ type: 'success', message: 'Global bulletin successfully broadcasted.' });
+      setTimeout(() => setFormStatus({ type: '', message: '' }), 5000);
+      setNewsForm({ headline: '', url: '', content: '' });
+      setErrors([]);
+    } else {
+      setFormStatus({ type: 'error', message: 'Incomplete bulletin. All informational fields are required.' });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      
+      {/* Global Form Status Banner */}
+      {formStatus.message && (
+        <div className={`p-4 rounded-xl border animate-in slide-in-from-top-4 duration-300 flex items-center gap-3 ${
+          formStatus.type === 'success' 
+          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+          : 'bg-red-500/10 border-red-500/20 text-red-400'
+        }`}>
+          {formStatus.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          <p className="text-sm font-bold uppercase tracking-wide">{formStatus.message}</p>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0f172a] border border-white/10 rounded-2xl p-8 max-w-sm w-full shadow-2xl scale-in-center">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Delete Account?</h3>
+              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                Are you sure you want to delete this user? This operation is permanent and cannot be undone.
+              </p>
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <button 
+                  onClick={() => setShowDeleteModal(null)}
+                  className="py-2.5 rounded-lg border border-white/10 text-sm font-bold hover:bg-white/5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  className="py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold shadow-lg shadow-red-600/20 transition-all"
+                >
+                  Delete User
+                </button>
+              </div>
             </div>
+          </div>
         </div>
-    );
+      )}
 
-    const [usersList, setUsersList] = React.useState([]);
+      {activeTab === 'dashboard' && (
+        <>
+          {/* Analytics Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className={theme.card + " p-6"}>
+              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Registered</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-bold text-white">12,842</h3>
+                <span className="text-xs text-green-500 font-bold">+5.2%</span>
+              </div>
+            </div>
 
+            <div className={theme.card + " p-6"}>
+              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Active Sessions</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-bold text-white">482</h3>
+                <span className="text-xs text-orange-500 animate-pulse font-bold tracking-tighter uppercase">Live</span>
+              </div>
+            </div>
 
+            <div className={theme.card + " p-6"}>
+              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Monthly Engagement</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-bold text-white">92.4%</h3>
+                <span className="text-xs text-slate-500 font-bold tracking-tight">Stable</span>
+              </div>
+            </div>
+          </div>
 
-    React.useEffect(() => {
-        if (activeTab === 'users') {
-            const fetchUsers = async () => {
-                try {
-                    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
-                        credentials: 'include'
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        setUsersList(data.users);
-                    }
-                } catch (err) {
-                    console.error("Failed to fetch users", err);
-                }
-            };
-            fetchUsers();
-        }
-    }, [activeTab]);
+          <div className={theme.card + " p-6"}>
+            <div className="mb-6 flex justify-between items-start">
+              <div>
+                <h4 className="text-sm font-bold uppercase tracking-widest">User Acquisition Forecast</h4>
+                <p className="text-[10px] text-slate-500 uppercase tracking-tight">Timeline: April 2024</p>
+              </div>
+              <div className="px-3 py-1 bg-white/5 rounded border border-white/10 text-[10px] font-bold text-slate-400">
+                UTC +00:00
+              </div>
+            </div>
+            <div className="h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={monthlyUserData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ea580c" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#ea580c" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#475569" 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    dy={10}
+                  />
+                  <YAxis 
+                    stroke="#475569" 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false}
+                    tickFormatter={(val) => `${val}`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#0f172a', 
+                      border: '1px solid rgba(255,255,255,0.1)', 
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                    itemStyle={{ color: '#ea580c' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="users" 
+                    stroke="#ea580c" 
+                    strokeWidth={2}
+                    fill="url(#chartGradient)" 
+                    dot={{ fill: '#ea580c', r: 3, strokeWidth: 2, stroke: '#020618' }}
+                    activeDot={{ r: 5, strokeWidth: 0 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </>
+      )}
 
-    return (
-        <div className="space-y-8">
-            {/* Dashboard Content */}
-            {activeTab === 'overview' && (
-                <>
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                        <StatCard 
-                            title="Total Revenue" 
-                            value={`$${formatCompactNumber(stats.totalRevenue)}`} 
-                            icon={DollarSign} 
-                            color="emerald" 
-                            trend={stats.revenueGrowth}
-                        />
-                        <StatCard 
-                            title="Total Users" 
-                            value={formatCompactNumber(stats.totalUsers)} 
-                            icon={Users} 
-                            color="blue" 
-                            trend={stats.userGrowth}
-                        />
-                        <StatCard 
-                            title="Active Listings" 
-                            value={formatCompactNumber(stats.activeListings)} 
-                            icon={ShoppingBag} 
-                            color="purple" 
-                            trend={stats.listingsGrowth}
-                        />
-                        <StatCard 
-                            title="Open Tickets" 
-                            value={ticketStats.open + ticketStats.inProgress} 
-                            icon={AlertCircle} 
-                            color="amber" 
-                        />
-                    </div>
-
-                    {/* Charts & Activity Section */}
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                        {/* Main Chart Area (Mockup) */}
-                        <div className="xl:col-span-2 bg-slate-900 border border-white/10 rounded-2xl p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h3 className="text-lg font-black text-white uppercase tracking-tight">Revenue Overview</h3>
-                                    <p className="text-xs text-slate-500">Monthly revenue performance</p>
-                                </div>
-                                <select className="bg-slate-950 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
-                                    <option>This Year</option>
-                                    <option>Last Year</option>
-                                </select>
-                            </div>
-                            
-                            {/* CSS Bar Chart (Placeholder for Future Data) */}
-                            <div className="overflow-x-auto pb-2 scrollbar-hide">
-                                <div className="h-48 md:h-64 flex items-end justify-between gap-2 md:gap-4 px-2 min-w-[500px] md:min-w-0">
-                                    {/* Initialize with 0s for now as requested by user */}
-                                    {new Array(12).fill(0).map((height, i) => (
-                                        <div key={i} className="w-full flex flex-col items-center gap-2 group">
-                                            <div 
-                                                className="w-full bg-slate-800 rounded-t-lg transition-colors relative"
-                                                style={{ height: `${Math.max(height, 2)}%` }} // Min height for visibility
-                                            >
-                                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap shadow-xl border border-white/10">
-                                                    ${height}k
-                                                </div>
-                                            </div>
-                                            <span className="text-[9px] md:text-[10px] text-slate-500 font-mono uppercase">
-                                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Recent Activity (Now Dynamic-ish) */}
-                        <div className="bg-slate-900 border border-white/10 rounded-2xl p-6">
-                            <h3 className="text-lg font-black text-white uppercase tracking-tight mb-6">Recent Activity</h3>
-                            <div className="space-y-6">
-                                {stats.recentActivity && stats.recentActivity.length > 0 ? (
-                                    stats.recentActivity.map((activity, i) => (
-                                        <div key={i} className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0`}>
-                                                <Activity className={`w-4 h-4 text-emerald-500`} />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-start">
-                                                    <p className="text-xs font-bold text-white truncate">
-                                                        <span className="text-slate-400">{activity.userId || 'User'}</span> {activity.type}
-                                                    </p>
-                                                    <span className="text-[10px] text-slate-600 font-mono whitespace-nowrap">
-                                                        {new Date(activity.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center mt-0.5">
-                                                    <p className="text-[10px] text-slate-500 truncate">{activity.itemId || 'Item'}</p>
-                                                    {activity.amount && (
-                                                        <span className="text-[10px] font-bold text-emerald-400">${activity.amount}</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center text-slate-500 text-xs py-8">
-                                        No recent activity
-                                    </div>
-                                )}
-                            </div>
-                            <button className="w-full mt-6 py-3 bg-slate-950/50 hover:bg-slate-950 border border-white/5 rounded-xl text-xs font-bold text-slate-400 uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
-                                View All Activity
-                                <ArrowUpRight className="w-3 h-3 group-hover:text-amber-500 transition-colors" />
-                            </button>
-                        </div>
-                    </div>
-                </>
-            )}
-
-            {/* Support Tickets Tab */}
-            {activeTab === 'tickets' && (
-                <TicketManager />
-            )}
-
-            {/* User Management Tab - NOW IMPLEMENTED */}
-            {activeTab === 'users' && (
-                <div className="bg-slate-900 border border-white/10 rounded-2xl overflow-hidden">
-                    <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                        <div>
-                            <h3 className="text-lg font-black text-white uppercase tracking-tight">User Database</h3>
-                            <p className="text-xs text-slate-500">View and manage registered users</p>
-                        </div>
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Live Data
-                        </div>
-                    </div>
-                    
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-white/5 bg-slate-950/50">
-                                    <th className="p-4 text-[10px] uppercase tracking-widest text-slate-500 font-bold">User</th>
-                                    <th className="p-4 text-[10px] uppercase tracking-widest text-slate-500 font-bold">Email</th>
-                                    <th className="p-4 text-[10px] uppercase tracking-widest text-slate-500 font-bold">Role</th>
-                                    <th className="p-4 text-[10px] uppercase tracking-widest text-slate-500 font-bold">Joined</th>
-                                    <th className="p-4 text-[10px] uppercase tracking-widest text-slate-500 font-bold text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                                {usersList.length > 0 ? (
-                                    usersList.map((user) => (
-                                        <tr key={user.id} className="hover:bg-white/5 transition-colors group">
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-slate-800 overflow-hidden border border-white/10">
-                                                        {user.picture ? (
-                                                            <img src={user.picture} alt={user.name} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-400">
-                                                                {user.name?.charAt(0)}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <span className="text-sm font-bold text-white group-hover:text-amber-500 transition-colors">
-                                                        {user.name}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-xs text-slate-400 font-mono">{user.email}</td>
-                                            <td className="p-4">
-                                                <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${
-                                                    user.role === 'admin' 
-                                                        ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
-                                                        : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                                }`}>
-                                                    {user.role}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 text-xs text-slate-500">
-                                                {new Date(user.joinedAt).toLocaleDateString()}
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <button className="text-xs font-bold text-slate-500 hover:text-white transition-colors">
-                                                    Edit
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="5" className="p-8 text-center text-slate-500 italic">
-                                            No users yet.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+      {activeTab === 'users' && (
+        <div className={theme.card}>
+          <div className="p-6 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h4 className="font-bold uppercase tracking-wider text-sm">Member Directory</h4>
+            <div className="flex items-center gap-3">
+                <div className="flex bg-white/5 border border-white/10 rounded-lg p-1">
+                  {['all', 'google', 'email'].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setUserLoginFilter(type)}
+                      className={`px-3 py-1 rounded text-[10px] font-bold uppercase transition-all ${userLoginFilter === type ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20' : 'text-slate-500 hover:text-white'}`}
+                    >
+                      {type}
+                    </button>
+                  ))}
                 </div>
-            )}
-        </div>
-    );
+                <div className="flex bg-white/5 border border-white/10 rounded-lg p-1">
+                  {['all', 'online', 'offline'].map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setUserStatusFilter(status)}
+                      className={`px-3 py-1 rounded text-[10px] font-bold uppercase transition-all ${userStatusFilter === status ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20' : 'text-slate-500 hover:text-white'}`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                  <input type="text" placeholder="Search UUID..." className="bg-white/5 border border-white/10 rounded-md pl-9 pr-4 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500" />
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-white/5">
+                    <th className="px-6 py-4">User Identity</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Registry Date</th>
+                    <th className="px-6 py-4">Last Session</th>
+                    <th className="px-6 py-4 text-right">Operations</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="font-bold text-sm text-white group-hover:text-orange-500 transition-colors uppercase tracking-tight">{user.name}</p>
+                          {user.loginType === 'google' ? (
+                            <Globe className="w-3 h-3 text-blue-400 opacity-60" />
+                          ) : (
+                            <Calendar className="w-3 h-3 text-slate-500 opacity-60" />
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{user.email}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        {user.active ? (
+                          <span className="text-[9px] font-black text-emerald-500 flex items-center gap-1.5 bg-emerald-500/5 px-2.5 py-1 rounded-full border border-emerald-500/10 w-fit uppercase">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Network Active
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-black text-slate-600 flex items-center gap-1.5 bg-slate-500/5 px-2.5 py-1 rounded-full border border-slate-500/10 w-fit uppercase">
+                            <span className="w-1.5 h-1.5 bg-slate-700 rounded-full"></span> Disconnected
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                         <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <Calendar className="w-3.5 h-3.5 text-slate-600" />
+                            {user.created}
+                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                         <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 font-mono uppercase">
+                            <Clock className="w-3.5 h-3.5 text-slate-600" />
+                            {user.lastActive}
+                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => setShowDeleteModal(user.id)}
+                          className="p-2.5 text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'inventory' && (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div className={`${theme.card} lg:col-span-3 p-8`}>
+              <h4 className="text-sm font-bold uppercase tracking-widest mb-8 flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-orange-500" /> Card Registration
+              </h4>
+              <div className="space-y-6">
+                <div>
+                  <label className={theme.label}>Asset Upload</label>
+                  <div 
+                    onClick={handleAssetClick}
+                    className={`border border-white/10 bg-white/5 rounded-xl p-10 border-dashed text-center hover:bg-orange-600/5 hover:border-orange-500/50 transition-all cursor-pointer group h-[120px] flex flex-col justify-center ${errors.includes('image') ? 'border-red-500/50' : ''}`}
+                  >
+                    <Upload className={`w-6 h-6 mx-auto mb-2 transition-colors ${errors.includes('image') ? 'text-red-500' : 'text-slate-600 group-hover:text-orange-500'}`} />
+                    <p className={`text-[10px] ${errors.includes('image') ? 'text-red-400 font-bold' : 'text-slate-500'}`}>
+                      {errors.includes('image') ? 'IMAGE ASSET REQUIRED' : 'Drop high-res scan or click to browse'}
+                    </p>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={theme.label}>Card Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Gear 5 Luffy" 
+                      className={`${theme.input} ${errors.includes('name') ? 'border-red-500/50' : ''}`}
+                      value={cardForm.name}
+                      onChange={(e) => {
+                        setCardForm({ ...cardForm, name: e.target.value });
+                        if(errors.includes('name')) setErrors(prev => prev.filter(err => err !== 'name'));
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className={theme.label}>Type</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Leader / Super Rare" 
+                      className={`${theme.input} ${errors.includes('type') ? 'border-red-500/50' : ''}`}
+                      value={cardForm.type}
+                      onChange={(e) => {
+                        setCardForm({ ...cardForm, type: e.target.value });
+                        if(errors.includes('type')) setErrors(prev => prev.filter(err => err !== 'type'));
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className={theme.label}>Valuation ($)</label>
+                    <input 
+                      type="number" 
+                      placeholder="0.00" 
+                      className={`${theme.input} ${errors.includes('valuation') ? 'border-red-500/50' : ''}`}
+                      value={cardForm.valuation}
+                      onChange={(e) => {
+                        setCardForm({ ...cardForm, valuation: e.target.value });
+                        if(errors.includes('valuation')) setErrors(prev => prev.filter(err => err !== 'valuation'));
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={theme.label}>Expansion Set</label>
+                  <select 
+                    value={cardForm.expansion}
+                    onChange={(e) => {
+                      setCardForm({ ...cardForm, expansion: e.target.value });
+                      if(errors.includes('expansion')) setErrors(prev => prev.filter(err => err !== 'expansion'));
+                    }}
+                    className={`${theme.input} cursor-pointer ${errors.includes('expansion') ? 'border-red-500/50' : ''}`}
+                  >
+                    <option value="">Choose Expansion</option>
+                    <option value="op01">OP-01 Romance Dawn</option>
+                    <option value="op02">OP-02 Paramount War</option>
+                    <option value="op05">OP-05 Awakening</option>
+                    <option value="others">Custom/Other</option>
+                  </select>
+                </div>
+                {cardForm.expansion === 'others' && (
+                  <div className="animate-in slide-in-from-top-2 duration-300">
+                    <label className={theme.label}>New Expansion Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter identifier..." 
+                      className={`${theme.input} border-orange-500/30 bg-orange-500/5 ${errors.includes('customExpansion') ? 'border-red-500/50' : ''}`}
+                      value={cardForm.customExpansion}
+                      onChange={(e) => {
+                        setCardForm({ ...cardForm, customExpansion: e.target.value });
+                        if(errors.includes('customExpansion')) setErrors(prev => prev.filter(err => err !== 'customExpansion'));
+                      }}
+                    />
+                  </div>
+                )}
+                <button 
+                  onClick={handleCommitCard}
+                  className={theme.buttonPrimary + " w-full mt-4"}
+                >
+                  Commit to Ledger
+                </button>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 space-y-6">
+              <div className={theme.card + " p-6 h-full flex flex-col justify-center items-center text-slate-600"}>
+                 {imagePreview ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 text-orange-500 italic">Pre-production Scan</p>
+                       <img src={imagePreview} alt="Preview" className="w-full h-auto max-h-[400px] object-contain rounded-lg shadow-2xl shadow-black/50 border border-white/10" />
+                    </div>
+                 ) : (
+                    <>
+                      <div className={`w-32 h-44 bg-white/5 border rounded-lg flex items-center justify-center mb-4 transition-all ${errors.includes('image') ? 'border-red-500/30' : 'border-white/10 hover:border-orange-500/30'}`}>
+                        <Package className={`w-8 h-8 ${errors.includes('image') ? 'text-red-500 opacity-40' : 'opacity-20'}`} />
+                      </div>
+                      <p className={`text-[10px] font-bold uppercase tracking-tighter ${errors.includes('image') ? 'text-red-500' : ''}`}>
+                        {errors.includes('image') ? 'MISSING ASSET' : 'Preview Sandbox'}
+                      </p>
+                    </>
+                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+      {activeTab === 'news' && (
+         <div className={theme.card + " p-8"}>
+            <h4 className="text-sm font-bold uppercase tracking-widest mb-8 text-white">Publish Global Update</h4>
+            <div className="space-y-6">
+               <div>
+                  <label className={theme.label}>Headline</label>
+                  <input 
+                    type="text" 
+                    placeholder="Title of the bulletin" 
+                    className={`${theme.input} ${errors.includes('headline') ? 'border-red-500/50' : ''}`}
+                    value={newsForm.headline}
+                    onChange={(e) => {
+                      setNewsForm({ ...newsForm, headline: e.target.value });
+                      if(errors.includes('headline')) setErrors(prev => prev.filter(err => err !== 'headline'));
+                    }}
+                  />
+               </div>
+               <div>
+                  <label className={theme.label}>Redirection URL</label>
+                  <div className="relative">
+                    <LinkIcon className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${errors.includes('url') ? 'text-red-500' : 'text-slate-500'}`} />
+                    <input 
+                      type="text" 
+                      placeholder="https://opmasters.com/news/expansion-01" 
+                      className={`${theme.input} pl-10 ${errors.includes('url') ? 'border-red-500/50' : ''}`}
+                      value={newsForm.url}
+                      onChange={(e) => {
+                        setNewsForm({ ...newsForm, url: e.target.value });
+                        if(errors.includes('url')) setErrors(prev => prev.filter(err => err !== 'url'));
+                      }}
+                    />
+                  </div>
+               </div>
+               <div>
+                  <label className={theme.label}>Bulletin Content</label>
+                  <textarea 
+                    rows="8" 
+                    placeholder="System notification text..." 
+                    className={`${theme.input} resize-none ${errors.includes('content') ? 'border-red-500/50' : ''}`}
+                    value={newsForm.content}
+                    onChange={(e) => {
+                      setNewsForm({ ...newsForm, content: e.target.value });
+                      if(errors.includes('content')) setErrors(prev => prev.filter(err => err !== 'content'));
+                    }}
+                  ></textarea>
+               </div>
+               <div className="flex justify-end">
+                  <button 
+                    onClick={handleBroadcastNews}
+                    className={theme.buttonPrimary + " px-12"}
+                  >
+                    Broadcast Bulletin
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
+    </div>
+  );
 };
 
 export default AdminDashboard;
