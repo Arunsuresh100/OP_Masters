@@ -147,31 +147,30 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
           onClick={() => setIsOpen(!isOpen)}
           className="w-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-white/20 transition-all shadow-lg"
         >
-          <div className="flex flex-col items-start translate-y-[-1px]">
-             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-1">Set / Collection</span>
-             <span className="text-[12px] text-white font-black uppercase tracking-wider truncate max-w-[200px]">
+          <div className="flex flex-col items-start min-w-0">
+             <span className="text-[11px] text-white font-black uppercase tracking-wider truncate max-w-[180px]">
                 {selectedOption.id !== 'all' ? `${selectedOption.id} - ` : ''}{selectedOption.name}
              </span>
           </div>
-          <Filter className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-amber-500' : 'group-hover:text-white'}`} />
+          <Filter className={`w-4 h-4 text-slate-500 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-amber-500' : 'group-hover:text-white'}`} />
         </button>
 
         {isOpen && (
           <div className="absolute z-[200] mt-3 w-full bg-slate-950/98 backdrop-blur-3xl border border-white/15 rounded-2xl shadow-[0_30px_70px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 ring-1 ring-white/5">
-            <div className="p-4 border-b border-white/5 bg-slate-950/20">
+            <div className="p-3 border-b border-white/5 bg-slate-950/20">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Search by ID or Name (e.g. OP15)..."
+                  placeholder="Find set..."
                   value={filterQuery}
                   onChange={(e) => setFilterQuery(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-[11px] text-white focus:outline-none focus:border-amber-500/50 transition-all font-bold placeholder:text-slate-600"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-9 pr-3 text-[10px] text-white focus:outline-none focus:border-amber-500/50 transition-all font-bold placeholder:text-slate-600"
                 />
               </div>
             </div>
-            <div className="max-h-72 overflow-y-auto custom-scrollbar py-2">
+            <div className="max-h-72 overflow-y-auto overflow-x-hidden custom-scrollbar py-1">
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((opt) => (
                   <button
@@ -182,19 +181,19 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
                       setIsOpen(false);
                       setFilterQuery('');
                     }}
-                    className={`w-full px-5 py-4 text-left text-[11px] font-black transition-all flex items-center justify-between group ${value === opt.id ? 'bg-amber-500/15 text-amber-500' : 'text-slate-400 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-amber-500/30'}`}
+                    className={`w-full px-5 py-3 text-left text-[10px] font-black transition-all flex items-center justify-between group ${value === opt.id ? 'bg-amber-500/15 text-amber-500' : 'text-slate-400 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-amber-500/30'}`}
                   >
-                    <div className="flex flex-col">
-                       <span className={`uppercase tracking-widest text-[9px] mb-0.5 ${value === opt.id ? 'text-amber-500/70' : 'text-slate-600'}`}>{opt.id}</span>
+                    <div className="flex flex-col min-w-0">
+                       {opt.id !== 'all' && <span className={`uppercase tracking-widest text-[8px] mb-0.5 ${value === opt.id ? 'text-amber-500/70' : 'text-slate-600'}`}>{opt.id}</span>}
                        <span className="truncate uppercase tracking-wider">{opt.name}</span>
                     </div>
                     {value === opt.id && (
-                        <CheckCircle2 className="w-4 h-4 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] flex-shrink-0 ml-2" />
                     )}
                   </button>
                 ))
               ) : (
-                <div className="px-5 py-10 text-[11px] text-slate-600 text-center font-bold italic">No matching sets found</div>
+                <div className="px-5 py-8 text-[10px] text-slate-600 text-center font-bold italic">No results</div>
               )}
             </div>
           </div>
