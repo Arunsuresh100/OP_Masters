@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
+const NEWS_URL = 'https://en.onepiece-cardgame.com/news/';
 const TOPICS_URL = 'https://en.onepiece-cardgame.com/topics/';
 const HOME_URL = 'https://en.onepiece-cardgame.com/';
 const BASE_URL = 'https://en.onepiece-cardgame.com';
@@ -9,21 +10,32 @@ export async function fetchLatestNews() {
     let allNews = [];
     
     try {
-        // Source 1: Official Topics Page
-        const topicsNews = await scrapeSource(TOPICS_URL, 'dl');
-        allNews = [...topicsNews];
+        // Source 1: Official News Page
+        console.log('[SCRAPER] Fetching from News page...');
+        const primaryNews = await scrapeSource(NEWS_URL, '.newsListLink, .importantColBtn, .noticeListLink, dl');
+        allNews = [...primaryNews];
 
-        // Source 2: Home Page (if needed to reach 5 items)
-        if (allNews.length < 5) {
-            const homeNews = await scrapeSource(HOME_URL, '.topicList dl, .news dl, dl');
-            // Filter out duplicates based on title
-            const newItems = homeNews.filter(homeItem => 
-                !allNews.some(topicItem => topicItem.title === homeItem.title)
-            );
-            allNews = [...allNews, ...newItems];
-        }
+        // Source 2: Home Page (Often has the very latest "hot" topics)
+        console.log('[SCRAPER] Fetching from Home page...');
+        const homeNews = await scrapeSource(HOME_URL, '.newsListLink, .noticeListLink, .topicList dl, .news dl, dl');
+        
+        // Merge and unique by title
+        homeNews.forEach(item => {
+            if (!allNews.some(existing => existing.title === item.title)) {
+                allNews.push(item);
+            }
+        });
 
-        // Limit to 5 and ensure minimum 3 (though that depends on what's found)
+        // Date Parsing and Sorting
+        const parseDate = (dStr) => {
+            try {
+                // Handle "MONTH DD, YYYY" format
+                return new Date(dStr).getTime();
+            } catch (e) { return 0; }
+        };
+
+        allNews.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+
         return allNews.slice(0, 5);
     } catch (error) {
         console.error('Scraper Error:', error.message);
@@ -37,23 +49,54 @@ async function scrapeSource(url, selector) {
         const $ = cheerio.load(response.data);
         const sourceItems = [];
 
-        $(selector).each((i, dl) => {
-            const $dl = $(dl);
-            const title = $dl.find('.topicTit, dt').text().trim();
-            const date = $dl.find('.topicDate, .ddDate').text().trim();
-            const category = $dl.find('.topicCategory, .ddCategory').text().trim();
+        $(selector).each((i, el) => {
+            const $el = $(el);
+            
+            // Try home page selectors and fallback to general ones
+            let title = $el.find('.newsTitle, .title, .newsListTxt, .topicTit, dt, h4, .importantColBtnTxt').first().text().trim();
+            if (!title && $el.hasClass('importantColBtn')) {
+                title = $el.find('span').last().text().trim();
+            }
+
+            // If still no title, maybe it's a simple a tag?
+            if (!title) {
+                title = $el.text().split('\n')[0].trim();
+            }
+
+            // Date extraction with fallbacks
+            let date = $el.find('.newsDate, .date, time, .topicDate, .ddDate').first().text().trim();
+            if (!date) {
+                const dds = $el.find('dd');
+                date = dds.last().text().trim();
+            }
+            // Another fallback: check for month name in text
+            if (!date || date.length < 5) {
+                const text = $el.text();
+                const match = text.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}/i);
+                if (match) date = match[0];
+            }
+
+            // Category extraction
+            let category = $el.find('.topicCategory, .ddCategory, .newsListInfo .category, .newsListInfo div').not('time').first().text().trim();
+            if (!category) {
+                const dds = $el.find('dd');
+                category = dds.first().text().trim();
+                // If it's a date, categorizing as NEWS
+                if (category === date || category.match(/\d/)) category = 'NEWS';
+            }
             
             // Link finding logic
-            let link = $dl.closest('a').attr('href') || $dl.find('a').not('.topicCategory a').attr('href');
+            let link = $el.attr('href') || $el.closest('a').attr('href') || $el.find('a').not('.topicCategory a').attr('href');
             if (link && !link.startsWith('http')) {
                 link = BASE_URL + (link.startsWith('/') ? '' : '/') + link;
             }
 
-            if (title && date) {
+            // Filter out empty or too short titles
+            if (title && date && title.length > 5) {
                 sourceItems.push({
                     title,
                     date: date.toUpperCase(),
-                    category: category || 'Intelligence',
+                    category: category || 'NEWS',
                     link: link || url,
                     tagColor: getTagColor(category)
                 });

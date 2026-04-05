@@ -1,38 +1,38 @@
 {
   "news": [
     {
-      "title": "Premium Card Collection -Live Action Edition vol.2 Baroque Works- has been announced.",
-      "date": "MARCH 19, 2026",
-      "category": "PRODUCTS",
-      "link": "https://en.onepiece-cardgame.com/products/other/premium-card_collection_drama003.php",
-      "tagColor": "from-amber-500 to-orange-600"
-    },
-    {
-      "title": "Premium Card Collection -Live Action Edition vol.2 Straw Hat Crew- has been announced.",
-      "date": "MARCH 19, 2026",
-      "category": "PRODUCTS",
-      "link": "https://en.onepiece-cardgame.com/products/other/premium-card_collection_drama002.php",
-      "tagColor": "from-amber-500 to-orange-600"
-    },
-    {
-      "title": "C2E2 2026 has been updated.",
-      "date": "MARCH 19, 2026",
-      "category": "ROOKIES",
-      "link": "https://en.onepiece-cardgame.com/events/2026/c2e2/",
+      "title": "Armageddon Expo Auckland Autumn 2026 has been announced.",
+      "date": "APRIL 3, 2026",
+      "category": "NEWS",
+      "link": "https://en.onepiece-cardgame.com/events/armageddon-2026.html",
       "tagColor": "from-pink-500 to-rose-500"
     },
     {
-      "title": "Banned/Restricted Card Addition Notice has been updated.",
-      "date": "MARCH 16, 2026",
-      "category": "OTHER",
-      "link": "https://en.onepiece-cardgame.com/topics/029.php",
+      "title": "RECOMMENDED DECKS has been updated.",
+      "date": "APRIL 3, 2026",
+      "category": "NEWS",
+      "link": "https://en.onepiece-cardgame.com/feature/deck/?tags=OP15-EB04",
       "tagColor": "from-pink-500 to-rose-500"
     },
     {
-      "title": "Netflix Chopper DON!! has been updated.",
-      "date": "MARCH 16, 2026",
-      "category": "OTHER",
-      "link": "https://en.onepiece-cardgame.com/topics/028.php",
+      "title": "Treasure Cup May 2026 ~ has been updated.",
+      "date": "APRIL 3, 2026",
+      "category": "NEWS",
+      "link": "https://en.onepiece-cardgame.com/events/treasure-cup-may-2026.html",
+      "tagColor": "from-pink-500 to-rose-500"
+    },
+    {
+      "title": "Banned/Restricted Card Addition Notice",
+      "date": "MARCH 31, 2026",
+      "category": "NEWS",
+      "link": "https://en.onepiece-cardgame.com/news/restriction-260501.html",
+      "tagColor": "from-pink-500 to-rose-500"
+    },
+    {
+      "title": "Banned/Restricted Cards effective from April 10, 2026 has been announced.",
+      "date": "MARCH 31, 2026",
+      "category": "NEWS",
+      "link": "https://en.onepiece-cardgame.com/news/restriction-260501.html",
       "tagColor": "from-pink-500 to-rose-500"
     }
   ]

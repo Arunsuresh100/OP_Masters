@@ -187,13 +187,14 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
     const price = locale === 'EN' ? (Number(card.priceEnglish) || 0) : (Number(card.priceJapanese) || 0);
     const change24h = Number(card.percentChange ?? 0);
     const change1h = Number((change24h / 24 + (Math.random() * 0.2 - 0.1)).toFixed(2));
+    const change1m = Number((change24h * 0.4 + (Math.random() * 0.5 - 0.25)).toFixed(2)); // Month-ish simulation
     const volume = card.volume || 50;
     // marketCap = realistic estimated circulation value (no ×1000 multiplier)
     const marketCap = volume * price;
     const baseTrend = Array.from({ length: 7 }, (_, i) =>
       price * (1 + (i / 7) * (change24h / 100) + (Math.random() * 0.02 - 0.01))
     );
-    return { ...card, price, change24h, change1h, volume, marketCap, trendData: baseTrend };
+    return { ...card, price, change24h, change1h, change1m, volume, marketCap, trendData: baseTrend };
   });
 
   const fetchMarketRates = async (isRefresh = false) => {
@@ -439,10 +440,36 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
                         <tr className="bg-black/20 text-[10px] uppercase font-bold tracking-widest text-slate-600 border-b border-white/5">
                             <th className="py-6 px-10">Card</th>
                             <th className="py-6 px-8 text-right">Price</th>
-                            <th className="py-6 px-8 text-right">1h Change</th>
-                            <th className="py-6 px-8 text-right">1m Change</th>
-                            <th className="py-6 px-8 text-right">Trading Vol</th>
-                            <th className="py-6 px-10 w-44">Week Trend</th>
+                            <th className="py-6 px-8 text-right">
+                               <div className="flex items-center justify-end gap-2 group/tip relative">
+                                  <span>1h Change</span>
+                                  <Info className="w-3 h-3 text-slate-500 cursor-help" />
+                                  <div className="absolute top-full right-0 mt-3 w-40 p-2.5 rounded-xl bg-slate-950/95 backdrop-blur-xl border border-white/10 text-[9px] font-bold text-white text-center opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-[100] shadow-2xl">
+                                     Price change in the last hour.
+                                  </div>
+                               </div>
+                            </th>
+                            <th className="py-6 px-8 text-right">
+                               <div className="flex items-center justify-end gap-2 group/tip relative">
+                                  <span>1 Month</span>
+                                  <Info className="w-3 h-3 text-slate-500 cursor-help" />
+                                  <div className="absolute top-full right-0 mt-3 w-40 p-2.5 rounded-xl bg-slate-950/95 backdrop-blur-xl border border-white/10 text-[9px] font-bold text-white text-center opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-[100] shadow-2xl">
+                                     Price change in 30 days.
+                                  </div>
+                               </div>
+                            </th>
+                            <th className="py-6 px-8 text-right">
+                               <div className="flex items-center justify-end gap-2 group/tip relative">
+                                  <span>24h Volume</span>
+                                  <Info className="w-3 h-3 text-slate-500 cursor-help" />
+                                  <div className="absolute top-full right-0 mt-3 w-40 p-2.5 rounded-xl bg-slate-900/95 backdrop-blur-xl border border-white/10 text-[9px] font-bold text-white text-center opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-[100] shadow-2xl">
+                                     Total value traded in 24h.
+                                  </div>
+                               </div>
+                            </th>
+                            <th className="py-6 px-10 w-44">
+                               <span>Week Trend</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -507,7 +534,7 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
                                  1h: {card.change1h >= 0 ? '+' : ''}{card.change1h}%
                              </div>
                              <div className={`px-2 py-1 rounded-lg text-[9px] font-bold ${card.change1m >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                                 1m: {card.change1m >= 0 ? '+' : ''}{card.change1m}%
+                                 1 Month: {card.change1m >= 0 ? '+' : ''}{card.change1m}%
                              </div>
                           </div>
                       </div>

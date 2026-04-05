@@ -13,6 +13,7 @@ import jwt from 'jsonwebtoken';
 import { fetchLatestNews } from './scraper.js';
 import { OAuth2Client } from 'google-auth-library';
 import Joi from 'joi';
+import { exec } from 'child_process';
 
 // Google Client Init
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -198,6 +199,12 @@ const authenticateAdmin = (req, res, next) => {
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 const YOUTUBE_CACHE_FILE = path.join(__dirname, 'youtube_cache.json');
+const CARDS_FILE = path.join(__dirname, 'cards.json');
+const NEWS_CACHE_FILE = path.join(__dirname, 'news_cache.json');
+
+let memoryNews = null;
+let lastFetchTime = 0;
+
 let memoryYoutube = {
     channel: null,
     videos: null,
@@ -224,7 +231,7 @@ const RARITY_VOLATILITY = {
 
 const initMarketState = () => {
     try {
-        const raw = JSON.parse(fs.readFileSync(path.join(__dirname, 'cards.json'), 'utf8'));
+        const raw = JSON.parse(fs.readFileSync(CARDS_FILE, 'utf8'));
         const cards = raw.cards || (Array.isArray(raw) ? raw : []);
         cards.forEach(c => {
             marketState[c.id] = {
@@ -236,6 +243,7 @@ const initMarketState = () => {
                 prevEn: c.priceEnglish,
                 prevJp: c.priceJapanese,
                 rarity: c.rarity,
+                volume: c.volume || 10,
                 lastTick: Date.now()
             };
         });
@@ -262,6 +270,11 @@ const tickMarket = () => {
         s.priceJp = Math.max(s.baseJp * 0.70, Math.min(s.baseJp * 1.30, parseFloat((s.priceJp + jpDelta).toFixed(2))));
         // Recalculate 24h change relative to base
         s.change24h = parseFloat((((s.priceEn - s.baseEn) / s.baseEn) * 100).toFixed(2));
+        
+        // Randomize volume fluctuation (±5% per tick)
+        const volDelta = s.volume * 0.05 * (Math.random() * 2 - 1);
+        s.volume = Math.max(1, parseFloat((s.volume + volDelta).toFixed(1)));
+        
         s.lastTick = now;
     });
 };
@@ -326,30 +339,23 @@ const STATIC_FALLBACK_NEWS = [
 app.get('/api/news', async (req, res) => {
     const now = Date.now();
     
-    // 1. Check Memory Cache
+    // 1. Check Memory Cache (fastest)
     if (memoryNews && (now - lastFetchTime < CACHE_DURATION)) {
         return res.json(memoryNews);
     }
 
     // 2. Try to fetch fresh news
+    console.log('[NEWS] Fetching fresh news...');
     const freshNews = await fetchLatestNews();
     
-    // 3. Logic to ensure 3-5 items
     let finalNews = [];
-    let diskCache = readNewsCache();
-
     if (freshNews && freshNews.length > 0) {
-        const combined = [...freshNews, ...diskCache];
-        const uniqueTitles = new Set();
-        finalNews = combined.filter(item => {
-            if (uniqueTitles.has(item.title)) return false;
-            uniqueTitles.add(item.title);
-            return true;
-        }).slice(0, 5);
-
+        finalNews = freshNews;
         writeNewsCache(finalNews);
     } else {
-        finalNews = diskCache.length >= 3 ? diskCache.slice(0, 5) : STATIC_FALLBACK_NEWS;
+        // Fallback to disk if scraper fails
+        console.warn('[NEWS] Scraper failed, falling back to disk cache.');
+        finalNews = readNewsCache();
     }
 
     // Final sanity check
@@ -646,6 +652,7 @@ app.get('/api/market-rates', (req, res) => {
                 priceEnglish: live.priceEn,
                 priceJapanese: live.priceJp,
                 percentChange: live.change24h,
+                volume: live.volume,
                 priceDirection: live.priceEn > live.prevEn ? 'up' : live.priceEn < live.prevEn ? 'down' : 'neutral'
             };
         });
@@ -761,6 +768,44 @@ app.use((err, req, res, next) => {
     });
 });
 
+// [AUTO] Background card sync (every 3 days)
+setInterval(() => {
+    console.log('[AUTO] Checking for card updates...');
+    exec('node card_scraper.js', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`[SYNC ERROR] ${error.message}`);
+            return;
+        }
+        console.log(`[SYNC] ${stdout.trim()}`);
+    });
+}, 3 * 24 * 60 * 60 * 1000); 
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} with Secure CORS`);
+    initMarketState();
+
+    // Immediate card sync on startup
+    exec('node card_scraper.js', (error, stdout) => {
+        if (!error) console.log(`[STARTUP SYNC] ${stdout.trim()}`);
+    });
+    
+    // Automate card updates (every 3 days)
+    setInterval(() => {
+        console.log('[AUTO] Checking for card updates...');
+        exec('node card_scraper.js', (error, stdout) => {
+            if (!error) console.log(`[SYNC] ${stdout.trim()}`);
+        });
+    }, 3 * 24 * 60 * 60 * 1000); 
+
+    // Automate news updates (every 4 hours)
+    setInterval(async () => {
+        console.log('[AUTO] Background news refresh started...');
+        const freshNews = await fetchLatestNews();
+        if (freshNews && freshNews.length > 0) {
+            writeNewsCache(freshNews);
+            memoryNews = freshNews;
+            lastFetchTime = Date.now();
+            console.log(`[AUTO] Latest news updated (${freshNews.length} items).`);
+        }
+    }, 4 * 60 * 60 * 1000); 
 });
