@@ -20,7 +20,7 @@ const CHARACTER_AVATARS = [
 
 const MobileBottomNav = () => {
   const location = useLocation();
-  const { user, openAuth } = useUser();
+  const { user, openAuth, closeAuth } = useUser();
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-[2000] bg-slate-950/80 backdrop-blur-lg border-t border-white/10">
@@ -28,7 +28,7 @@ const MobileBottomNav = () => {
           {/* Home */}
           <Link 
             to="/" 
-            className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
+            onClick={closeAuth}            className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
               location.pathname === '/' 
                 ? 'text-amber-500' 
                 : 'text-slate-500 hover:text-slate-300'
@@ -43,7 +43,7 @@ const MobileBottomNav = () => {
           {/* Cards */}
           <Link 
             to="/cards" 
-            className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
+            onClick={closeAuth}            className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
               location.pathname === '/cards' 
                 ? 'text-amber-500' 
                 : 'text-slate-500 hover:text-slate-300'
@@ -58,7 +58,7 @@ const MobileBottomNav = () => {
           {/* Marketplace */}
           <Link 
             to="/marketplace" 
-            className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
+            onClick={closeAuth}            className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
               location.pathname === '/marketplace' 
                 ? 'text-amber-500' 
                 : 'text-slate-500 hover:text-slate-300'
@@ -74,7 +74,7 @@ const MobileBottomNav = () => {
           {user ? (
             <Link 
               to="/profile" 
-              className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
+              onClick={closeAuth}              className={`flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
                 location.pathname === '/profile' 
                   ? 'text-amber-500' 
                   : 'text-slate-500 hover:text-slate-300'

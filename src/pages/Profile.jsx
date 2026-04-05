@@ -47,11 +47,19 @@ const CHARACTER_AVATARS = [
 
 const Profile = () => {
     const { 
-        user, updateAvatar, getTransactions, 
+        user, loading, updateName, updateAvatar, getTransactions, 
         wishlist, toggleWishlist, 
         ownedCards, updateOwnedCard 
     } = useUser();
     const navigate = useNavigate();
+
+    // Redirect unauthenticated users to home
+    useEffect(() => {
+        if (!loading && !user) {
+            navigate('/');
+        }
+    }, [user, loading, navigate]);
+    
     const [allCards, setAllCards] = useState([]);
     const [loadingCards, setLoadingCards] = useState(true);
     const [activeTab, setActiveTab] = useState('vault');
@@ -61,8 +69,6 @@ const Profile = () => {
     const [vaultFilter, setVaultFilter] = useState('all');
     const [isEditingName, setIsEditingName] = useState(false);
     const [tempName, setTempName] = useState(user?.name || user?.username || '');
-    
-    const { updateName } = useUser();
     
     const { getUserTickets, createTicket, addUserResponse, deleteTicket } = useSupport();
     const userTickets = user ? getUserTickets(user.email) : [];

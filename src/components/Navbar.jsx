@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, Instagram, Youtube, User, LogOut, Wallet, ArrowRight, ShoppingBag, TrendingUp } from 'lucide-react';
 import { CHANNEL_LOGO_URL } from '../constants';
 import { useUser } from '../context/UserContext';
@@ -37,6 +37,7 @@ const Navbar = ({
   const [userDropdownOpen, setUserDropdownOpen] = React.useState(false);
   const dropdownRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -60,15 +61,11 @@ const Navbar = ({
     <nav className="fixed top-0 w-full z-[2000] bg-slate-950/80 backdrop-blur-xl border-b border-white/10">
        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
          
-         <AuthModals 
-            isOpen={authModal.isOpen} 
-            onClose={closeAuth} 
-            initialMode={authModal.mode} 
-         />
+
 
          {/* STANDARD NAVBAR CONTENT */}
          <div className={`flex items-center justify-between w-full transition-all duration-300 transform ${mobileSearchActive ? 'opacity-0 translate-y-10 pointer-events-none absolute' : 'opacity-100 translate-y-0 relative'}`}>
-             <Link to="/" className="flex items-center gap-3 group cursor-pointer flex-shrink-0 min-w-0">
+             <Link to="/" onClick={closeAuth} className="flex items-center gap-3 group cursor-pointer flex-shrink-0 min-w-0">
                <div className="relative flex-shrink-0">
                  <img src={APP_LOGO} alt="Logo" className="relative w-10 h-10 md:w-12 md:h-12 rounded-full object-cover bg-black border border-white/10" 
                       onError={(e) => e.target.src = CHANNEL_LOGO_URL} />
@@ -96,15 +93,15 @@ const Navbar = ({
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-6 lg:gap-10 mx-6">
-            <Link to="/" className="relative text-sm font-bold text-slate-400 hover:text-orange-500 transition-colors group">
+            <Link to="/" onClick={closeAuth} className="relative text-sm font-bold text-slate-400 hover:text-orange-500 transition-colors group">
               Home
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            <Link to="/cards" className="relative text-sm font-bold text-slate-400 hover:text-orange-500 transition-colors group">
+            <Link to="/cards" onClick={closeAuth} className="relative text-sm font-bold text-slate-400 hover:text-orange-500 transition-colors group">
               Cards
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            <Link to="/marketplace" className="relative text-sm font-bold text-slate-400 hover:text-orange-500 transition-colors group">
+            <Link to="/marketplace" onClick={closeAuth} className="relative text-sm font-bold text-slate-400 hover:text-orange-500 transition-colors group">
               Marketplace
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all duration-300 group-hover:w-full"></span>
             </Link>
@@ -190,6 +187,7 @@ const Navbar = ({
                                     onClick={() => {
                                         logout();
                                         setUserDropdownOpen(false);
+                                        navigate('/');
                                     }}
                                     className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 transition-all group w-full"
                                 >

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 const UserContext = createContext();
 
@@ -7,8 +8,14 @@ export const UserProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [wishlist, setWishlist] = useState([]);
     const [ownedCards, setOwnedCards] = useState({}); // { cardId: quantity }
-    const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'login' });
+    const [searchParams, setSearchParams] = useSearchParams();
     const [transactions, setTransactions] = useState([]);
+ 
+    // Sync authModal with searchParams
+    const authModal = {
+        isOpen: searchParams.has('auth'),
+        mode: searchParams.get('auth') || 'login'
+    };
 
     useEffect(() => {
         const savedUser = localStorage.getItem('op_user');
@@ -89,8 +96,12 @@ export const UserProvider = ({ children }) => {
         localStorage.removeItem('op_owned_cards');
     };
 
-    const openAuth = (mode = 'login') => setAuthModal({ isOpen: true, mode });
-    const closeAuth = () => setAuthModal({ ...authModal, isOpen: false });
+    const openAuth = (mode = 'login') => setSearchParams({ auth: mode });
+    const closeAuth = () => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('auth');
+        setSearchParams(newParams);
+    };
 
     const updateAvatar = (avatarId) => {
         const updatedUser = { ...user, selectedAvatar: avatarId };

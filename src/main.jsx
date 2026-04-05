@@ -11,14 +11,14 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '48250037624-c
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <UserProvider>
-        <SupportProvider>
-          <BrowserRouter>
+    <BrowserRouter>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <UserProvider>
+          <SupportProvider>
             <App />
-          </BrowserRouter>
-        </SupportProvider>
-      </UserProvider>
-    </GoogleOAuthProvider>
+          </SupportProvider>
+        </UserProvider>
+      </GoogleOAuthProvider>
+    </BrowserRouter>
   </StrictMode>,
 )

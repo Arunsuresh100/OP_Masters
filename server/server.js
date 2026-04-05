@@ -536,16 +536,28 @@ app.get('/api/auth/check', authenticateAdmin, (req, res) => {
 });
 
 app.post('/api/auth/google', async (req, res) => {
-    const { token } = req.body;
+    const { token, access_token } = req.body;
     
-    if (!token) {
-        return res.status(400).json({ error: 'Token is required' });
+    if (!token && !access_token) {
+        return res.status(400).json({ error: 'Token or Access Token is required' });
     }
 
-    const payload = await verifyGoogleToken(token);
+    let payload;
+    if (token) {
+        payload = await verifyGoogleToken(token);
+    } else if (access_token) {
+        try {
+            // Verify access token by fetching user info from Google
+            const response = await axios.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`);
+            payload = response.data;
+        } catch (error) {
+            console.error('Google Access Token verification failed:', error.message);
+            return res.status(401).json({ error: 'Invalid Google Access Token' });
+        }
+    }
     
     if (!payload) {
-        return res.status(401).json({ error: 'Invalid Google Token' });
+        return res.status(401).json({ error: 'Invalid Google Credentials' });
     }
 
     // Save User to File-Based DB
