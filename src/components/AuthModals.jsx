@@ -224,15 +224,11 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
 
     if (!isOpen) return null;
 
-    // "Top 150px for login in mobile view"
-    // Desktop stays at satisfied 100px.
-    const modalTop = (view === 'login' || view === 'otp') 
-        ? 'md:top-[100px] top-[150px]' 
-        : 'top-[100px]';
+
 
     return (
-        <div className="fixed inset-0 z-[3000] flex items-start justify-center p-4 bg-black animate-in fade-in duration-200 pt-0 uppercase overflow-hidden">
-            <div className={`bg-slate-900 w-full ${view === 'signup' ? 'max-w-xl' : 'max-w-md'} rounded-[10px] border border-white/10 shadow-2xl overflow-hidden relative ${modalTop} pointer-events-auto transition-all duration-300`}>
+        <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4 bg-black/90 animate-in fade-in duration-200 pt-20 uppercase overflow-hidden">
+            <div className={`bg-slate-900 w-full ${view === 'signup' ? 'max-w-xl' : 'max-w-md'} rounded-[20px] border border-white/10 shadow-2xl overflow-hidden relative pointer-events-auto transition-all duration-300 h-auto max-h-[85vh] md:max-h-[none]`}>
                 
                 <button 
                     onClick={() => onClose()} 
@@ -257,48 +253,48 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                     </div>
 
                     {(error || success) && (
-                        <div className={`mb-4 mx-auto md:w-full w-[90%] p-3 border rounded-[10px] flex items-center gap-3 animate-in slide-in-from-top-2 ${error ? 'bg-rose-500/10 border-rose-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
+                        <div className={`mb-4 mx-auto w-full p-2.5 border rounded-[10px] flex items-center gap-3 animate-in slide-in-from-top-2 ${error ? 'bg-rose-500/10 border-rose-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
                             {error ? <X className="w-4 h-4 text-rose-500" /> : <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-                            <p className={`text-xs font-bold ${error ? 'text-rose-400' : 'text-emerald-400'}`}>{error || success}</p>
+                            <p className={`text-[10px] font-bold ${error ? 'text-rose-400' : 'text-emerald-400'}`}>{error || success}</p>
                         </div>
                     )}
 
                     {view === 'login' && (
-                        <div className="animate-in fade-in duration-300 md:max-h-none max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                        <div className="animate-in fade-in duration-300 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-6">
                             <form onSubmit={handleEmailLogin} className="space-y-4">
-                                <div className="space-y-4">
-                                    <div className="relative group md:w-full w-[90%] mx-auto">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                                        <input type="email" required placeholder="Email Address" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-3 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 font-bold" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                                <div className="space-y-3">
+                                    <div className="relative group w-full">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                        <input type="email" required placeholder="Email Address" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-3 pl-11 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 font-bold transition-all text-sm" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                                     </div>
-                                    <div className="relative group md:w-full w-[90%] mx-auto">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                                        <input type={showPassword ? "text" : "password"} required placeholder="Password" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-3 pl-12 pr-12 text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 font-bold" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                                    <div className="relative group w-full">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                        <input type={showPassword ? "text" : "password"} required placeholder="Password" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-3 pl-11 pr-11 text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 font-bold transition-all text-sm" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
                                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
-                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                         </button>
                                     </div>
                                 </div>
                                 
-                                <div className="flex justify-end pr-[5%] md:pr-0">
-                                    <button type="button" onClick={() => { setSuccess('Reset link sent to ' + (formData.email || 'your email')); setError(''); }} className="text-[10px] font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest transition-colors">Forgot Password?</button>
+                                <div className="flex justify-end">
+                                    <button type="button" onClick={() => { setSuccess('Reset link sent to ' + (formData.email || 'your email')); setError(''); }} className="text-[9px] font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest transition-colors">Forgot Password?</button>
                                 </div>
 
-                                <div className="md:w-full w-[90%] mx-auto">
-                                    <button type="submit" disabled={loading} className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black rounded-[10px] shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 uppercase tracking-wider mt-1">
+                                <div className="w-full">
+                                    <button type="submit" disabled={loading} className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black rounded-[12px] shadow-lg transition-all transform active:scale-[0.98] disabled:opacity-50 uppercase tracking-wider text-sm">
                                         {loading ? 'Authenticating...' : 'Sign In'}
                                     </button>
                                 </div>
 
-                                <div className="flex items-center gap-4 my-4 md:w-full w-[90%] mx-auto">
+                                <div className="flex items-center gap-4 my-4 w-full">
                                     <div className="h-px flex-1 bg-white/5"></div>
                                     <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">OR</span>
                                     <div className="h-px flex-1 bg-white/5"></div>
                                 </div>
 
-                                <div className="md:w-full w-[90%] mx-auto">
-                                    <button type="button" onClick={() => handleGoogleLogin()} className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-medium py-3 px-4 rounded-[10px] border border-white/10 transition-all transform active:scale-[0.98] shadow-lg group normal-case">
-                                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                <div className="w-full">
+                                    <button type="button" onClick={() => handleGoogleLogin()} className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-[12px] border border-white/10 transition-all transform active:scale-[0.98] shadow-lg group normal-case text-sm">
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24">
                                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
@@ -308,8 +304,8 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     </button>
                                 </div>
                                 
-                                <div className="md:mt-4 mt-10 text-center md:pb-0 pb-[20px]">
-                                    <button onClick={() => setView('signup')} className="text-white text-sm hover:underline transition-all tracking-wider font-bold">
+                                <div className="mt-6 text-center">
+                                    <button onClick={() => setView('signup')} className="text-white text-xs hover:underline transition-all tracking-wider font-bold">
                                         Wait, I'm new here
                                     </button>
                                 </div>
@@ -318,68 +314,68 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                     )}
 
                     {view === 'signup' && (
-                        <div className="md:max-h-[70vh] max-h-[60vh] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                        <div className="overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-6 max-h-[60vh]">
                             <form className="space-y-4" onSubmit={handleSignupInit}>
-                                <div className="space-y-1 md:w-full w-[90%] mx-auto">
-                                    <label className="text-xs text-white uppercase tracking-widest ml-1">Full Name</label>
+                                <div className="space-y-1 w-full">
+                                    <label className="text-[10px] text-white uppercase tracking-widest ml-1">Full Name</label>
                                     <div className="relative group">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                                        <input type="text" required value={signupData.name} onChange={(e) => setSignupData({ ...signupData, name: e.target.value })} placeholder="Full Name" className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-12 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
+                                        <input type="text" required value={signupData.name} onChange={(e) => setSignupData({ ...signupData, name: e.target.value })} placeholder="Full Name" className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-11 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:w-full w-[90%] mx-auto">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                                     <div className="space-y-1">
-                                        <label className="text-xs text-white uppercase tracking-widest ml-1">Email address</label>
+                                        <label className="text-[10px] text-white uppercase tracking-widest ml-1">Email address</label>
                                         <div className="relative group">
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                            <input type="email" required value={signupData.email} onChange={(e) => setSignupData({ ...signupData, email: e.target.value })} placeholder="Email Address" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-2.5 pl-12 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
+                                            <input type="email" required value={signupData.email} onChange={(e) => setSignupData({ ...signupData, email: e.target.value })} placeholder="Email Address" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-2.5 pl-11 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs text-white uppercase tracking-widest ml-1">Mobile Number</label>
+                                        <label className="text-[10px] text-white uppercase tracking-widest ml-1">Mobile Number</label>
                                         <div className="relative group">
                                             <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                            <input type="tel" required value={signupData.phone} onChange={(e) => setSignupData({ ...signupData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="10 Digits" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-2.5 pl-12 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
+                                            <input type="tel" required value={signupData.phone} onChange={(e) => setSignupData({ ...signupData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="10 Digits" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-2.5 pl-11 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end md:w-full w-[90%] mx-auto">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end w-full">
                                     <div className="space-y-2">
-                                        <label className="text-xs text-white uppercase tracking-widest ml-1">Gender</label>
+                                        <label className="text-[10px] text-white uppercase tracking-widest ml-1">Gender</label>
                                         <div className="flex gap-2">
                                             {['M', 'F', 'O'].map(g => (
-                                                <button key={g} type="button" onClick={() => setSignupData({ ...signupData, gender: g })} className={`flex-1 py-1.5 rounded-[10px] border text-[10px] font-black transition-all ${signupData.gender === g ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-black/20 border-white/5 text-slate-600 hover:text-white'}`}>{g === 'M' ? 'MALE' : g === 'F' ? 'FEMALE' : 'OTHER'}</button>
+                                                <button key={g} type="button" onClick={() => setSignupData({ ...signupData, gender: g })} className={`flex-1 py-2 rounded-[10px] border text-[9px] font-black transition-all ${signupData.gender === g ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-black/20 border-white/5 text-slate-600 hover:text-white'}`}>{g === 'M' ? 'MALE' : g === 'F' ? 'FEMALE' : 'OTHER'}</button>
                                             ))}
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs text-white uppercase tracking-widest ml-1">Age (18+ only)</label>
+                                        <label className="text-[10px] text-white uppercase tracking-widest ml-1">Age (18+ only)</label>
                                         <div className="relative group">
                                             <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                                            <input type="date" required max="2099-12-31" value={signupData.dob} onChange={(e) => { const year = new Date(e.target.value).getFullYear(); if (year <= 9999) setSignupData({ ...signupData, dob: e.target.value }); }} className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold" />
+                                            <input type="date" required max="2099-12-31" value={signupData.dob} onChange={(e) => { const year = new Date(e.target.value).getFullYear(); if (year <= 9999) setSignupData({ ...signupData, dob: e.target.value }); }} className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold" />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-1 md:w-full w-[90%] mx-auto">
-                                    <label className="text-xs text-white uppercase tracking-widest ml-1">Password</label>
+                                <div className="space-y-1 w-full">
+                                    <label className="text-[10px] text-white uppercase tracking-widest ml-1">Password</label>
                                     <div className="relative group">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                                        <input type={showSignupPassword ? "text" : "password"} required value={signupData.password} onChange={(e) => setSignupData({ ...signupData, password: e.target.value })} placeholder="Password" className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-12 pr-12 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
+                                        <input type={showSignupPassword ? "text" : "password"} required value={signupData.password} onChange={(e) => setSignupData({ ...signupData, password: e.target.value })} placeholder="Password" className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-11 pr-11 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
                                         <button type="button" onClick={() => setShowSignupPassword(!showSignupPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
                                             {showSignupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="md:w-full w-[90%] mx-auto">
-                                    <button type="submit" disabled={loading} className="w-full bg-white text-slate-950 font-black py-4 rounded-[10px] uppercase text-[10px] tracking-widest hover:bg-amber-500 transition-all mt-4 shadow-xl">Create Account</button>
+                                <div className="w-full">
+                                    <button type="submit" disabled={loading} className="w-full bg-white text-slate-950 font-black py-3 rounded-[12px] uppercase text-[11px] tracking-widest hover:bg-amber-500 transition-all mt-4 shadow-xl">Create Account</button>
                                 </div>
                                 
-                                <div className="md:mt-4 mt-10 text-center md:pb-0 pb-[20px]">
-                                    <button onClick={() => setView('login')} className="text-white text-sm hover:underline transition-all tracking-wider font-bold">
+                                <div className="mt-6 text-center">
+                                    <button onClick={() => setView('login')} className="text-white text-xs hover:underline transition-all tracking-wider font-bold">
                                         I already have access
                                     </button>
                                 </div>
@@ -388,12 +384,12 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                     )}
 
                     {view === 'otp' && (
-                        <div className="animate-in fade-in zoom-in-95 duration-300 px-4">
+                        <div className="animate-in fade-in zoom-in-95 duration-300 px-4 pb-6">
                             <div className="flex flex-col items-center mb-6">
                                 <div className={`w-12 h-12 rounded-[10px] flex items-center justify-center border mb-4 ${timer === 0 ? 'bg-rose-500/10 border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 'bg-amber-500/10 border-amber-500/20 animate-pulse'}`}>
                                     <Clock className={`w-6 h-6 ${timer === 0 ? 'text-rose-500' : 'text-amber-500'}`} />
                                 </div>
-                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest text-center mb-1">Verify Security Code</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-1">Verify Security Code</p>
                                 <div className={`flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border ${timer === 0 ? 'border-rose-500/10' : 'border-white/10'}`}>
                                     <span className={`text-[10px] font-black ${timer === 0 ? 'text-rose-500' : 'text-white'}`}>{timer === 0 ? 'EXPIRED' : formatTime(timer)}</span>
                                     {timer > 0 && <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">REMAINING</span>}
@@ -411,7 +407,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                         value={digit}
                                         onChange={(e) => handleOtpChange(idx, e.target.value)}
                                         onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                                        className={`w-14 h-14 bg-white/5 border-2 rounded-[10px] text-center text-3xl font-black transition-all ${isValidating ? 'border-emerald-500 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : timer === 0 ? 'border-rose-500/20 text-rose-500/50 cursor-not-allowed' : 'border-white/20 text-white focus:border-amber-500 focus:bg-white/10 outline-none'}`}
+                                        className={`w-12 h-12 md:w-14 md:h-14 bg-white/5 border-2 rounded-[12px] text-center text-2xl font-black transition-all ${isValidating ? 'border-emerald-500 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : timer === 0 ? 'border-rose-500/20 text-rose-500/50 cursor-not-allowed' : 'border-white/20 text-white focus:border-amber-500 focus:bg-white/10 outline-none'}`}
                                         autoFocus={idx === 0}
                                     />
                                 ))}
@@ -421,13 +417,13 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                 {timer === 0 ? (
                                     <button 
                                         onClick={handleResend}
-                                        className="flex items-center gap-2 mx-auto text-xs text-white font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 px-6 py-3 rounded-[10px] transition-all border border-white/5"
+                                        className="flex items-center gap-2 mx-auto text-xs text-white font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 px-6 py-3 rounded-[12px] transition-all border border-white/5 shadow-xl"
                                     >
                                         <RotateCcw className="w-4 h-4" />
                                         Resend Code
                                     </button>
                                 ) : (
-                                    <button onClick={() => setView('signup')} className="text-[11px] text-amber-500 font-bold uppercase hover:underline tracking-widest">Change Email</button>
+                                    <button onClick={() => setView('signup')} className="text-xs text-amber-500 font-bold uppercase hover:underline tracking-widest">Change Email</button>
                                 )}
                             </div>
                         </div>
