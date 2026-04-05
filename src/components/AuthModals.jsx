@@ -290,7 +290,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                     )}
 
                     {view === 'signup' && (
-                        <div className="max-h-[70vh] overflow-y-auto pr-1">
+                        <div className="max-h-[70vh] overflow-y-auto pr-1 pb-24">
                             <form className="space-y-4" onSubmit={handleSignupInit}>
                                 <div className="space-y-1">
                                     <label className="text-xs text-white uppercase tracking-widest ml-1">Full Name</label>
@@ -348,7 +348,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                         </div>
                                     )}
                                 </div>
-                                <button type="submit" disabled={loading} className="w-full bg-white text-slate-950 font-black py-4 rounded-[10px] uppercase text-[10px] tracking-widest hover:bg-amber-500 transition-all mt-4">Create Account</button>
+                                <button type="submit" disabled={loading} className="w-full bg-white text-slate-950 font-black py-4 rounded-[10px] uppercase text-[10px] tracking-widest hover:bg-amber-500 transition-all mt-4 shadow-xl">Create Account</button>
                             </form>
                         </div>
                     )}
