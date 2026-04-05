@@ -427,52 +427,27 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
 
         {/* Right Content */}
         <div className="lg:col-span-3 pt-0">
-                     {/* Top Rarity Filter - Centered with Precise Geometry */}
-           <div className="mb-12 relative">
-                <div className="flex items-center justify-center gap-3">
-                    {/* Left Navigation Control */}
+                 {/* Clean Rarity Filter - No Scrolling, Professional Wrapping */}
+           <div className="mb-12 flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto px-4">
+                {/* 'All' Selector */}
+                <button 
+                    onClick={() => { setSelectedRarity('all'); setCurrentPage(1); }} 
+                    className={`h-10 px-6 flex items-center justify-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedRarity === 'all' ? 'bg-white text-slate-950 border-white shadow-[0_0_20px_rgba(255,255,255,0.15)]' : 'bg-slate-900 text-slate-500 border-white/10 hover:border-white/20 hover:text-white hover:bg-slate-800'}`}
+                >
+                    All
+                </button>
+                
+                {/* Dynamic Rarity Selectors */}
+                {RARITIES.map(r => (
                     <button 
-                        onClick={() => filterScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' })} 
-                        className="flex-shrink-0 w-10 h-10 items-center justify-center rounded-[10px] bg-slate-900 border border-white/10 text-white hover:bg-white hover:text-slate-950 transition-all flex shadow-xl active:scale-90"
+                        key={r.id} 
+                        onClick={() => { setSelectedRarity(r.code); setCurrentPage(1); }} 
+                        className={`h-10 px-6 flex items-center justify-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent shadow-lg scale-105` : 'bg-slate-900 text-slate-500 border-white/10 hover:border-white/20 hover:text-white hover:bg-slate-800'}`}
                     >
-                        <ChevronLeft className="w-5 h-5" />
+                        {r.code}
                     </button>
-
-                    {/* Uniform Filter Rail */}
-                    <div 
-                        ref={filterScrollRef} 
-                        className="flex items-center gap-2 overflow-x-auto no-scrollbar snap-x px-1 py-2" 
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                    >
-                        {/* 'All' Selector */}
-                        <button 
-                            onClick={() => { setSelectedRarity('all'); setCurrentPage(1); }} 
-                            className={`flex-shrink-0 w-16 h-10 flex items-center justify-center rounded-[10px] text-[10px] font-black uppercase tracking-widest transition-all border snap-start ${selectedRarity === 'all' ? 'bg-white text-slate-950 border-white shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 'bg-slate-900 text-slate-500 border-white/5 hover:border-white/20 hover:text-white'}`}
-                        >
-                            All
-                        </button>
-                        
-                        {/* Dynamic Rarity Selectors */}
-                        {RARITIES.map(r => (
-                            <button 
-                                key={r.id} 
-                                onClick={() => { setSelectedRarity(r.code); setCurrentPage(1); }} 
-                                className={`flex-shrink-0 w-16 h-10 flex items-center justify-center rounded-[10px] text-[10px] font-black uppercase tracking-widest transition-all border snap-start ${selectedRarity === r.code ? `bg-gradient-to-r ${r.gradient} text-white border-transparent shadow-lg` : 'bg-slate-900 text-slate-500 border-white/5 hover:border-white/20 hover:text-white'}`}
-                            >
-                                {r.code}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Right Navigation Control */}
-                    <button 
-                        onClick={() => filterScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })} 
-                        className="flex-shrink-0 w-10 h-10 items-center justify-center rounded-[10px] bg-slate-900 border border-white/10 text-white hover:bg-white hover:text-slate-950 transition-all flex shadow-xl active:scale-90"
-                    >
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-                </div>
-           </div>
+                ))}
+            </div>
            {/* Consolidated Results Header (Optimized One-Line) */}
            <div className="mb-6 lg:mb-12 flex flex-row items-center justify-between gap-1 sm:gap-6 px-1">
                <div className="flex items-center gap-1.5 sm:gap-4 flex-nowrap min-w-0">
