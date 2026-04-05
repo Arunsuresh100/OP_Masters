@@ -141,6 +141,33 @@ export async function scrapeOfficialSet(seriesId, setName = 'OP15') {
     }
 }
 
+async function fetchAllSeriesIds() {
+    try {
+        console.log('[SYNC] Fetching all series IDs from official site...');
+        const res = await axios.get(LIST_URL);
+        const $ = cheerio.load(res.data);
+        const series = [];
+        $('select[name="series"] option').each((i, el) => {
+            const val = $(el).val();
+            const text = $(el).text().replace(/\s+/g, ' ').trim();
+            if (val) {
+                // Extract clean category name (e.g. ST-29, OP-01)
+                let catMatch = text.match(/\[(.*?)\]/);
+                let rawCat = catMatch ? catMatch[1] : (text.includes('Promotion') ? 'P' : 'Other');
+                
+                // Clean up ID for frontend (e.g. OP15-EB04 -> OP15, ST-29 -> ST29)
+                let catId = rawCat.split('-')[0].replace(/\s+/g, '');
+                
+                series.push({ id: val, name: catId });
+            }
+        });
+        return series;
+    } catch (err) {
+        console.error('[SYNC] Failed to fetch series list:', err.message);
+        return [];
+    }
+}
+
 async function runSync() {
     // Read existing
     let currentData = { cards: [] };
@@ -148,20 +175,35 @@ async function runSync() {
         currentData = JSON.parse(fs.readFileSync(CARDS_FILE, 'utf8'));
     }
 
-    // Sync OP15 (ID found in research: 569115)
-    // Adventure on Kami's Island
-    const op15CardsReady = await scrapeOfficialSet('569115', 'OP15');
-    
-    // Merge only if ID not already present
+    const allSeries = await fetchAllSeriesIds();
+    console.log(`[SYNC] Found ${allSeries.length} series to sync.`);
+
     const existingIds = new Set(currentData.cards.map(c => c.id));
-    const newCount = op15CardsReady.filter(c => !existingIds.has(c.id)).length;
-    
-    if (newCount > 0) {
-        currentData.cards = [...currentData.cards, ...op15CardsReady.filter(c => !existingIds.has(c.id))];
-        fs.writeFileSync(CARDS_FILE, JSON.stringify(currentData, null, 2));
-        console.log(`[SYNC] Added ${newCount} new cards! Total: ${currentData.cards.length}`);
+    let totalNew = 0;
+
+    // Process in batches of 5 series to avoid being blocked
+    for (let i = 0; i < allSeries.length; i++) {
+        const s = allSeries[i];
+        const cardsReady = await scrapeOfficialSet(s.id, s.name);
+        
+        const newCards = cardsReady.filter(c => !existingIds.has(c.id));
+        if (newCards.length > 0) {
+            currentData.cards = [...currentData.cards, ...newCards];
+            newCards.forEach(c => existingIds.add(c.id));
+            totalNew += newCards.length;
+            
+            // Incremental write to prevent data loss if crash
+            fs.writeFileSync(CARDS_FILE, JSON.stringify(currentData, null, 2));
+        }
+        
+        // Wait a bit between series
+        await new Promise(r => setTimeout(r, 500));
+    }
+
+    if (totalNew > 0) {
+        console.log(`[SYNC] Success! Added ${totalNew} new cards. Total Library: ${currentData.cards.length}`);
     } else {
-        console.log('[SYNC] No new OP15 cards found (already in database).');
+        console.log('[SYNC] No new cards discovered today.');
     }
 }
 

@@ -42,58 +42,30 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
   }, [cards]);
 
   const SETS = [
-    { id: 'all', name: 'ALL' },
-    { id: 'PRB02', name: 'Premium Booster vol.2 [PRB-02]' },
-    { id: 'PRB01', name: 'Premium Booster [PRB-01]' },
-    { id: 'EB03', name: 'Extra Booster Heroines [EB-03]' },
-    { id: 'EB02', name: 'Extra Booster Anime 25th [EB-02]' },
-    { id: 'EB01', name: 'Extra Booster Memorial [EB-01]' },
-    { id: 'OP15', name: 'ADVENTURE ON KAMI’S ISLAND [OP15-EB04]' },
-    { id: 'OP14', name: 'THE AZURE SEA’S SEVEN [OP14-EB04]' },
-    { id: 'OP13', name: 'CARRYING ON HIS WILL [OP13]' },
-    { id: 'OP12', name: 'LEGACY OF THE MASTER [OP12]' },
-    { id: 'OP11', name: 'A FIST OF DIVINE SPEED [OP11]' },
-    { id: 'OP10', name: 'ROYAL BLOOD [OP10]' },
-    { id: 'OP09', name: 'EMPERORS IN THE NEW WORLD [OP09]' },
-    { id: 'OP08', name: 'TWO LEGENDS [OP08]' },
-    { id: 'OP07', name: 'Booster Pack [OP07]' },
-    { id: 'OP06', name: 'Booster Pack [OP06]' },
-    { id: 'OP05', name: 'Booster Pack [OP05]' },
-    { id: 'OP04', name: 'Booster Pack [OP04]' },
-    { id: 'OP03', name: 'Booster Pack [OP03]' },
-    { id: 'OP02', name: 'Booster Pack [OP02]' },
-    { id: 'OP01', name: 'Booster Pack [OP01]' },
-    { id: 'ST29', name: 'Starter Deck [ST-29]' },
-    { id: 'ST28', name: 'Starter Deck [ST-28]' },
-    { id: 'ST27', name: 'Starter Deck [ST-27]' },
-    { id: 'ST26', name: 'Starter Deck [ST-26]' },
-    { id: 'ST25', name: 'Starter Deck [ST-25]' },
-    { id: 'ST24', name: 'Starter Deck [ST-24]' },
-    { id: 'ST23', name: 'Starter Deck [ST-23]' },
-    { id: 'ST22', name: 'Starter Deck [ST-22]' },
-    { id: 'ST21', name: 'Starter Deck [ST-21]' },
-    { id: 'ST20', name: 'Starter Deck [ST-20]' },
-    { id: 'ST19', name: 'Starter Deck [ST-19]' },
-    { id: 'ST18', name: 'Starter Deck [ST-18]' },
-    { id: 'ST17', name: 'Starter Deck [ST-17]' },
-    { id: 'ST16', name: 'Starter Deck [ST-16]' },
-    { id: 'ST15', name: 'Starter Deck [ST-15]' },
-    { id: 'ST14', name: 'Starter Deck [ST-14]' },
-    { id: 'ST13', name: 'Starter Deck [ST-13]' },
-    { id: 'ST12', name: 'Starter Deck [ST-12]' },
-    { id: 'ST11', name: 'Starter Deck [ST-11]' },
-    { id: 'ST10', name: 'Starter Deck [ST-10]' },
-    { id: 'ST09', name: 'Starter Deck [ST-09]' },
-    { id: 'ST08', name: 'Starter Deck [ST-08]' },
-    { id: 'ST07', name: 'Starter Deck [ST-07]' },
-    { id: 'ST06', name: 'Starter Deck [ST-06]' },
-    { id: 'ST05', name: 'Starter Deck [ST-05]' },
-    { id: 'ST04', name: 'Starter Deck [ST-04]' },
-    { id: 'ST03', name: 'Starter Deck [ST-03]' },
-    { id: 'ST02', name: 'Starter Deck [ST-02]' },
-    { id: 'ST01', name: 'Starter Deck [ST-01]' },
-    { id: 'P', name: 'Promotion Cards' },
-    { id: 'Other', name: 'Other Products' }
+    { id: 'all', name: 'ALL COLLECTIONS' },
+    { id: 'OP15', name: 'OP15 - Adventure on Kami’s Island' },
+    { id: 'OP14', name: 'OP14 - The Azure Sea’s Seven' },
+    { id: 'OP13', name: 'OP13 - Carrying on His Will' },
+    { id: 'OP12', name: 'OP12 - Legacy of the Master' },
+    { id: 'OP11', name: 'OP11 - A Fist of Divine Speed' },
+    { id: 'OP10', name: 'OP10 - Royal Blood' },
+    { id: 'OP09', name: 'OP09 - Emperors in the New World' },
+    { id: 'OP08', name: 'OP08 - Two Legends' },
+    { id: 'OP07', name: 'OP07 - 500 Years into the Future' },
+    { id: 'OP06', name: 'OP06 - Wings of the Captain' },
+    { id: 'OP05', name: 'OP05 - Awakening of the New Era' },
+    { id: 'OP04', name: 'OP04 - Kingdoms of Intrigue' },
+    { id: 'OP03', name: 'OP03 - Pillars of Strength' },
+    { id: 'OP02', name: 'OP02 - Paramount War' },
+    { id: 'OP01', name: 'OP01 - Romance Dawn' },
+    { id: 'EB03', name: 'EB03 - Extra Booster Heroines' },
+    { id: 'EB02', name: 'EB02 - Extra Booster Anime 25th' },
+    { id: 'EB01', name: 'EB01 - Extra Booster Memorial' },
+    { id: 'PRB02', name: 'PRB02 - Premium Booster vol.2' },
+    { id: 'PRB01', name: 'PRB01 - Premium Booster vol.1' },
+    { id: 'P', name: 'PROMO - Promotion Cards' },
+    { id: 'ST', name: 'ST - Full Starter Decks' },
+    { id: 'Other', name: 'OTHER - Special Products' }
   ];
 
   const getCardImageUrl = (url) => {
@@ -139,13 +111,18 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  const SearchableSelect = ({ options, value, onChange, placeholder }) => {
+  const CardSetFilter = ({ value, onChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [filterQuery, setFilterQuery] = useState('');
     const dropdownRef = React.useRef(null);
     const inputRef = React.useRef(null);
 
-    const selectedOption = options.find(opt => opt.id === value) || options[0];
+    const filteredOptions = SETS.filter(opt => 
+      opt.name.toLowerCase().includes(filterQuery.toLowerCase()) || 
+      opt.id.toLowerCase().includes(filterQuery.toLowerCase())
+    );
+
+    const selectedOption = SETS.find(s => s.id === value) || SETS[0];
 
     useEffect(() => {
       const handleClickOutside = (event) => {
@@ -157,41 +134,44 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const filteredOptions = options.filter(opt => 
-      opt.name.toLowerCase().includes(filterQuery.toLowerCase()) ||
-      opt.id.toLowerCase().includes(filterQuery.toLowerCase())
-    );
+    useEffect(() => {
+      if (isOpen && inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, [isOpen]);
 
     return (
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative w-full" ref={dropdownRef}>
         <button
           type="button"
-          onClick={() => {
-            setIsOpen(!isOpen);
-            if (!isOpen) setTimeout(() => inputRef.current?.focus(), 100);
-          }}
-          className="w-full bg-slate-950 border border-white/10 rounded-xl py-4 pl-4 pr-10 text-[11px] font-black text-white text-left hover:border-white transition-all flex items-center justify-between group"
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-white/20 transition-all shadow-lg"
         >
-          <span className="truncate">{selectedOption.name}</span>
-          <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-90 text-white' : 'text-slate-500 group-hover:text-white'}`} />
+          <div className="flex flex-col items-start translate-y-[-1px]">
+             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-1">Set / Collection</span>
+             <span className="text-[12px] text-white font-black uppercase tracking-wider truncate max-w-[200px]">
+                {selectedOption.id !== 'all' ? `${selectedOption.id} - ` : ''}{selectedOption.name}
+             </span>
+          </div>
+          <Filter className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-amber-500' : 'group-hover:text-white'}`} />
         </button>
 
         {isOpen && (
-          <div className="absolute z-[100] mt-2 w-full bg-slate-950/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="p-3 border-b border-white/5 bg-slate-950/50">
+          <div className="absolute z-[200] mt-3 w-full bg-slate-950/98 backdrop-blur-3xl border border-white/15 rounded-2xl shadow-[0_30px_70px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 ring-1 ring-white/5">
+            <div className="p-4 border-b border-white/5 bg-slate-950/20">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Search set..."
+                  placeholder="Search by ID or Name (e.g. OP15)..."
                   value={filterQuery}
                   onChange={(e) => setFilterQuery(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-2.5 pl-9 pr-3 text-[11px] text-white focus:outline-none focus:border-white/20 transition-all font-bold"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-[11px] text-white focus:outline-none focus:border-amber-500/50 transition-all font-bold placeholder:text-slate-600"
                 />
               </div>
             </div>
-            <div className="max-h-60 overflow-y-auto custom-scrollbar py-1">
+            <div className="max-h-72 overflow-y-auto custom-scrollbar py-2">
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((opt) => (
                   <button
@@ -202,16 +182,19 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
                       setIsOpen(false);
                       setFilterQuery('');
                     }}
-                    className={`w-full px-4 py-3.5 text-left text-[11px] font-black transition-all flex items-center justify-between group ${value === opt.id ? 'bg-amber-500/10 text-amber-500' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                    className={`w-full px-5 py-4 text-left text-[11px] font-black transition-all flex items-center justify-between group ${value === opt.id ? 'bg-amber-500/15 text-amber-500' : 'text-slate-400 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-amber-500/30'}`}
                   >
-                    <span className="truncate uppercase tracking-wider">{opt.name}</span>
+                    <div className="flex flex-col">
+                       <span className={`uppercase tracking-widest text-[9px] mb-0.5 ${value === opt.id ? 'text-amber-500/70' : 'text-slate-600'}`}>{opt.id}</span>
+                       <span className="truncate uppercase tracking-wider">{opt.name}</span>
+                    </div>
                     {value === opt.id && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                        <CheckCircle2 className="w-4 h-4 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                     )}
                   </button>
                 ))
               ) : (
-                <div className="px-4 py-6 text-[11px] text-slate-500 text-center font-bold">No results found</div>
+                <div className="px-5 py-10 text-[11px] text-slate-600 text-center font-bold italic">No matching sets found</div>
               )}
             </div>
           </div>
@@ -235,9 +218,21 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
   };
 
   const filteredCards = cards.filter(card => {
-    const matchesSearch = card.name.toLowerCase().includes(searchTerm.toLowerCase()) || card.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRarity = selectedRarity === 'all' || card.rarity === selectedRarity;
-    const matchesSet = selectedSet === 'all' || card.set === selectedSet;
+    const searchLower = searchTerm.toLowerCase().trim();
+    const matchesSearch = !searchLower || 
+                          card.name.toLowerCase().includes(searchLower) || 
+                          card.id.toLowerCase().includes(searchLower);
+    
+    // Normalize RARITY for exact matching (e.g. 'SEC' === 'SEC')
+    const cardRarity = (card.rarity || '').toUpperCase().trim();
+    const filterRarity = (selectedRarity || 'all').toUpperCase().trim();
+    const matchesRarity = filterRarity === 'ALL' || cardRarity === filterRarity;
+
+    // Normalize SET for exact matching
+    const cardSet = (card.set || '').toUpperCase().trim();
+    const filterSet = (selectedSet || 'all').toUpperCase().trim();
+    const matchesSet = filterSet === 'ALL' || cardSet === filterSet;
+
     return matchesSearch && matchesRarity && matchesSet;
   });
 
@@ -330,7 +325,7 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
 
               <div className="pt-4 border-t border-white/5">
                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Set</h3>
-                <SearchableSelect options={SETS} value={selectedSet} onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} placeholder="Select Set" />
+                <CardSetFilter value={selectedSet} onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} />
               </div>
               
               <button 
@@ -406,7 +401,7 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
 
               <div className="pt-2 border-t border-white/5">
                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Expansion Set</h3>
-                <SearchableSelect options={SETS} value={selectedSet} onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} placeholder="Expansion" />
+                <CardSetFilter value={selectedSet} onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} />
               </div>
               
               <div className="pt-6 pb-12 border-t border-white/5">
