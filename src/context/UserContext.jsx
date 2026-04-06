@@ -20,8 +20,13 @@ export const UserProvider = ({ children }) => {
     // 1. Initial Load from LocalStorage (Fast)
     useEffect(() => {
         const savedUser = localStorage.getItem('op_user');
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
+        if (savedUser && savedUser !== 'undefined') {
+            try {
+                setUser(JSON.parse(savedUser));
+            } catch (err) {
+                console.warn('Invalid user data in localStorage. Clearing corrupt session.');
+                localStorage.removeItem('op_user');
+            }
         }
         setLoading(false);
     }, []);
