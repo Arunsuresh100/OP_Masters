@@ -55,8 +55,8 @@ const SafeModule = ({ children }) => {
 const Admin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [authorized, setAuthorized] = useState(true); // Temporary bypass as requested
-  const [loading, setLoading] = useState(false); // Skip loader for now
+  const [authorized, setAuthorized] = useState(false); // Locked by default
+  const [loading, setLoading] = useState(true); // Must load to check existing cookie
   const [activeTab, setActiveTab] = useState('dashboard');
   const [status, setStatus] = useState({ type: '', message: '' });
 
