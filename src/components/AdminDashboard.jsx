@@ -23,7 +23,13 @@ import {
   Tooltip, 
   ResponsiveContainer,
   AreaChart,
-  Area
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
 } from 'recharts';
 
 // Professional Analytics Data - April 2024
@@ -114,6 +120,19 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
       if (res.ok) {
         const data = await res.json();
         console.log("[DEBUG] Admin stats fetched:", data);
+        
+        // Convert strict UTC hours from backend into Local Browser Timezone 
+        if (data.todayActivity && Array.isArray(data.todayActivity)) {
+           data.todayActivity = data.todayActivity.map(act => {
+             const d = new Date();
+             d.setUTCHours(act.hour, 0, 0, 0); // Inject the UTC hour
+             let localHour = d.getHours(); // Extract browser's mathematically converted local hour
+             const ampm = localHour >= 12 ? 'PM' : 'AM';
+             localHour = localHour % 12 || 12;
+             return { ...act, name: `${localHour}${ampm}` }; // Override the display label
+           });
+        }
+        
         setStats(data);
       }
     } catch (err) {
@@ -464,11 +483,12 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
                         axisLine={false} 
                         dy={10}
                         className="font-bold font-mono"
-                        interval={1} // Show every 2nd hour for better density in 12h view
+                        interval={0} // Show every single hour per user request
                       />
                       <YAxis 
                         stroke="#475569" 
                         fontSize={10} 
+                        tick={false} 
                         tickLine={false} 
                         axisLine={false}
                         domain={[0, 'auto']}
@@ -506,6 +526,73 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Extended Real-Time Analytics */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            
+            {/* Distribution Pie Chart */}
+            <div className={theme.card + " p-6"}>
+              <h4 className="font-bold uppercase tracking-wider text-sm mb-4">Registration Demographics</h4>
+              <div className="h-[250px] w-full">
+                {loadingStats ? (
+                   <div className="w-full h-full bg-white/5 animate-pulse rounded-2xl flex items-center justify-center" />
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={stats?.authMetrics || []}
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {(stats?.authMetrics || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                      />
+                      <Legend 
+                         verticalAlign="bottom" 
+                         height={36} 
+                         wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '20px' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+
+            {/* Historical Trend Bar Chart */}
+            <div className={theme.card + " p-6"}>
+              <div className="flex justify-between items-center mb-4">
+                 <h4 className="font-bold uppercase tracking-wider text-sm">Historical Signups</h4>
+                 <span className="text-[9px] bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20 font-bold uppercase">6-Month Span</span>
+              </div>
+              <div className="h-[250px] w-full">
+                {loadingStats ? (
+                   <div className="w-full h-full bg-white/5 animate-pulse rounded-2xl flex items-center justify-center" />
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats?.monthlyActivity || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                      <XAxis dataKey="name" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={5} className="font-bold" />
+                      <YAxis tick={false} stroke="#475569" axisLine={false} tickLine={false} />
+                      <Tooltip 
+                        cursor={{ fill: '#ffffff05' }}
+                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '8px' }}
+                        itemStyle={{ color: '#3b82f6', fontSize: '12px', fontWeight: 'bold' }}
+                      />
+                      <Bar dataKey="users" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+
           </div>
         </>
       )}

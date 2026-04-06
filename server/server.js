@@ -1243,15 +1243,59 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
 
         const finalizedActivity = hourlyActivity.map(h => ({
            name: h.name,
-           users: h.users
+           users: h.users,
+           hour: h.hour
         }));
+
+        // 4. Monthly Signups (Last 6 Months)
+        const monthlyData = [];
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        
+        for (let i = 5; i >= 0; i--) {
+            const mDate = new Date();
+            mDate.setMonth(now.getMonth() - i);
+            monthlyData.push({
+                name: monthNames[mDate.getMonth()],
+                users: 0,
+                targetMonth: mDate.getMonth(),
+                targetYear: mDate.getFullYear()
+            });
+        }
+
+        // 5. Auth Demographics
+        const { data: allUsers } = await supabase.from('users').select('joined_at, auth_provider').eq('role', 'user');
+        let googleCount = 0;
+        let emailCount = 0;
+
+        if (allUsers) {
+            allUsers.forEach(u => {
+                // Auth Pie Chart computation
+                if (u.auth_provider === 'google') googleCount++;
+                else emailCount++;
+
+                // Monthly Bar Chart computation
+                const uDate = new Date(u.joined_at);
+                const bucket = monthlyData.find(m => m.targetMonth === uDate.getMonth() && m.targetYear === uDate.getFullYear());
+                if (bucket) bucket.users++;
+            });
+        }
+
+        const authDistribution = [
+            { name: 'Google Login', value: googleCount, color: '#3b82f6' },
+            { name: 'Manual Email', value: emailCount, color: '#ea580c' }
+        ];
+
+        // Clean out internal logic variables before transmitting
+        const finalizedMonthly = monthlyData.map(m => ({ name: m.name, users: m.users }));
 
         res.json({
             totalUsers: userCount || 0,
-            totalCards: totalCardCount, // RE-ADDED: Missing field fix
+            totalCards: totalCardCount,
             totalEnquiries: supportStats.total,
             pendingReplies: supportStats.pending,
             todayActivity: finalizedActivity,
+            monthlyActivity: finalizedMonthly,
+            authMetrics: authDistribution,
             lastRefresh: new Date().toLocaleTimeString()
         });
     } catch (err) {

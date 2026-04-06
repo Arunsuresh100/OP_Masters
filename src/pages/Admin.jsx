@@ -160,11 +160,27 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#020618] text-white flex font-sans antialiased">
+    <div className="h-screen overflow-hidden bg-[#020618] text-white flex flex-col lg:flex-row font-sans antialiased relative">
       
-      {/* Sidebar Navigation */}
+      {/* Mobile Top Header */}
+      <div className="lg:hidden flex items-center justify-between p-4 border-b border-white/5 sticky top-0 bg-[#020618]/90 backdrop-blur-xl z-[100]">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-shrink-0">
+            <img src={logoImg} alt="Logo" className="w-8 h-8 rounded-full object-cover bg-black border border-white/10" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-black tracking-tight bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent uppercase">OP MASTER</span>
+            <span className="text-[7px] font-bold text-slate-500 uppercase tracking-[0.2em] -mt-0.5">Admin</span>
+          </div>
+        </div>
+        <button onClick={handleLogout} className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors">
+          <LogOut className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Desktop Sidebar Navigation */}
       <aside className="w-64 border-r border-white/5 flex flex-col sticky top-0 h-screen hidden lg:flex">
-        <div className="p-6">
+        <div className="p-6 flex-1">
           <div className="flex items-center gap-3 mb-10 px-2 group cursor-pointer">
             <div className="relative flex-shrink-0">
               <img src={logoImg} alt="Logo" className="w-10 h-10 rounded-full object-cover bg-black border border-white/10 group-hover:scale-110 transition-transform" />
@@ -180,7 +196,7 @@ const Admin = () => {
               { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
               { id: 'users', label: 'User Directory', icon: Users },
               { id: 'inventory', label: 'Card Inventory', icon: PlusCircle },
-              { id: 'reports', label: 'Support Hub', icon: MessageSquare }, // Removed hardcoded badge as requested
+              { id: 'reports', label: 'Support Hub', icon: MessageSquare },
             ].map((item) => (
               <button
                 key={item.id}
@@ -195,15 +211,12 @@ const Admin = () => {
                   <item.icon className="w-4 h-4" />
                   <span className="text-sm font-medium">{item.label}</span>
                 </div>
-                {item.badge > 0 && (
-                  <span className="bg-orange-600 text-[10px] px-1.5 py-0.5 rounded text-white font-bold">{item.badge}</span>
-                )}
               </button>
             ))}
           </nav>
         </div>
 
-        <div className="mt-auto p-6 border-t border-white/5">
+        <div className="p-6 border-t border-white/5 flex-shrink-0">
           <button 
             onClick={handleLogout}
             className="flex items-center gap-3 text-slate-500 hover:text-red-400 text-sm transition-colors w-full px-2"
@@ -215,20 +228,20 @@ const Admin = () => {
       </aside>
 
       {/* Main Panel */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        <header className="flex justify-between items-end mb-8">
+      <main className="flex-1 p-4 lg:p-8 pb-24 lg:pb-8 overflow-y-auto">
+        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight capitalize">{activeTab.replace('-', ' ')}</h2>
-            <p className="text-slate-500 text-sm">System Administration & Global Management</p>
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight capitalize">{activeTab.replace('-', ' ')}</h2>
+            <p className="text-slate-500 text-xs md:text-sm">System Administration & Global Management</p>
           </div>
-          <div className="flex items-center gap-4">
-             <div className="text-right mr-2">
+          <div className="flex items-center gap-4 self-start md:self-auto">
+             <div className="text-right mr-2 hidden md:block">
                 <p className="text-xs font-bold text-white uppercase tracking-wider">Vegapunk</p>
                 <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center justify-end gap-1">
                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Network Stable
                 </p>
              </div>
-             <div className="w-10 h-10 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden shadow-lg shadow-orange-500/10">
+             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden shadow-lg shadow-orange-500/10">
                 <img src="https://static.beebom.com/wp-content/uploads/2024/08/Vegapunk.jpg?w=1024" alt="Vegapunk" className="w-full h-full object-cover" />
              </div>
           </div>
@@ -245,6 +258,32 @@ const Admin = () => {
            </SafeModule>
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 w-full bg-[#020618]/95 backdrop-blur-xl border-t border-white/10 z-[100] px-4 py-2 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+         <nav className="flex items-center justify-between">
+            {[
+              { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+              { id: 'users', label: 'Users', icon: Users },
+              { id: 'inventory', label: 'Cards', icon: PlusCircle },
+              { id: 'reports', label: 'Support', icon: MessageSquare },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex flex-col items-center justify-center w-full py-1 gap-1 transition-all ${
+                  activeTab === item.id 
+                  ? 'text-orange-500' 
+                  : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
+              </button>
+            ))}
+         </nav>
+      </div>
+
     </div>
   );
 };
