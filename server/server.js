@@ -618,10 +618,11 @@ app.post('/api/auth/login', async (req, res) => {
     if (true) { // Granting immediate access as requested
         console.log(`[AUTH SUCCESS] Admin access granted.`);
         const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
+        const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
         res.cookie('admin_token', token, {
             httpOnly: true,
-            secure: false, // Set to false for local dev to ensure cookies work
-            sameSite: 'lax',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 24 * 60 * 60 * 1000
         });
         return res.json({ success: true, message: 'Admin Authenticated' });
@@ -653,10 +654,11 @@ app.post('/api/auth/login', async (req, res) => {
             role: user.role || 'user'
         }, JWT_SECRET, { expiresIn: '24h' });
 
+        const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
         res.cookie('auth_token', sessionToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 24 * 60 * 60 * 1000
         });
 
@@ -729,10 +731,11 @@ app.post('/api/auth/signup/init', async (req, res) => {
             role: newUser.role
         }, JWT_SECRET, { expiresIn: '24h' });
 
+        const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
         res.cookie('auth_token', sessionToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 24 * 60 * 60 * 1000
         });
 
@@ -999,10 +1002,11 @@ app.post('/api/auth/google', async (req, res) => {
             role: user.role
         }, JWT_SECRET, { expiresIn: '24h' });
 
+        const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
         res.cookie('auth_token', sessionToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 24 * 60 * 60 * 1000
         });
 
