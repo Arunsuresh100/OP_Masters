@@ -603,10 +603,14 @@ app.post('/api/trade/transaction', (req, res) => {
 // --- UPDATED LOGIN ENDPOINT ---
 app.post('/api/auth/login', async (req, res) => {
     let { email, password } = req.body;
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
+    
+    // Quick check: If no password at all, reject.
+    if (!password) {
+        return res.status(400).json({ error: 'Password/Secret is required' });
     }
-    email = email.toLowerCase().trim();
+    if (email) {
+        email = email.toLowerCase().trim();
+    }
     
     // Admin login fallback
     const expectedSecret = (ADMIN_SECRET || 'Op_masters').trim();
@@ -614,8 +618,8 @@ app.post('/api/auth/login', async (req, res) => {
 
     console.log(`[LOGIN ATTEMPT] Provided length: ${providedSecret.length}, Expected length: ${expectedSecret.length}`);
 
-    // Admin login fallback - TEMPORARY BYPASS ACTIVE
-    if (true) { // Granting immediate access as requested
+    // Admin login fallback verification
+    if (providedSecret === expectedSecret) {
         console.log(`[AUTH SUCCESS] Admin access granted.`);
         const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
         const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
@@ -1164,8 +1168,10 @@ app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
 // --- ADMIN STATISTICS ENDPOINT ---
 app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
     try {
-        // 1. Fetch Totals from Supabase
-        const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
+        // 1. Fetch Totals from Supabase (Exclude Admins)
+        const { count: userCount } = await supabase.from('users')
+            .select('*', { count: 'exact', head: true })
+            .eq('role', 'user');
         const { count: manualCardCount } = await supabase.from('card_inventory').select('*', { count: 'exact', head: true });
         
         // Count from local JSON + manual
@@ -1200,17 +1206,19 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
 
         const startOfRange = new Date(now.getTime() - 12 * 60 * 60 * 1000);
 
-        // A. Track New Signups
+        // A. Track New Signups (Exclude Admins)
         const { data: recentUsers } = await supabase
             .from('users')
             .select('joined_at')
-            .gte('joined_at', startOfRange.toISOString());
+            .gte('joined_at', startOfRange.toISOString())
+            .eq('role', 'user');
 
-        // B. Track Message Activity (Pulse)
+        // B. Track Message Activity (Exclude Admin Replies)
         const { data: recentMessages } = await supabase
             .from('support_messages')
             .select('created_at')
-            .gte('created_at', startOfRange.toISOString());
+            .gte('created_at', startOfRange.toISOString())
+            .eq('is_admin', false);
 
         // Combine into buckets
         const processStats = (list, field) => {
