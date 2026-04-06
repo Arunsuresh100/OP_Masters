@@ -263,7 +263,13 @@ const authenticateAny = async (req, res, next) => {
     try {
         const verified = jwt.verify(token, JWT_SECRET);
         
-        // --- REAL-TIME SESSION CHECK ---
+        // Admin Fallback Token doesn't have an ID in Supabase
+        if (verified.role === 'admin' && !verified.id) {
+            req.user = { role: 'admin', id: 'secret_admin', name: 'System Admin' };
+            return next();
+        }
+
+        // --- REAL-TIME SESSION CHECK FOR STANDARD USERS ---
         const { data: user, error } = await supabase
             .from('users')
             .select('id, role, name')
