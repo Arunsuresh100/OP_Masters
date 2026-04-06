@@ -29,6 +29,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
     const [success, setSuccess] = useState('');
     const [timer, setTimer] = useState(180);
     const [isValidating, setIsValidating] = useState(false);
+    const [touched, setTouched] = useState({});
     
     const { login } = useUser();
     const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -142,7 +143,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             onClose();
         } catch (err) {
             console.error('Login Error:', err);
-            setError('Could not reach server. It might be waking up—please try again.');
+            setError(err.message || 'Connection failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -154,18 +155,61 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
     const handleSignupInit = async (e) => {
         e.preventDefault();
         setError('');
-        if (!isValidEmail(signupData.email)) return setError('Please enter a valid email address');
-        if (!isValidPhone(signupData.phone)) return setError('Mobile number must be exactly 10 digits');
+        setLoading(true);
+
+        if (!signupData.gender) {
+            setLoading(false);
+            return setError('Please select your gender.');
+        }
+
+        if (!isValidEmail(signupData.email)) {
+            setLoading(false);
+            return setError('Please enter a valid email address');
+        }
+        if (!isValidPhone(signupData.phone)) {
+            setLoading(false);
+            return setError('Mobile number must be exactly 10 digits');
+        }
         
         const bday = new Date(signupData.dob);
         const today = new Date();
-        const age = today.getFullYear() - bday.getFullYear();
-        if (age < 18) return setError('Access Denied: You must be at least 18 years old.');
+        if (bday >= today) {
+            setLoading(false);
+            return setError('Age Error: You cannot be born in the future!');
+        }
 
-        setOtpArray(['', '', '', '', '']); 
-        setSuccess('Code sent!');
-        setView('otp');
-        setTimer(180);
+        const age = today.getFullYear() - bday.getFullYear();
+        if (age < 18) {
+            setLoading(false);
+            return setError('Access Denied: You must be at least 18 years old.');
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/signup/init`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(signupData),
+                credentials: 'include'
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Signup failed');
+
+            // Direct Login on Success
+            setSuccess('Account created successfully!');
+            login(data.user);
+            
+            setTimeout(() => {
+                navigate('/');
+                onClose();
+            }, 1500);
+
+        } catch (err) {
+            console.error('Signup Error:', err);
+            setError(err.message || 'Could not connect to server.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleOtpChange = (index, value) => {
@@ -193,16 +237,16 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
     useEffect(() => {
         const fullOtp = otpArray.join('');
         if (fullOtp.length === 5 && timer > 0 && !isValidating) {
-            if (fullOtp === '12345') {
+            if (fullOtp.toUpperCase() === 'OPMST') {
                 setIsValidating(true);
                 setError('');
                 setTimeout(() => {
-                    login({ name: signupData.name || 'Guest User', email: signupData.email || 'guest@example.com', role: 'guest' });
+                    login({ name: signupData.name || 'Master User', email: signupData.email || 'user@opmasters.com', role: 'user' });
                     navigate('/');
                     onClose();
                 }, 2000); 
             } else {
-                setError('Invalid code. Try 12345.');
+                setError('Verification failed. System code required.');
             }
         }
     }, [otpArray, timer, isValidating]);
@@ -304,7 +348,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                 </div>
                                 
                                 <div className="mt-6 text-center">
-                                    <button onClick={() => setView('signup')} className="text-white text-xs hover:underline transition-all tracking-wider font-bold">
+                                    <button type="button" onClick={() => { setError(''); setSuccess(''); setView('signup'); }} className="text-white text-xs hover:underline transition-all tracking-wider font-bold">
                                         Wait, I'm new here
                                     </button>
                                 </div>
@@ -328,15 +372,17 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                         <label className="text-[10px] text-white uppercase tracking-widest ml-1">Email address</label>
                                         <div className="relative group">
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                            <input type="email" required value={signupData.email} onChange={(e) => setSignupData({ ...signupData, email: e.target.value })} placeholder="Email Address" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-2.5 pl-11 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
+                                            <input type="email" required value={signupData.email} onChange={(e) => { setSignupData({ ...signupData, email: e.target.value }); if (!touched.email) setTouched({ ...touched, email: true }); }} placeholder="Email Address" className={`w-full bg-white/5 border rounded-[10px] py-2.5 pl-11 pr-5 text-sm text-white focus:outline-none font-bold placeholder-slate-700 transition-all ${touched.email && signupData.email && !isValidEmail(signupData.email) ? 'border-rose-500/50 bg-rose-500/5' : 'border-white/10 focus:border-amber-500/50'}`} />
                                         </div>
+                                        {touched.email && signupData.email && !isValidEmail(signupData.email) && <p className="text-[9px] text-rose-500 font-bold ml-1">Please enter a valid email format</p>}
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-[10px] text-white uppercase tracking-widest ml-1">Mobile Number</label>
                                         <div className="relative group">
                                             <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                            <input type="tel" required value={signupData.phone} onChange={(e) => setSignupData({ ...signupData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="10 Digits" className="w-full bg-white/5 border border-white/10 rounded-[10px] py-2.5 pl-11 pr-5 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
+                                            <input type="tel" required value={signupData.phone} onChange={(e) => { const val = e.target.value.replace(/\D/g, '').slice(0, 10); setSignupData({ ...signupData, phone: val }); if (!touched.phone) setTouched({ ...touched, phone: true }); }} placeholder="10 Digits" className={`w-full bg-white/5 border rounded-[10px] py-2.5 pl-11 pr-5 text-sm text-white focus:outline-none font-bold placeholder-slate-700 transition-all ${touched.phone && signupData.phone && !isValidPhone(signupData.phone) ? 'border-rose-500/50 bg-rose-500/5' : 'border-white/10 focus:border-amber-500/50'}`} />
                                         </div>
+                                        {touched.phone && signupData.phone && !isValidPhone(signupData.phone) && <p className="text-[9px] text-rose-500 font-bold ml-1">10 Digits Required</p>}
                                     </div>
                                 </div>
 
@@ -353,28 +399,36 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                         <label className="text-[10px] text-white uppercase tracking-widest ml-1">Age (18+ only)</label>
                                         <div className="relative group">
                                             <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                                            <input type="date" required max="2099-12-31" value={signupData.dob} onChange={(e) => { const year = new Date(e.target.value).getFullYear(); if (year <= 9999) setSignupData({ ...signupData, dob: e.target.value }); }} className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold" />
+                                            <input type="date" required max={new Date(Date.now() - 86400000).toISOString().split('T')[0]} value={signupData.dob} onChange={(e) => setSignupData({ ...signupData, dob: e.target.value })} className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-11 pr-4 text-[11px] text-white focus:outline-none focus:border-amber-500/50 font-bold" />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-1 w-full">
+                                <div className="space-y-1 w-full relative">
                                     <label className="text-[10px] text-white uppercase tracking-widest ml-1">Password</label>
                                     <div className="relative group">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                                        <input type={showSignupPassword ? "text" : "password"} required value={signupData.password} onChange={(e) => setSignupData({ ...signupData, password: e.target.value })} placeholder="Password" className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-11 pr-11 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
+                                        <input type={showSignupPassword ? "text" : "password"} required value={signupData.password} onChange={(e) => setSignupData({ ...signupData, password: e.target.value })} placeholder="Create Password" className="w-full bg-black/40 border border-white/5 rounded-[10px] py-2.5 pl-11 pr-11 text-sm text-white focus:outline-none focus:border-amber-500/50 font-bold placeholder-slate-700" />
                                         <button type="button" onClick={() => setShowSignupPassword(!showSignupPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
                                             {showSignupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                         </button>
                                     </div>
+                                    {signupData.password && (
+                                        <div className="mt-1.5 flex items-center gap-2">
+                                            <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                                                <div className={`h-full transition-all duration-500 ${strength?.label === 'Weak' ? 'w-1/3 bg-rose-500' : strength?.label === 'Medium' ? 'w-2/3 bg-amber-500' : 'w-full bg-emerald-500'}`}></div>
+                                            </div>
+                                            <span className={`text-[8px] font-black uppercase tracking-widest ${strength?.color}`}>{strength?.label} Password</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="w-full">
-                                    <button type="submit" disabled={loading} className="w-full bg-white text-slate-950 font-black py-3 rounded-[12px] uppercase text-[11px] tracking-widest hover:bg-amber-500 transition-all mt-4 shadow-xl">Create Account</button>
+                                    <button type="submit" disabled={loading} className={`w-full font-black py-3 rounded-[12px] uppercase text-[11px] tracking-widest transition-all mt-4 shadow-xl transform active:scale-[0.98] ${loading ? 'bg-slate-700 text-slate-400 opacity-50' : 'bg-white text-slate-950 hover:bg-amber-500'}`}>Create Account</button>
                                 </div>
                                 
                                 <div className="mt-6 text-center">
-                                    <button onClick={() => setView('login')} className="text-white text-xs hover:underline transition-all tracking-wider font-bold">
+                                    <button type="button" onClick={() => { setError(''); setSuccess(''); setView('login'); }} className="text-white text-xs hover:underline transition-all tracking-wider font-bold">
                                         I already have access
                                     </button>
                                 </div>

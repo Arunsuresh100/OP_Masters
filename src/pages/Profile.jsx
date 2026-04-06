@@ -406,152 +406,155 @@ const Profile = () => {
                             </div>
                         )}
 
-                         {/* TAB: EXACT VISUAL MATCH MESSAGE CENTER (FLIPPED ALIGNMENT & COMPACT) */}
-                         {activeTab === 'history' && (
-                              <div className="flex flex-col md:flex-row h-[600px] md:h-[650px] bg-[#0a0f1c] border border-white/5 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden animate-in fade-in zoom-in-95 duration-500 shadow-2xl" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                 
-                                 {/* Sidebar (List of Reports) - Hidden on smaller screens if a ticket is selected */}
-                                 <div className={`w-full md:w-80 flex flex-col border-r border-white/5 bg-[#0a0f1c] ${selectedTicketId ? 'hidden md:flex' : 'flex'}`}>
-                                     <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
-                                         {userTickets.length === 0 ? (
-                                             <div className="py-20 text-center px-4">
-                                                 <History className="w-10 h-10 text-slate-800 mx-auto mb-4 opacity-20" />
-                                                 <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">No Records Found</p>
-                                             </div>
-                                         ) : (
-                                             userTickets.map((ticket) => (
-                                                 <button
-                                                     key={ticket.id}
-                                                     onClick={() => setSelectedTicketId(ticket.id)}
-                                                     className={`w-full p-5 rounded-xl text-left transition-all border ${
-                                                         selectedTicketId === ticket.id 
-                                                             ? 'bg-[#131b2d] border-[#3b82f6]/50' 
-                                                             : 'bg-[#131b2d]/40 border-white/5 hover:bg-[#131b2d]/60'
-                                                     }`}
-                                                 >
-                                                     <div className="flex justify-between items-start mb-3">
-                                                         <span className={`text-[13px] font-bold ${selectedTicketId === ticket.id ? 'text-white' : 'text-slate-300'}`}>User Report #{ticket.id.toString().slice(-4)}</span>
-                                                         <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">2H AGO</span>
-                                                     </div>
-                                                     <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed opacity-80">
-                                                         "{ticket.message}"
-                                                     </p>
-                                                 </button>
-                                             ))
-                                         )}
-                                     </div>
-                                 </div>
+                          {/* TAB: EXACT VISUAL MATCH MESSAGE CENTER (FLIPPED ALIGNMENT & COMPACT) */}
+                          {activeTab === 'history' && (
+                               <div className="flex flex-col md:flex-row h-[600px] md:h-[650px] bg-[#0a0f1c] border border-white/5 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden animate-in fade-in zoom-in-95 duration-500 shadow-2xl" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                  
+                                  {/* Sidebar (List of Reports) - Hidden on smaller screens if a ticket is selected */}
+                                  <div className={`w-full md:w-80 flex flex-col border-r border-white/5 bg-[#0a0f1c] ${selectedTicketId ? 'hidden md:flex' : 'flex'}`}>
+                                      <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
+                                          {userTickets.length === 0 ? (
+                                              <div className="py-20 text-center px-4">
+                                                  <History className="w-10 h-10 text-slate-800 mx-auto mb-4 opacity-20" />
+                                                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">No Records Found</p>
+                                              </div>
+                                          ) : (
+                                              userTickets.map((ticket) => (
+                                                  <button
+                                                      key={ticket.id}
+                                                      onClick={() => setSelectedTicketId(ticket.id)}
+                                                      className={`w-full p-5 rounded-xl text-left transition-all border ${
+                                                          selectedTicketId === ticket.id 
+                                                              ? 'bg-[#131b2d] border-[#3b82f6]/50' 
+                                                              : 'bg-[#131b2d]/40 border-white/5 hover:bg-[#131b2d]/60'
+                                                      }`}
+                                                  >
+                                                      <div className="flex justify-between items-start mb-3">
+                                                          <span className={`text-[13px] font-bold ${selectedTicketId === ticket.id ? 'text-white' : 'text-slate-300'}`}>User Report #{ticket.id.toString().slice(-4)}</span>
+                                                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">REALTIME</span>
+                                                      </div>
+                                                      <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed opacity-80 italic">
+                                                          "{ticket.message}"
+                                                      </p>
+                                                  </button>
+                                              ))
+                                          )}
+                                      </div>
+                                  </div>
 
-                                 {/* Main Conversation Pane - Full width on mobile/tablet if selected */}
-                                 <div className={`flex-1 flex flex-col bg-[#0b1222] ${!selectedTicketId ? 'hidden md:flex' : 'flex'}`}>
-                                     {selectedTicketId ? (
-                                         (() => {
-                                             const activeTicket = userTickets.find(t => t.id === selectedTicketId);
-                                             if (!activeTicket) return null;
-                                             return (
-                                                 <>
-                                                     {/* Pane Header */}
-                                                     <div className="p-4 md:p-8 border-b border-white/5 flex items-center justify-between">
-                                                         <div className="flex items-center gap-3 md:gap-5">
-                                                             <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-[#2563eb] flex items-center justify-center text-white font-bold text-base md:text-xl shadow-lg border border-white/10 shrink-0">
-                                                                 {user.name?.charAt(0).toUpperCase()}
-                                                             </div>
-                                                             <div className="min-w-0">
-                                                                 <h3 className="text-sm md:text-lg font-bold text-white tracking-tight truncate">
-                                                                     {user.name} <span className="hidden md:inline text-slate-400 font-medium normal-case text-sm">(User ID: {user.username})</span>
-                                                                 </h3>
-                                                                 <p className="text-[10px] md:text-xs font-medium text-slate-500 mt-0.5 truncate">
-                                                                     {new Date(activeTicket.createdAt).toLocaleDateString()} @ {new Date(activeTicket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                 </p>
-                                                             </div>
-                                                         </div>
-                                                         <div className="flex items-center gap-2">
-                                                             <button 
-                                                                onClick={() => setShowDeleteConfirm(true)} 
-                                                                className="p-2 text-slate-600 hover:text-rose-500 transition-colors"
-                                                             >
-                                                                 <Trash2 className="w-5 h-5" /> 
-                                                             </button>
-                                                             <button onClick={() => setSelectedTicketId(null)} className="p-2 text-slate-600 hover:text-white transition-colors">
-                                                                 <X className="w-5 h-5" /> 
-                                                             </button>
-                                                         </div>
-                                                     </div>
+                                  {/* Main Conversation Pane - Full width on mobile/tablet if selected */}
+                                  <div className={`flex-1 flex flex-col bg-[#0b1222] ${!selectedTicketId ? 'hidden md:flex' : 'flex'}`}>
+                                      {selectedTicketId ? (
+                                          (() => {
+                                              const activeTicket = userTickets.find(t => t.id === selectedTicketId);
+                                              if (!activeTicket) return null;
+                                              return (
+                                                  <>
+                                                      {/* Pane Header */}
+                                                      <div className="p-4 md:p-8 border-b border-white/5 flex items-center justify-between">
+                                                          <div className="flex items-center gap-3 md:gap-5">
+                                                              <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-[#2563eb] flex items-center justify-center text-white font-bold text-base md:text-xl shadow-lg border border-white/10 shrink-0">
+                                                                  {user.name?.charAt(0).toUpperCase()}
+                                                              </div>
+                                                              <div className="min-w-0">
+                                                                  <h3 className="text-sm md:text-lg font-bold text-white tracking-tight truncate">
+                                                                      {user.name} <span className="hidden md:inline text-slate-400 font-medium normal-case text-sm">(User Portal)</span>
+                                                                  </h3>
+                                                                  <p className="text-[10px] md:text-xs font-medium text-slate-500 mt-0.5 truncate tracking-widest uppercase">
+                                                                      Inquiry ID: {activeTicket.id.toString().slice(-8)}
+                                                                  </p>
+                                                              </div>
+                                                          </div>
+                                                          <div className="flex items-center gap-2">
+                                                              <button 
+                                                                 onClick={() => setShowDeleteConfirm(true)} 
+                                                                 className="p-2 text-slate-600 hover:text-rose-500 transition-colors"
+                                                              >
+                                                                  <Trash2 className="w-5 h-5" /> 
+                                                              </button>
+                                                              <button onClick={() => setSelectedTicketId(null)} className="p-2 text-slate-600 hover:text-white transition-colors">
+                                                                  <X className="w-5 h-5" /> 
+                                                              </button>
+                                                          </div>
+                                                      </div>
 
-                                                     {/* Chat Messages Feed (Reduced Gaps) */}
-                                                     <div className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-10 space-y-4">
-                                                         
-                                                         {/* Initial Inquiry (Right aligned for User) */}
-                                                         <div className="flex justify-end">
-                                                             <div className="max-w-[85%] sm:max-w-[75%] bg-[#1e293b]/60 border border-white/5 rounded-2xl rounded-tr-none p-4 text-xs sm:text-sm text-slate-200 font-medium leading-relaxed shadow-lg">
-                                                                 {activeTicket.message}
-                                                             </div>
-                                                         </div>
+                                                          {/* Chat Messages Feed (Re-Synchronized) */}
+                                                          <div className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-10 space-y-6">
+                                                              {/* Loop starts immediately with responses */}
+                                                              <div className="space-y-4">
+                                                                  {activeTicket.responses && activeTicket.responses.length > 0 ? (
+                                                                      activeTicket.responses.map((reply, rid) => (
+                                                                          <div key={rid} className={`flex ${reply.isUser ? 'justify-end' : 'justify-start'}`}>
+                                                                              <div className={`flex flex-col ${reply.isUser ? 'items-end' : 'items-start'} gap-1.5 max-w-[85%] sm:max-w-[75%]`}>
+                                                                                   {/* Special Label for the very first message in the thread */}
+                                                                                   {rid === 0 && (
+                                                                                       <span className="text-[9px] font-black text-slate-500 uppercase px-1 pb-1 tracking-[0.2em] italic opacity-60">Primary Report Context</span>
+                                                                                   )}
+                                                                                   
+                                                                                   <div className={`p-4 text-xs sm:text-sm font-extrabold leading-relaxed shadow-2xl rounded-2xl ${
+                                                                                      reply.isUser 
+                                                                                          ? `${rid === 0 ? 'bg-[#2563eb] text-white border-transparent' : 'bg-[#1e293b] text-slate-200 border-white/10'} border rounded-tr-none` 
+                                                                                          : 'bg-indigo-600 border border-indigo-400 rounded-tl-none text-white'
+                                                                                  }`}>
+                                                                                      {reply.text}
+                                                                                  </div>
+                                                                                   <span className="text-[9px] font-bold text-slate-600 uppercase px-2 tracking-tighter mt-1">
+                                                                                       {reply.isUser ? (rid === 0 ? 'Your Inquiry' : 'Broadcast') : 'Admin Authority'} • {new Date(reply.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                                   </span>
+                                                                              </div>
+                                                                          </div>
+                                                                      ))
+                                                                  ) : (
+                                                                      <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                                                                          <div className="text-[10px] sm:text-xs font-black bg-white/5 border border-white/10 p-6 rounded-3xl text-slate-400 italic tracking-[0.2em] uppercase mb-4 text-center text-balance">
+                                                                              Protocol: Established. Awaiting Command Feed.
+                                                                          </div>
+                                                                      </div>
+                                                                  )}
+                                                              </div>
+                                                          </div>
 
-                                                         {/* Response Stream */}
-                                                         {activeTicket.responses.map((reply, rid) => (
-                                                             <div key={rid} className={`flex ${reply.isUser ? 'justify-end' : 'justify-start'}`}>
-                                                                 <div className={`max-w-[85%] sm:max-w-[75%] p-4 text-xs sm:text-sm font-medium leading-relaxed shadow-xl rounded-2xl ${
-                                                                     reply.isUser 
-                                                                         ? 'bg-[#1e293b]/60 border border-white/5 rounded-tr-none text-slate-200' 
-                                                                         : 'bg-[#1e3a8a]/40 border border-indigo-500/30 rounded-tl-none text-indigo-50'
-                                                                 }`}>
-                                                                     {reply.text}
-                                                                 </div>
-                                                             </div>
-                                                         ))}
+                                                      {/* Message Input */}
+                                                      <div className="p-4 sm:p-10">
+                                                          <form 
+                                                             className="relative max-w-4xl mx-auto"
+                                                             onSubmit={async (e) => {
+                                                                 e.preventDefault();
+                                                                 if (replyText.trim()) {
+                                                                     const success = await addUserResponse(activeTicket.id, replyText, user.name);
+                                                                     setReplyText('');
+                                                                 }
+                                                             }}
+                                                          >
+                                                              <input 
+                                                                 type="text" 
+                                                                 value={replyText}
+                                                                 onChange={(e) => setReplyText(e.target.value)}
+                                                                 placeholder="Type your response to the command center..." 
+                                                                 className="w-full bg-[#131b2d] border border-white/10 rounded-full px-8 py-5 pr-20 text-sm font-medium text-white placeholder-slate-600 focus:outline-none focus:border-[#3b82f6]/50 transition-all shadow-inner" 
+                                                              />
+                                                              <button 
+                                                                 type="submit"
+                                                                 disabled={!replyText.trim()}
+                                                                 className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-[#3b82f6] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20"
+                                                              >
+                                                                  <ArrowUpRight className="w-5 h-5 pointer-events-none" />
+                                                              </button>
+                                                          </form>
+                                                      </div>
+                                                  </>
+                                              );
+                                          })()
+                                      ) : (
+                                          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-30">
+                                              <History className="w-12 h-12 text-slate-500 mb-6" />
+                                              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest italic">Initialize Protocol</h3>
+                                          </div>
+                                      )}
+                                  </div>
 
-                                                         {/* Demo Placeholder (Admin Reply on left if no replays) */}
-                                                         {activeTicket.responses.length === 0 && (
-                                                             <div className="flex justify-start opacity-40">
-                                                                 <div className="max-w-[85%] sm:max-w-[75%] p-4 text-[10px] sm:text-xs font-bold leading-relaxed shadow-xl rounded-2xl bg-[#1e3a8a]/20 border border-indigo-500/10 rounded-tl-none text-indigo-300 italic tracking-widest uppercase">
-                                                                     Protocol Initialized: Awaiting Agent Link...
-                                                                 </div>
-                                                             </div>
-                                                         )}
-                                                     </div>
-
-                                                     {/* Message Input (Full Rounded Pill) */}
-                                                     <div className="p-4 sm:p-10">
-                                                         <form 
-                                                            className="relative max-w-4xl mx-auto"
-                                                            onSubmit={(e) => {
-                                                                e.preventDefault();
-                                                                if (replyText.trim()) {
-                                                                    addUserResponse(activeTicket.id, replyText, user.name);
-                                                                    setReplyText('');
-                                                                }
-                                                            }}
-                                                         >
-                                                             <input 
-                                                                type="text" 
-                                                                value={replyText}
-                                                                onChange={(e) => setReplyText(e.target.value)}
-                                                                placeholder="Type your reply to admin..." 
-                                                                className="w-full bg-[#131b2d] border border-white/10 rounded-full px-8 py-5 pr-20 text-sm font-medium text-white placeholder-slate-600 focus:outline-none focus:border-[#3b82f6]/50 transition-all shadow-inner" 
-                                                             />
-                                                             <button 
-                                                                type="submit"
-                                                                disabled={!replyText.trim()}
-                                                                className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 bg-[#3b82f6] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20"
-                                                             >
-                                                                 <ArrowUpRight className="w-5 h-5 pointer-events-none" />
-                                                             </button>
-                                                         </form>
-                                                     </div>
-                                                 </>
-                                             );
-                                         })()
-                                     ) : (
-                                         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-30">
-                                             <History className="w-12 h-12 text-slate-500 mb-6" />
-                                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest italic">Initialize Protocol</h3>
-                                         </div>
-                                     )}
-                                 </div>
-
-                              </div>
-                         )}
+                               </div>
+                          )}
 
                         {/* TAB: SUPPORT (Compact Full-Width Terminal) */}
                         {activeTab === 'support' && (
@@ -582,7 +585,6 @@ const Profile = () => {
                                             const formData = new FormData(e.target);
                                             createTicket({
                                                 userEmail: user.email,
-                                                subject: formData.get('subject'),
                                                 message: formData.get('message'),
                                                 priority: formData.get('priority'),
                                                 category: 'General Inquiry'
@@ -591,14 +593,10 @@ const Profile = () => {
                                             e.target.reset();
                                             setTimeout(() => setShowSupportSuccess(false), 5000);
                                         }}>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                            <div className="space-y-5" style={{ fontFamily: 'Arial, sans-serif' }}>
                                                 <div className="space-y-1.5">
-                                                    <label className="text-xs font-bold text-white/70 capitalize tracking-tight ml-1">Issue</label>
-                                                    <input name="priority" required type="text" placeholder="Type of issue..." className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 sm:px-5 py-3 text-sm font-medium text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 transition-all" />
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <label className="text-xs font-bold text-white/70 capitalize tracking-tight ml-1">Subject</label>
-                                                    <input name="subject" required type="text" placeholder="Specify context..." className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 sm:px-5 py-3 text-sm font-medium text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 transition-all" />
+                                                    <label className="text-xs font-bold text-white/70 capitalize tracking-tight ml-1">Type of Issue</label>
+                                                    <input name="priority" required type="text" placeholder="e.g. Card Sync, Login Issue, Bug..." className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 sm:px-5 py-3 text-sm font-medium text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 transition-all" />
                                                 </div>
                                             </div>
 
@@ -655,16 +653,18 @@ const Profile = () => {
 
                             <div className="flex flex-col gap-3">
                                 <button 
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (selectedTicketId) {
-                                            deleteTicket(selectedTicketId);
-                                            setSelectedTicketId(null);
+                                            const success = await deleteTicket(selectedTicketId);
+                                            if (success) {
+                                                setSelectedTicketId(null);
+                                                setShowDeleteConfirm(false);
+                                            }
                                         }
-                                        setShowDeleteConfirm(false);
                                     }}
-                                    className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-rose-900/20 transition-all"
+                                    className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-rose-900/20 transition-all active:scale-95"
                                 >
-                                    Delete
+                                    Confirm Purge
                                 </button>
                                 <button 
                                     onClick={() => setShowDeleteConfirm(false)}

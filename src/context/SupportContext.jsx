@@ -2,125 +2,148 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const SupportContext = createContext();
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 export const SupportProvider = ({ children }) => {
     const [tickets, setTickets] = useState([]);
 
-    // Load tickets from localStorage on mount
-    useEffect(() => {
-        const savedTickets = localStorage.getItem('op_tickets');
-        if (savedTickets) {
-            setTickets(JSON.parse(savedTickets));
+    // 1. Fetch Tickets from Cloud
+    const refreshTickets = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/support/tickets`, { credentials: 'include' });
+            if (res.ok) {
+                const data = await res.json();
+                setTickets(data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch tickets:", err);
         }
+    };
+
+    useEffect(() => {
+        refreshTickets();
+        // Polling for new messages every 30 seconds
+        const interval = setInterval(refreshTickets, 30000);
+        return () => clearInterval(interval);
     }, []);
 
-    // Save tickets to localStorage whenever they change
-    useEffect(() => {
-        if (tickets.length >= 0) {
-            localStorage.setItem('op_tickets', JSON.stringify(tickets));
-        }
-    }, [tickets]);
-
     // Create a new ticket
-    const createTicket = (ticketData) => {
-        const newTicket = {
-            id: Date.now() + Math.random(),
-            ...ticketData,
-            status: 'open',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            responses: []
-        };
-        
-        setTickets(prev => [newTicket, ...prev]);
-        return newTicket;
+    const createTicket = async (ticketData) => {
+        try {
+            const res = await fetch(`${API_BASE}/api/support/tickets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ticketData),
+                credentials: 'include'
+            });
+            if (res.ok) {
+                await refreshTickets();
+                return true;
+            }
+        } catch (err) {
+            console.error("Failed to create ticket:", err);
+        }
+        return false;
     };
 
-    // Get tickets for a specific user
+    // Get tickets for a specific user (Already filtered by API for non-admins)
     const getUserTickets = (userEmail) => {
-        return tickets.filter(ticket => ticket.userEmail === userEmail);
+        return tickets;
     };
 
-    // Get all tickets (admin only)
+    // Get all tickets (Already handled by API for admins)
     const getAllTickets = () => {
         return tickets;
     };
 
     // Update ticket status
-    const updateTicketStatus = (ticketId, newStatus) => {
-        setTickets(prev => prev.map(ticket => 
-            ticket.id === ticketId 
-                ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString() }
-                : ticket
-        ));
+    const updateTicketStatus = async (ticketId, newStatus) => {
+        try {
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+                credentials: 'include'
+            });
+            if (res.ok) refreshTickets();
+        } catch (err) {
+            console.error("Failed to update status:", err);
+        }
     };
 
     // Update ticket priority
-    const updateTicketPriority = (ticketId, newPriority) => {
-        setTickets(prev => prev.map(ticket => 
-            ticket.id === ticketId 
-                ? { ...ticket, priority: newPriority, updatedAt: new Date().toISOString() }
-                : ticket
-        ));
+    const updateTicketPriority = async (ticketId, newPriority) => {
+        try {
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ priority: newPriority }),
+                credentials: 'include'
+            });
+            if (res.ok) refreshTickets();
+        } catch (err) {
+            console.error("Failed to update priority:", err);
+        }
     };
 
     // Add admin response to ticket
-    const addResponse = (ticketId, responseText, adminName) => {
-        const response = {
-            id: Date.now() + Math.random(),
-            text: responseText,
-            adminName: adminName || 'Admin',
-            timestamp: new Date().toISOString()
-        };
-
-        setTickets(prev => prev.map(ticket => 
-            ticket.id === ticketId 
-                ? { 
-                    ...ticket, 
-                    responses: [...ticket.responses, response],
-                    updatedAt: new Date().toISOString()
-                }
-                : ticket
-        ));
+    const addResponse = async (ticketId, responseText, adminName) => {
+        try {
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: responseText }),
+                credentials: 'include'
+            });
+            if (res.ok) refreshTickets();
+        } catch (err) {
+            console.error("Failed to add response:", err);
+        }
     };
 
     // Add user response to ticket
-    const addUserResponse = (ticketId, responseText, userName) => {
-        const response = {
-            id: Date.now() + Math.random(),
-            text: responseText,
-            userName: userName || 'User',
-            timestamp: new Date().toISOString(),
-            isUser: true
-        };
-
-        setTickets(prev => prev.map(ticket => 
-            ticket.id === ticketId 
-                ? { 
-                    ...ticket, 
-                    responses: [...ticket.responses, response],
-                    updatedAt: new Date().toISOString()
-                }
-                : ticket
-        ));
+    const addUserResponse = async (ticketId, responseText, userName) => {
+        try {
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: responseText }),
+                credentials: 'include'
+            });
+            if (res.ok) {
+                await refreshTickets();
+                return true;
+            }
+        } catch (err) {
+            console.error("Failed to add response:", err);
+        }
+        return false;
     };
 
-    // Delete ticket
-    const deleteTicket = (ticketId) => {
-        setTickets(prev => prev.filter(ticket => ticket.id !== ticketId));
+    // Delete ticket (Cloud Sync)
+    const deleteTicket = async (ticketId) => {
+        try {
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            if (res.ok) {
+                await refreshTickets();
+                return true;
+            }
+        } catch (err) {
+            console.error("Failed to delete ticket:", err);
+        }
+        return false;
     };
 
-    // Get ticket statistics
     const getStats = () => {
-        const stats = {
+        return {
             total: tickets.length,
             open: tickets.filter(t => t.status === 'open').length,
-            inProgress: tickets.filter(t => t.status === 'in-progress').length,
-            resolved: tickets.filter(t => t.status === 'resolved').length,
-            closed: tickets.filter(t => t.status === 'closed').length,
-            critical: tickets.filter(t => t.priority === 'critical').length,
-            high: tickets.filter(t => t.priority === 'high').length
+            replied: tickets.filter(t => t.status === 'replied').length,
+            pending: tickets.filter(t => t.status === 'pending').length
         };
-        return stats;
     };
 
     return (

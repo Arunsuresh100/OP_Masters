@@ -17,53 +17,96 @@ export const UserProvider = ({ children }) => {
         mode: searchParams.get('auth') || 'login'
     };
 
+    // 1. Initial Load from LocalStorage (Fast)
     useEffect(() => {
         const savedUser = localStorage.getItem('op_user');
-        const savedTransactions = localStorage.getItem('op_transactions');
-        const savedWishlist = localStorage.getItem('op_wishlist');
-        const savedOwned = localStorage.getItem('op_owned_cards');
-        
         if (savedUser) {
-            const userData = JSON.parse(savedUser);
-            if (!userData.selectedAvatar) {
-                userData.selectedAvatar = 'luffy';
-            }
-            setUser(userData);
+            setUser(JSON.parse(savedUser));
         }
-        
-        if (savedTransactions) {
-            setTransactions(JSON.parse(savedTransactions));
-        }
-
-        if (savedWishlist) {
-            setWishlist(JSON.parse(savedWishlist));
-        }
-
-        if (savedOwned) {
-            setOwnedCards(JSON.parse(savedOwned));
-        }
-        
         setLoading(false);
     }, []);
 
-    const toggleWishlist = (cardId) => {
-        const updatedWishlist = wishlist.includes(cardId)
+    // Helper: Global Auth Response Guard
+    const guardAuth = (res) => {
+        if (res.status === 401) {
+            console.warn("Session invalidated. Force logout initiated.");
+            logout();
+            return false;
+        }
+        return res.ok;
+    };
+
+    // 2. Fetch Fresh Data from Cloud when user is logged in
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchCloudData = async () => {
+            try {
+                const [vaultRes, wishlistRes] = await Promise.all([
+                    fetch(`${import.meta.env.VITE_API_URL}/api/user/vault`, { credentials: 'include' }),
+                    fetch(`${import.meta.env.VITE_API_URL}/api/user/wishlist`, { credentials: 'include' })
+                ]);
+
+                if (!guardAuth(vaultRes) || !guardAuth(wishlistRes)) return;
+
+                const vaultData = await vaultRes.json();
+                const owned = {};
+                vaultData.forEach(item => owned[item.card_id] = item.quantity);
+                setOwnedCards(owned);
+
+                const wishlistData = await wishlistRes.json();
+                setWishlist(wishlistData);
+            } catch (err) {
+                console.error("Failed to sync cloud data:", err);
+            }
+        };
+
+        fetchCloudData();
+    }, [user]);
+
+    const toggleWishlist = async (cardId) => {
+        const isRemoving = wishlist.includes(cardId);
+        const updatedWishlist = isRemoving
             ? wishlist.filter(id => id !== cardId)
             : [...wishlist, cardId];
         
         setWishlist(updatedWishlist);
-        localStorage.setItem('op_wishlist', JSON.stringify(updatedWishlist));
+
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/wishlist${isRemoving ? `/${cardId}` : ''}`, {
+                method: isRemoving ? 'DELETE' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: isRemoving ? null : JSON.stringify({ card_id: cardId }),
+                credentials: 'include'
+            });
+            guardAuth(res);
+        } catch (err) {
+            console.error("Wishlist sync error:", err);
+        }
     };
 
-    const updateOwnedCard = (cardId, quantity) => {
+    const updateOwnedCard = async (cardId, quantity) => {
         const updatedOwned = { ...ownedCards };
-        if (quantity <= 0) {
+        const isRemoving = quantity <= 0;
+
+        if (isRemoving) {
             delete updatedOwned[cardId];
         } else {
             updatedOwned[cardId] = quantity;
         }
         setOwnedCards(updatedOwned);
-        localStorage.setItem('op_owned_cards', JSON.stringify(updatedOwned));
+
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/vault${isRemoving ? `/${cardId}` : ''}`, {
+                method: isRemoving ? 'DELETE' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: isRemoving ? null : JSON.stringify({ card_id: cardId, quantity }),
+                credentials: 'include'
+            });
+            guardAuth(res);
+        } catch (err) {
+            console.error("Vault sync error:", err);
+        }
     };
 
     const toggleOwnedCard = (cardId) => {
@@ -75,14 +118,8 @@ export const UserProvider = ({ children }) => {
     };
 
     const login = (userData) => {
-        // Ensure default avatar ID for new users (not URL)
-        const userWithDefaults = {
-            ...userData,
-            selectedAvatar: userData.selectedAvatar || 'luffy',
-            joinedDate: userData.joinedDate || new Date().toISOString()
-        };
-        setUser(userWithDefaults);
-        localStorage.setItem('op_user', JSON.stringify(userWithDefaults));
+        setUser(userData);
+        localStorage.setItem('op_user', JSON.stringify(userData));
     };
 
     const logout = () => {
@@ -91,11 +128,9 @@ export const UserProvider = ({ children }) => {
         setWishlist([]);
         setOwnedCards({});
         localStorage.removeItem('op_user');
-        localStorage.removeItem('op_transactions');
         localStorage.removeItem('op_wishlist');
         localStorage.removeItem('op_owned_cards');
-        localStorage.removeItem('auth_view'); // CLEAR AUTH MEMORY
-        closeAuth(); // ENSURE MODAL CLOSES ON LOGOUT
+        closeAuth();
     };
 
     const openAuth = (mode = 'login') => setSearchParams({ auth: mode });
@@ -105,16 +140,40 @@ export const UserProvider = ({ children }) => {
         setSearchParams(newParams);
     };
 
-    const updateAvatar = (avatarId) => {
+    const updateAvatar = async (avatarId) => {
         const updatedUser = { ...user, selectedAvatar: avatarId };
         setUser(updatedUser);
         localStorage.setItem('op_user', JSON.stringify(updatedUser));
+
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ avatar_id: avatarId }),
+                credentials: 'include'
+            });
+            guardAuth(res);
+        } catch (err) {
+            console.error("Avatar sync error:", err);
+        }
     };
 
-    const updateName = (newName) => {
+    const updateName = async (newName) => {
         const updatedUser = { ...user, name: newName };
         setUser(updatedUser);
         localStorage.setItem('op_user', JSON.stringify(updatedUser));
+
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName }),
+                credentials: 'include'
+            });
+            guardAuth(res);
+        } catch (err) {
+            console.error("Name sync error:", err);
+        }
     };
 
     const addTransaction = (transaction) => {

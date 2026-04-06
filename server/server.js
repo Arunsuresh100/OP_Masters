@@ -1,3 +1,4 @@
+import { supabase } from './lib/supabase.js';
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
@@ -92,6 +93,34 @@ const JWT_SECRET = process.env.JWT_SECRET;
 if (!ADMIN_SECRET || !JWT_SECRET) {
     console.warn('⚠️ WARNING: ADMIN_SECRET or JWT_SECRET is missing in .env! Security is COMPROMISED.');
 }
+
+// --- AUTH MIDDLEWARE ---
+const authenticateToken = async (req, res, next) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ error: 'Access denied. Please log in.' });
+
+    try {
+        const verified = jwt.verify(token, JWT_SECRET);
+        
+        // --- REAL-TIME SESSION CHECK ---
+        // If user was deleted from DB, they shouldn't be allowed to proceed.
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('id', verified.id)
+            .single();
+
+        if (error || !user) {
+            res.clearCookie('auth_token');
+            return res.status(401).json({ error: 'Your session is no longer valid. Please log in again.' });
+        }
+
+        req.user = verified;
+        next();
+    } catch (err) {
+        res.status(403).json({ error: 'Invalid or expired token.' });
+    }
+};
 
 // --- EMAIL CONFIGURATION ---
 const transporter = nodemailer.createTransport({
@@ -540,11 +569,16 @@ app.post('/api/trade/transaction', (req, res) => {
 
 // --- AUTH ENDPOINTS ---
 
+// --- UPDATED LOGIN ENDPOINT ---
 app.post('/api/auth/login', async (req, res) => {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+    }
+    email = email.toLowerCase().trim();
     
     // Admin login fallback
-    if (password === ADMIN_SECRET || password === '12345') {
+    if (password === ADMIN_SECRET || password === 'Op_masters') {
         const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
         res.cookie('admin_token', token, {
             httpOnly: true,
@@ -555,15 +589,18 @@ app.post('/api/auth/login', async (req, res) => {
         return res.json({ success: true, message: 'Admin Authenticated' });
     }
 
-    // Standard User Login
-    const users = readUsers();
-    const user = users.find(u => u.email === email);
-
-    if (!user || !user.password) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
+    // Standard User Login (SUPABASE)
     try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (error || !user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid email or password' });
@@ -583,45 +620,89 @@ app.post('/api/auth/login', async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000
         });
 
-        res.json({ 
-            success: true, 
-            user: { email: user.email, name: user.name } 
-        });
+        res.json({ success: true, user: { email: user.email, name: user.name } });
     } catch (err) {
         res.status(500).json({ error: 'Login failed' });
     }
 });
 
 // --- SIGNUP ENDPOINTS ---
+// --- SIGNUP ENDPOINTS (Modified for Data Integrity) ---
 app.post('/api/auth/signup/init', async (req, res) => {
-    const { name, email, phone, password } = req.body;
+    let { name, email, phone, password, gender, dob } = req.body;
     
     if (!name || !email || !password) {
         return res.status(400).json({ error: 'Please provide all required fields' });
     }
 
-    const users = readUsers();
-    if (users.find(u => u.email === email)) {
-        return res.status(400).json({ error: 'Email already exists' });
-    }
-
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-    // Save temporary data
-    otps.set(email, { 
-        otp, 
-        userData: { name, email, phone, password }, 
-        expires 
-    });
+    // Normalization (Standardize for Security)
+    email = email.toLowerCase().trim();
+    phone = phone?.replace(/\D/g, '') || '';
 
     try {
-        await sendOTPEmail(email, otp);
-        res.json({ success: true, message: 'Verification code sent to your email' });
+        // 1. Check if Email or Phone already exists (Improved Syntax)
+        const { data: existingUser, error: checkError } = await supabase
+            .from('users')
+            .select('email, phone')
+            .or(`email.eq.${email},phone.eq.${phone}`)
+            .maybeSingle();
+
+        if (checkError) {
+            console.error('🔍 Supabase Check Error:', checkError.message);
+            throw new Error('Verification failed. Try again.');
+        }
+
+        if (existingUser) {
+            if (existingUser.email === email) return res.status(400).json({ error: 'Email already registered.' });
+            if (existingUser.phone === phone) return res.status(400).json({ error: 'Phone number already registered.' });
+        }
+
+        // 2. Hash Password and Create User immediately
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = {
+            id: 'user_' + Date.now(),
+            name,
+            email,
+            phone: phone || '',
+            password: hashedPassword,
+            gender: gender || '',
+            dob: dob || null,
+            auth_provider: 'local',
+            role: 'user'
+        };
+
+        const { error: insertError } = await supabase.from('users').insert([newUser]);
+        if (insertError) {
+            console.error('Supabase Insert Error:', insertError);
+            if (insertError.code === '23505') {
+                return res.status(400).json({ error: 'This email or phone is already registered.' });
+            }
+            throw new Error('Database insertion failed.');
+        }
+
+        // 3. Auto-Login after Signup
+        const sessionToken = jwt.sign({ 
+            id: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+            role: newUser.role
+        }, JWT_SECRET, { expiresIn: '24h' });
+
+        res.cookie('auth_token', sessionToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
+        res.json({ 
+            success: true, 
+            message: 'Account created successfully!', 
+            user: { email: newUser.email, name: newUser.name } 
+        });
     } catch (err) {
-        console.error('Email sending failed:', err);
-        res.status(500).json({ error: 'Failed to send verification email. Check server config.' });
+        console.error('Signup error:', err);
+        res.status(500).json({ error: err.message || 'Failed to create account.' });
     }
 });
 
@@ -642,36 +723,86 @@ app.post('/api/auth/signup/verify', async (req, res) => {
         return res.status(400).json({ error: 'Verification code expired' });
     }
 
-    // Finalize user creation
-    const users = readUsers();
-    const hashedPassword = await bcrypt.hash(record.userData.password, 10);
-    
-    const newUser = {
-        id: 'user_' + Date.now(),
-        name: record.userData.name,
-        email: record.userData.email,
-        phone: record.userData.phone,
-        password: hashedPassword,
-        role: 'user',
-        joinedAt: new Date().toISOString(),
-        ownedCards: {},
-        wishlist: []
-    };
+    try {
+        const hashedPassword = await bcrypt.hash(record.userData.password, 10);
+        
+        // SAVE TO SUPABASE
+        const { error } = await supabase.from('users').insert([{
+            id: 'user_' + Date.now(),
+            name: record.userData.name,
+            email: record.userData.email,
+            phone: record.userData.phone || '',
+            password: hashedPassword,
+            role: 'user'
+        }]);
 
-    users.push(newUser);
-    writeUsers(users);
-    otps.delete(email);
+        if (error) {
+            console.error('Supabase Insert Error:', error);
+            return res.status(500).json({ error: 'Database error: Could not save user.' });
+        }
 
-    res.json({ success: true, message: 'Account created successfully! You can now log in.' });
+        otps.delete(email);
+        res.json({ success: true, message: 'Account created successfully! You can now log in.' });
+    } catch (err) {
+        console.error('Signup error:', err);
+        res.status(500).json({ error: 'Failed to create account.' });
+    }
 });
 
 app.post('/api/auth/logout', (req, res) => {
     res.clearCookie('admin_token');
-    res.json({ success: true, message: 'Logged out' });
+    res.clearCookie('auth_token');
+    res.json({ success: true, message: 'Logged out successfully' });
 });
 
 app.get('/api/auth/check', authenticateAdmin, (req, res) => {
     res.json({ authenticated: true });
+});
+
+// --- ADMIN USER MANAGEMENT ---
+
+// 1. Fetch all users from Supabase for the Directory
+app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
+    try {
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('id, name, email, auth_provider, created_at, role')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        // Map to match the dashboard's expected format
+        const formatted = users.map(u => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            loginType: u.auth_provider === 'google' ? 'google' : 'email',
+            created: new Date(u.created_at).toISOString().split('T')[0],
+            active: true, // Placeholder logic for online/offline
+            lastActive: 'Active'
+        }));
+
+        res.json(formatted);
+    } catch (err) {
+        console.error('Admin Fetch Users Error:', err);
+        res.status(500).json({ error: 'Failed to fetch user directory.' });
+    }
+});
+
+// 2. Delete User permanently
+app.delete('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+        res.json({ success: true, message: 'User deleted from global registry.' });
+    } catch (err) {
+        console.error('Admin Delete User Error:', err);
+        res.status(500).json({ error: 'Failed to delete user.' });
+    }
 });
 
 app.post('/api/auth/google', async (req, res) => {
@@ -686,7 +817,6 @@ app.post('/api/auth/google', async (req, res) => {
         payload = await verifyGoogleToken(token);
     } else if (access_token) {
         try {
-            // Verify access token by fetching user info from Google
             const response = await axios.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`);
             payload = response.data;
         } catch (error) {
@@ -695,90 +825,242 @@ app.post('/api/auth/google', async (req, res) => {
         }
     }
     
-    if (!payload) {
-        return res.status(401).json({ error: 'Invalid Google Credentials' });
-    }
+    if (!payload.email) return res.status(401).json({ error: 'Google account missing email' });
+    const normalizedEmail = payload.email.toLowerCase().trim();
 
-    // Save User to File-Based DB
-    const users = readUsers();
-    let user = users.find(u => u.email === payload.email);
-    
-    if (!user) {
-        console.log(`[DEBUG] New User Detected: ${payload.email}. Saving to users.json...`);
-        user = {
-            id: payload.sub,
-            email: payload.email,
-            name: payload.name,
-            picture: payload.picture,
-            role: 'user',
-            joinedAt: new Date().toISOString()
-        };
-        users.push(user);
-        writeUsers(users);
-        console.log(`[DEBUG] User Saved. Total Users: ${users.length}`);
-    } else {
-        console.log(`[DEBUG] Existing User Logged In: ${payload.email}`);
-    }
+    try {
+        // 1. Check if Google user exists (Normalized Email)
+        let { data: user, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', normalizedEmail)
+            .maybeSingle();
 
-    // Create session (JWT)
-    const sessionToken = jwt.sign({ 
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        picture: user.picture,
-        role: user.role
-    }, JWT_SECRET, { expiresIn: '24h' });
+        if (fetchError) {
+            console.error('Database Fetch Error:', fetchError);
+            throw fetchError;
+        }
 
-    // Set HttpOnly Cookie
-    res.cookie('auth_token', sessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    });
+        if (!user) {
+            // 2. Create New Google User in Database
+            const newUser = {
+                id: payload.sub || 'g_' + Date.now(),
+                email: payload.email,
+                name: payload.name,
+                role: 'user',
+                auth_provider: 'google',
+                joined_at: new Date().toISOString()
+            };
+            const { error: insertError } = await supabase.from('users').insert([newUser]);
+            if (insertError) {
+                console.error('Supabase Insert Error (Google):', insertError);
+                throw insertError;
+            }
+            user = newUser; // Set user for JWT
+            console.log(`[DEBUG] New Google User saved to Database: ${payload.email}`);
+        } else {
+            console.log(`[DEBUG] Existing Google User Logged In: ${payload.email}`);
+        }
 
-    res.json({ 
-        success: true, 
-        user: {
+        // 3. Create session (JWT)
+        const sessionToken = jwt.sign({ 
             id: user.id,
             email: user.email,
             name: user.name,
-            picture: user.picture
-        }
-    });
+            role: user.role
+        }, JWT_SECRET, { expiresIn: '24h' });
+
+        res.cookie('auth_token', sessionToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
+        res.json({ 
+            success: true, 
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name
+            }
+        });
+    } catch (err) {
+        console.error('Google Auth Error:', err);
+        res.status(500).json({ error: 'Google Login failed.' });
+    }
+});
+
+// --- PROFILE & DASHBOARD ENDPOINTS ---
+
+// 1. Update Profile (Name/Avatar)
+app.patch('/api/users/profile', authenticateToken, async (req, res) => {
+    const { name, avatar_id } = req.body;
+    const userId = req.user.id;
+
+    try {
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (avatar_id) updateData.avatar_id = avatar_id;
+
+        const { data, error } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('id', userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ success: true, user: data });
+    } catch (err) {
+        console.error('Profile update error:', err);
+        res.status(500).json({ error: 'Failed to update profile.' });
+    }
+});
+
+// 2. Vault (Inventory) Endpoints
+app.get('/api/user/vault', authenticateToken, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('user_inventory')
+            .select('card_id, quantity')
+            .eq('user_id', req.user.id);
+        
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        console.error('Vault fetch error:', err);
+        res.status(500).json({ error: 'Failed to fetch vault.' });
+    }
+});
+
+app.post('/api/user/vault', authenticateToken, async (req, res) => {
+    const { card_id, quantity } = req.body;
+    try {
+        const { error } = await supabase
+            .from('user_inventory')
+            .upsert({ user_id: req.user.id, card_id, quantity }, { onConflict: 'user_id,card_id' });
+        
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Vault update error:', err);
+        res.status(500).json({ error: 'Failed to update vault.' });
+    }
+});
+
+app.delete('/api/user/vault/:card_id', authenticateToken, async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('user_inventory')
+            .delete()
+            .eq('user_id', req.user.id)
+            .eq('card_id', req.params.card_id);
+        
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Vault delete error:', err);
+        res.status(500).json({ error: 'Failed to remove from vault.' });
+    }
+});
+
+// 3. Wishlist Endpoints
+app.get('/api/user/wishlist', authenticateToken, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('user_wishlist')
+            .select('card_id')
+            .eq('user_id', req.user.id);
+        
+        if (error) throw error;
+        res.json(data.map(item => item.card_id));
+    } catch (err) {
+        console.error('Wishlist fetch error:', err);
+        res.status(500).json({ error: 'Failed to fetch wishlist.' });
+    }
+});
+
+app.post('/api/user/wishlist', authenticateToken, async (req, res) => {
+    const { card_id } = req.body;
+    try {
+        const { error } = await supabase
+            .from('user_wishlist')
+            .insert([{ user_id: req.user.id, card_id }]);
+        
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Wishlist update error:', err);
+        res.status(500).json({ error: 'Failed to add to wishlist.' });
+    }
+});
+
+app.delete('/api/user/wishlist/:card_id', authenticateToken, async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('user_wishlist')
+            .delete()
+            .eq('user_id', req.user.id)
+            .eq('card_id', req.params.card_id);
+        
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Wishlist delete error:', err);
+        res.status(500).json({ error: 'Failed to remove from wishlist.' });
+    }
 });
 
 // --- USERS ENDPOINT ---
-app.get('/api/users', authenticateAdmin, (req, res) => {
-    const users = readUsers();
-    // Sort by joinedAt desc
-    const sortedUsers = users.sort((a, b) => new Date(b.joinedAt) - new Date(a.joinedAt));
-    res.json({ users: sortedUsers });
+app.get('/api/users', authenticateAdmin, async (req, res) => {
+    try {
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('*')
+            .order('joined_at', { ascending: false });
+
+        if (error) throw error;
+        res.json({ users });
+    } catch (err) {
+        console.error('Error fetching users:', err);
+        res.status(500).json({ error: 'Failed to fetch users.' });
+    }
 });
 
 // --- STATS ENDPOINT ---
-app.get('/api/stats', authenticateAdmin, (req, res) => {
-    const users = readUsers();
-    const transactions = readTransactions();
-    const cards = readCards();
+app.get('/api/stats', authenticateAdmin, async (req, res) => {
+    try {
+        // 1. Fetch Totals from Supabase
+        const { count: userCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
+        const { count: cardCount } = await supabase.from('cards').select('*', { count: 'exact', head: true });
+        const { data: transactions } = await supabase.from('transactions').select('*').limit(5).order('timestamp', { ascending: false });
 
-    // Calculate Stats
-    const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-    const activeListings = cards.length; // Simplified for now
-    
-    // Calculate Growth (Mock logic based on real data)
-    const usersLastMonth = users.filter(u => new Date(u.joinedAt) > new Date(Date.now() - 30*24*60*60*1000)).length;
-    const userGrowth = users.length > 0 ? ((usersLastMonth / users.length) * 100).toFixed(1) : 0;
+        // Calculate Revenue (if amount exists in transactions)
+        const totalRevenue = 0; // Update this logic if you add 'amount' to transactions
+        
+        // Calculate Growth (Last 30 days)
+        const thirtyDaysAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+        const { count: usersLastMonth } = await supabase
+            .from('users')
+            .select('*', { count: 'exact', head: true })
+            .gt('joined_at', thirtyDaysAgo);
 
-    res.json({
-        totalUsers: users.length,
-        totalRevenue,
-        activeListings,
-        userGrowth,
-        revenueGrowth: 0, // Need transaction dates for this
-        listingsGrowth: 0,
-        recentActivity: transactions.slice(-5).reverse() // Last 5 transactions
-    });
+        const userGrowth = userCount > 0 ? ((usersLastMonth / userCount) * 100).toFixed(1) : 0;
+
+        res.json({
+            totalUsers: userCount || 0,
+            totalRevenue,
+            activeListings: cardCount || 0,
+            userGrowth,
+            revenueGrowth: 0,
+            listingsGrowth: 0,
+            recentActivity: transactions || []
+        });
+    } catch (err) {
+        console.error('Stats Error:', err);
+        res.status(500).json({ error: 'Failed to fetch stats.' });
+    }
 });
 
 // Endpoint to get all cards
@@ -930,6 +1212,165 @@ setInterval(() => {
         console.log(`[SYNC] ${stdout.trim()}`);
     });
 }, 3 * 24 * 60 * 60 * 1000); 
+
+// --- SUPPORT TICKETING ENDPOINTS ---
+
+// 1. Fetch Tickets (User gets their own, Admin gets all)
+app.get('/api/support/tickets', authenticateToken, async (req, res) => {
+    try {
+        let query = supabase.from('support_tickets').select('*, support_messages(*)').order('updated_at', { ascending: false });
+        
+        // If not admin, filter by user_id
+        if (req.user.role !== 'admin') {
+            query = query.eq('user_id', req.user.id);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        // Map to match the frontend expectations
+        const formatted = data.map(ticket => ({
+            id: ticket.id,
+            subject: ticket.subject,
+            message: ticket.support_messages?.[0]?.message || '', // Initial message from thread
+            status: ticket.status,
+            priority: ticket.priority,
+            createdAt: ticket.created_at,
+            updatedAt: ticket.updated_at,
+            responses: (ticket.support_messages || []).map(m => ({
+                id: m.id,
+                text: m.message,
+                adminName: m.is_admin ? 'Admin' : null,
+                userName: !m.is_admin ? 'User' : null,
+                timestamp: m.created_at,
+                isUser: !m.is_admin
+            }))
+        }));
+
+        res.json(formatted);
+    } catch (err) {
+        console.error('Support fetch error:', err);
+        res.status(500).json({ error: 'Failed to fetch tickets.' });
+    }
+});
+
+// 2. Create Ticket
+app.post('/api/support/tickets', authenticateToken, async (req, res) => {
+    let { subject, message, priority } = req.body;
+    
+    if (!message) {
+        return res.status(400).json({ error: 'Message is required to open a support ticket.' });
+    }
+
+    // Auto-generate subject if missing
+    if (!subject || subject.trim() === '') {
+        subject = message.length > 50 ? message.substring(0, 47) + '...' : message;
+    }
+
+    try {
+        const { data: ticket, error: tError } = await supabase
+            .from('support_tickets')
+            .insert([{ user_id: req.user.id, subject, priority: priority || 'normal' }])
+            .select()
+            .single();
+
+        if (tError) throw tError;
+
+        // Add the initial message to messages thread (Include Role Badge)
+        const { error: mError } = await supabase
+            .from('support_messages')
+            .insert([{ 
+                ticket_id: ticket.id, 
+                sender_id: req.user.id, 
+                message, 
+                is_admin: false,
+                sender_role: 'user'
+            }]);
+
+        if (mError) throw mError;
+        res.json({ success: true, ticket });
+    } catch (err) {
+        console.error('Ticket creation error:', err);
+        res.status(500).json({ error: 'Failed to create ticket.' });
+    }
+});
+
+// 3. Add Reply to Ticket
+app.post('/api/support/tickets/:id/messages', authenticateToken, async (req, res) => {
+    const { message } = req.body;
+    const ticketId = req.params.id;
+    const isAdmin = req.user.role === 'admin';
+
+    try {
+        const senderRole = isAdmin ? 'admin' : 'user';
+        const { error: mError } = await supabase
+            .from('support_messages')
+            .insert([{ 
+                ticket_id: ticketId, 
+                sender_id: req.user.id, 
+                message, 
+                is_admin: isAdmin,
+                sender_role: senderRole
+            }]);
+
+        if (mError) throw mError;
+
+        // Update ticket's updated_at timestamp
+        await supabase
+            .from('support_tickets')
+            .update({ updated_at: new Date().toISOString(), status: isAdmin ? 'replied' : 'pending' })
+            .eq('id', ticketId);
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Response error:', err);
+        res.status(500).json({ error: 'Failed to send message.' });
+    }
+});
+
+// 4. Delete Ticket (Cascade)
+app.delete('/api/support/tickets/:id', authenticateToken, async (req, res) => {
+    const ticketId = req.params.id;
+    try {
+        // First delete all messages associated with this ticket
+        const { error: mError } = await supabase
+            .from('support_messages')
+            .delete()
+            .eq('ticket_id', ticketId);
+
+        if (mError) throw mError;
+
+        // Then delete the ticket itself
+        const { error: tError } = await supabase
+            .from('support_tickets')
+            .delete()
+            .eq('id', ticketId);
+
+        if (tError) throw tError;
+
+        res.json({ success: true, message: 'Ticket purged from database.' });
+    } catch (err) {
+        console.error('Delete ticket error:', err);
+        res.status(500).json({ error: 'Failed to delete ticket.' });
+    }
+});
+
+// 4. Update Ticket (Admin Only)
+app.patch('/api/support/tickets/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only.' });
+    const { status, priority } = req.body;
+    try {
+        const { error } = await supabase
+            .from('support_tickets')
+            .update({ status, priority, updated_at: new Date().toISOString() })
+            .eq('id', req.params.id);
+        
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update ticket.' });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} with Secure CORS`);

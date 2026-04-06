@@ -44,7 +44,8 @@ const mockUsers = [
 ];
 
 const AdminDashboard = ({ activeTab = 'dashboard' }) => {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [userLoginFilter, setUserLoginFilter] = useState('all');
   const [userStatusFilter, setUserStatusFilter] = useState('all');
   const [showDeleteModal, setShowDeleteModal] = useState(null);
@@ -74,9 +75,44 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
                           (userStatusFilter === 'offline' && !user.active);
     return matchesLogin && matchesStatus;
   });
+  
+  // 1. Fetch Real Users from Cloud
+  const refreshUsers = async () => {
+    if (activeTab !== 'users') return;
+    setLoadingUsers(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
-  const confirmDelete = () => {
-    setUsers(users.filter(u => u.id !== showDeleteModal));
+  useEffect(() => {
+    refreshUsers();
+  }, [activeTab]);
+
+  const confirmDelete = async () => {
+    if (!showDeleteModal) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users/${showDeleteModal}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        setUsers(users.filter(u => u.id !== showDeleteModal));
+        setFormStatus({ type: 'success', message: 'Target account successfully purged from registry.' });
+      } else {
+        setFormStatus({ type: 'error', message: 'Purge failed. Access restricted.' });
+      }
+    } catch (err) {
+        setFormStatus({ type: 'error', message: 'Network interruption during purge.' });
+    }
     setShowDeleteModal(null);
   };
 
