@@ -161,8 +161,8 @@ const Navbar = ({
                                         );
                                     })()}
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-white font-bold truncate">{user.displayName}</p>
-                                        <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                                        <p className="text-white font-black truncate text-sm">{user.name || user.displayName || 'Collector Protocol'}</p>
+                                        <p className="text-[10px] text-slate-500 font-bold truncate tracking-widest mt-0.5 lowercase">{user.email?.toLowerCase()}</p>
                                     </div>
                                 </div>
                             </div>

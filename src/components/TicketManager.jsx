@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   MessageSquare, 
   Trash2, 
@@ -15,7 +15,12 @@ const TicketManager = () => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [reportFilter, setReportFilter] = useState('all');
   const [replyText, setReplyText] = useState('');
+  const messagesEndRef = useRef(null);
   const stats = getStats();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // Design Tokens
   const theme = {
@@ -23,19 +28,30 @@ const TicketManager = () => {
     input: 'w-full bg-[#1e293b] border border-white/10 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-orange-500 transition-all text-sm outline-none',
   };
 
-  const filteredMessages = tickets.filter(msg => 
-    reportFilter === 'all' || msg.status === reportFilter
-  );
+  const filteredMessages = [...tickets]
+    .filter(msg => reportFilter === 'all' || msg.status === reportFilter)
+    .sort((a, b) => {
+        const priority = { 'pending': 1, 'open': 1, 'replied': 2, 'closed': 3 };
+        return (priority[a.status] || 4) - (priority[b.status] || 4);
+    });
 
   const handleSendMessage = async () => {
     if (!selectedMessage || !replyText.trim()) return;
-    await addResponse(selectedMessage.id, replyText, 'Admin');
-    setReplyText('');
-    
-    // Refresh selected message to show the new reply
-    const updated = tickets.find(t => t.id === selectedMessage.id);
-    if (updated) setSelectedMessage(updated);
+    const tId = selectedMessage.id;
+    setReplyText(''); // Fast clear
+    await addResponse(tId, replyText, 'Admin');
   };
+
+  // Sync selected message with ticket array from context whenever it changes
+  useEffect(() => {
+    if (selectedMessage) {
+      const latest = tickets.find(t => t.id === selectedMessage.id);
+      if (latest) {
+          setSelectedMessage(latest);
+          setTimeout(scrollToBottom, 50);
+      }
+    }
+  }, [tickets]);
 
   const handleDelete = (e, id) => {
     e.stopPropagation();
@@ -50,11 +66,11 @@ const TicketManager = () => {
       <div className={theme.card + " lg:col-span-1 flex flex-col overflow-hidden shadow-2xl"}>
         <div className="p-5 border-b border-white/5 bg-white/[0.03] flex items-center justify-between">
           <div>
-            <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">Support Queue</h5>
-            <p className="text-[8px] text-slate-500 font-bold uppercase mt-0.5">{stats.open} Open • {stats.pending} Pending</p>
+            <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Support Hub Hub</h5>
+            <p className="text-[8px] text-slate-500 font-bold uppercase mt-0.5">{stats.total} Total • {stats.pending} Pending</p>
           </div>
           <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
-            {['all', 'open', 'replied'].map(status => (
+            {['all', 'pending', 'replied'].map(status => (
               <button 
                 key={status}
                 onClick={() => setReportFilter(status)}
@@ -79,7 +95,7 @@ const TicketManager = () => {
                   <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tight mt-0.5 italic opacity-60">ID: #{m.id.toString().slice(-4)}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                   {m.status === 'replied' ? (
+                   {m.status === 'replied' || selectedMessage?.id === m.id ? (
                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                    ) : (
                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
@@ -100,7 +116,7 @@ const TicketManager = () => {
               <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
                 <Clock className="w-6 h-6 text-slate-700" />
               </div>
-              <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No Active Reports</p>
+              <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No Active Transmission</p>
             </div>
           )}
         </div>
@@ -132,32 +148,59 @@ const TicketManager = () => {
                   <X className="w-5 h-5" />
               </button>
             </div>
-
             <div className="flex-1 p-8 space-y-6 overflow-y-auto no-scrollbar bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
                 
-                {/* User's Original Message */}
-                <div className="flex flex-col gap-2">
-                   <div className="bg-slate-900 border border-white/5 p-5 rounded-2xl rounded-tl-none max-w-[85%] shadow-xl">
-                      <p className="text-[13px] text-slate-200 leading-relaxed font-medium">
-                        {selectedMessage.message || selectedMessage.responses?.[0]?.text}
-                      </p>
-                   </div>
-                   <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest ml-1">Transmitted • {new Date(selectedMessage.createdAt).toLocaleTimeString()}</span>
-                </div>
+                {/* 1. Ticket Thread (Reactive Alignment & Width) */}
+                <div className="space-y-6">
+                  {selectedMessage.responses && selectedMessage.responses.length > 0 ? (
+                    selectedMessage.responses.map((resp, i) => (
+                      <div key={i} className={`flex flex-col gap-1.5 ${resp.isUser ? 'items-start' : 'items-end'}`}>
+                        {/* IDENTIFICATION LABEL */}
+                        <div className={`flex items-center gap-2 px-1 mb-0.5 ${resp.isUser ? 'flex-row' : 'flex-row-reverse'}`}>
+                           <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
+                             resp.isUser 
+                               ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
+                               : 'bg-orange-500/10 text-orange-500 border border-orange-500/20'
+                           }`}>
+                             {resp.isUser ? 'USER' : 'ADMIN'}
+                           </span>
+                           <span className="text-[7px] font-bold text-slate-600 uppercase tracking-tight italic">
+                             {new Date(resp.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                           </span>
+                        </div>
 
-                {/* Conversation Thread */}
-                {selectedMessage.responses?.slice(1).map((resp, i) => (
-                  <div key={i} className={`flex flex-col gap-2 ${resp.isUser ? '' : 'items-end'}`}>
-                    <div className={`p-5 rounded-2xl max-w-[85%] shadow-xl border ${resp.isUser ? 'bg-slate-900 border-white/5 rounded-tl-none' : 'bg-orange-600/10 border-orange-500/20 rounded-tr-none'}`}>
-                      <p className={`text-[13px] leading-relaxed font-medium ${resp.isUser ? 'text-slate-200' : 'text-orange-100'}`}>
-                        {resp.text}
-                      </p>
+                        {/* MESSAGE BUBBLE */}
+                        <div className={`p-4 rounded-2xl max-w-[85%] w-fit shadow-2xl border transition-all hover:scale-[1.01] ${
+                          resp.isUser 
+                            ? 'bg-[#1e293b] border-white/5 rounded-tl-none text-slate-200' 
+                            : 'bg-orange-600 border-orange-400 rounded-tr-none text-white'
+                        }`}>
+                          <p className="text-[12.5px] leading-relaxed font-semibold">
+                            {resp.text}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    /* Fallback to original message if no responses array present */
+                    <div className="flex flex-col gap-1.5 items-start">
+                       <div className="flex items-center gap-2 px-1 mb-0.5">
+                           <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded">
+                             USER
+                           </span>
+                           <span className="text-[7px] font-bold text-slate-600 uppercase tracking-tight italic">
+                             {new Date(selectedMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                           </span>
+                       </div>
+                       <div className="bg-[#1e293b] border border-white/5 p-4 rounded-2xl rounded-tl-none max-w-[85%] w-fit shadow-2xl">
+                          <p className="text-[12.5px] text-slate-200 leading-relaxed font-semibold">
+                            {selectedMessage.message}
+                          </p>
+                       </div>
                     </div>
-                    <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-1">
-                      {resp.isUser ? 'User' : 'Admin Response'} • {new Date(resp.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                ))}
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
             </div>
 
             <div className="p-8 border-t border-white/5 bg-black/40">
@@ -166,7 +209,7 @@ const TicketManager = () => {
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="Input command response for user..." 
-                    className={theme.input + " pr-16 min-h-[120px] bg-[#020618] border-white/5 focus:border-orange-500/50 resize-none p-5 text-sm font-medium"}
+                    className={theme.input + " pr-16 min-h-[60px] bg-[#020618] border-white/5 focus:border-orange-500/50 resize-none p-4 text-sm font-medium leading-tight"}
                   ></textarea>
                   <button 
                     onClick={handleSendMessage}

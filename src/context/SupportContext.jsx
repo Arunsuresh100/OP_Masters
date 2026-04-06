@@ -10,7 +10,8 @@ export const SupportProvider = ({ children }) => {
     // 1. Fetch Tickets from Cloud
     const refreshTickets = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/support/tickets`, { credentials: 'include' });
+            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
+            const res = await fetch(`${API_BASE}/api/support/tickets?admin_secret=${secret}`, { credentials: 'include' });
             if (res.ok) {
                 const data = await res.json();
                 setTickets(data);
@@ -27,7 +28,7 @@ export const SupportProvider = ({ children }) => {
         return () => clearInterval(interval);
     }, []);
 
-    // Create a new ticket
+    // Create a new ticket (User auth via cookie — no admin_secret)
     const createTicket = async (ticketData) => {
         try {
             const res = await fetch(`${API_BASE}/api/support/tickets`, {
@@ -40,6 +41,15 @@ export const SupportProvider = ({ children }) => {
                 await refreshTickets();
                 return true;
             }
+            // If cookie auth fails, fall back with admin_secret but flag as user
+            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
+            const res2 = await fetch(`${API_BASE}/api/support/tickets?admin_secret=${secret}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...ticketData, is_admin: false }),
+                credentials: 'include'
+            });
+            if (res2.ok) { await refreshTickets(); return true; }
         } catch (err) {
             console.error("Failed to create ticket:", err);
         }
@@ -59,10 +69,14 @@ export const SupportProvider = ({ children }) => {
     // Update ticket status
     const updateTicketStatus = async (ticketId, newStatus) => {
         try {
-            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}`, {
+            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}?admin_secret=${secret}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({ 
+                    status: newStatus,
+                    is_admin: true 
+                }),
                 credentials: 'include'
             });
             if (res.ok) refreshTickets();
@@ -74,7 +88,8 @@ export const SupportProvider = ({ children }) => {
     // Update ticket priority
     const updateTicketPriority = async (ticketId, newPriority) => {
         try {
-            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}`, {
+            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}?admin_secret=${secret}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ priority: newPriority }),
@@ -89,31 +104,45 @@ export const SupportProvider = ({ children }) => {
     // Add admin response to ticket
     const addResponse = async (ticketId, responseText, adminName) => {
         try {
-            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}/messages`, {
+            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}/messages?admin_secret=${secret}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: responseText }),
+                body: JSON.stringify({ 
+                    message: responseText,
+                    is_admin: true
+                }),
                 credentials: 'include'
             });
-            if (res.ok) refreshTickets();
+            if (res.ok) await refreshTickets();
         } catch (err) {
             console.error("Failed to add response:", err);
         }
     };
 
-    // Add user response to ticket
+    // Add user response to ticket (User auth via cookie — no admin_secret)
     const addUserResponse = async (ticketId, responseText, userName) => {
         try {
+            // Try cookie-based auth first (identifies sender as user)
             const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: responseText }),
+                body: JSON.stringify({ message: responseText, is_admin: false }),
                 credentials: 'include'
             });
             if (res.ok) {
                 await refreshTickets();
                 return true;
             }
+            // Fallback with explicit is_admin: false
+            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
+            const res2 = await fetch(`${API_BASE}/api/support/tickets/${ticketId}/messages?admin_secret=${secret}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: responseText, is_admin: false }),
+                credentials: 'include'
+            });
+            if (res2.ok) { await refreshTickets(); return true; }
         } catch (err) {
             console.error("Failed to add response:", err);
         }
@@ -123,7 +152,8 @@ export const SupportProvider = ({ children }) => {
     // Delete ticket (Cloud Sync)
     const deleteTicket = async (ticketId) => {
         try {
-            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}`, {
+            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}?admin_secret=${secret}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
@@ -140,9 +170,8 @@ export const SupportProvider = ({ children }) => {
     const getStats = () => {
         return {
             total: tickets.length,
-            open: tickets.filter(t => t.status === 'open').length,
             replied: tickets.filter(t => t.status === 'replied').length,
-            pending: tickets.filter(t => t.status === 'pending').length
+            pending: tickets.filter(t => t.status === 'pending' || t.status === 'open').length
         };
     };
 

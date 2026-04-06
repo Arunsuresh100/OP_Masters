@@ -70,6 +70,8 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
 
   const getCardImageUrl = (url) => {
     if (!url) return '';
+    // If it's a direct upload (base64) or a blob, return it directly
+    if (url.startsWith('data:') || url.startsWith('blob:')) return url;
     return `${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
   };
 
@@ -99,7 +101,8 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
     fetch(`${import.meta.env.VITE_API_URL}/api/cards`)
       .then(res => res.json())
       .then(data => {
-        setCards(data);
+        const sortedData = Array.isArray(data) ? data : [];
+        setCards(sortedData);
         setLoading(false);
       })
       .catch(err => {
@@ -107,6 +110,39 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
         setLoading(false);
       });
   }, []);
+
+  // Dynamically derive SETS from the card library (Smart Filter)
+  const dynamicSets = React.useMemo(() => {
+    const baseSets = [...SETS];
+    
+    // Extract unique set names from the unified registry
+    const uniqueSetsInLibrary = [...new Set(cards.map(c => c?.set?.trim() || '').filter(Boolean))];
+    
+    uniqueSetsInLibrary.forEach(s => {
+      const sUpper = s.toUpperCase();
+      // 1. Check if it's already in the official list (exact match)
+      const existing = baseSets.find(bs => bs.id.toUpperCase() === sUpper);
+      
+      // 2. NEW GROUPING LOGIC: 
+      // Skip if it's an ST-XX set (we'll group these under the main 'ST' filter)
+      // Skip if it's 'OTHERS' (we'll group under main 'Other' filter)
+      const isSTSubSet = sUpper.startsWith('ST');
+      // Fix: Don't accidentally skip creating an entry if it's uniquely named 'others'
+      const isOtherSync = sUpper === 'OTHERS' || sUpper === 'OTHER';
+      
+      // 3. Add as a clean, single option ONLY if it's truly a new custom collection
+      if (!existing && !isSTSubSet && !isOtherSync) {
+        baseSets.push({ id: s, name: s.toUpperCase() });
+      }
+    });
+
+    // 3. Sort alphabetically (keeping 'ALL' at the top)
+    return baseSets.sort((a, b) => {
+      if (a.id === 'all') return -1;
+      if (b.id === 'all') return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [cards, SETS]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -117,12 +153,12 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
     const dropdownRef = React.useRef(null);
     const inputRef = React.useRef(null);
 
-    const filteredOptions = SETS.filter(opt => 
-      opt.name.toLowerCase().includes(filterQuery.toLowerCase()) || 
-      opt.id.toLowerCase().includes(filterQuery.toLowerCase())
+    const filteredOptions = dynamicSets.filter(opt => 
+      (opt?.name || '').toLowerCase().includes(filterQuery.toLowerCase()) || 
+      (opt?.id || '').toLowerCase().includes(filterQuery.toLowerCase())
     );
 
-    const selectedOption = SETS.find(s => s.id === value) || SETS[0];
+    const selectedOption = dynamicSets.find(s => s.id === value) || dynamicSets[0];
 
     useEffect(() => {
       const handleClickOutside = (event) => {
@@ -229,10 +265,24 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
     const filterRarity = (selectedRarity || 'all').toUpperCase().trim();
     const matchesRarity = filterRarity === 'ALL' || cardRarity === filterRarity;
 
-    // Normalize SET for exact matching
+    // Normalize SET for intelligent matching
     const cardSet = (card.set || '').toUpperCase().trim();
     const filterSet = (selectedSet || 'all').toUpperCase().trim();
-    const matchesSet = filterSet === 'ALL' || cardSet === filterSet;
+    
+    // SMART MATCHING: 
+    // - 'ST' filter matches ST-01, ST-02 etc.
+    // - 'OTHER' filter matches 'others' manual entries
+    let matchesSet = filterSet === 'ALL';
+    if (!matchesSet) {
+      if (filterSet === 'ST') {
+        matchesSet = cardSet.startsWith('ST');
+      } else if (filterSet === 'OTHER') {
+        // Broadly match 'OTHER', 'OTHERS', and any entries containing 'OTHER' (case-insensitive)
+        matchesSet = cardSet.includes('OTHER') || cardSet === 'OTHERS';
+      } else {
+        matchesSet = cardSet === filterSet;
+      }
+    }
 
     return matchesSearch && matchesRarity && matchesSet;
   });

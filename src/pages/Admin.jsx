@@ -7,17 +7,56 @@ import {
   LayoutDashboard,
   LogOut,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import AdminDashboard from '../components/AdminDashboard';
 import TicketManager from '../components/TicketManager';
 import logoImg from '../assets/logo.jpg';
 import vegapunkImg from '../assets/Vegapunk.png';
 
+// Simple Safety Wrapper to prevent White Screen Crashes
+const SafeModule = ({ children }) => {
+  const [hasError, setHasError] = React.useState(false);
+  
+  React.useEffect(() => {
+    const handleError = (error) => {
+      console.error("Module Crash Detected:", error);
+      setHasError(true);
+    };
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="p-20 bg-red-500/5 border border-red-500/10 rounded-[2.5rem] text-center flex flex-col items-center gap-6">
+        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
+          <AlertCircle className="w-8 h-8 text-red-500" />
+        </div>
+        <div>
+          <h3 className="text-xl font-black text-white uppercase italic mb-2 tracking-widest">Module Failure</h3>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">The requested administration terminal encountered a runtime exception.</p>
+        </div>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-8 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white/10 transition-all"
+        >
+          Re-initialize System
+        </button>
+      </div>
+    );
+  }
+
+  return children;
+};
+
 const Admin = () => {
   const [password, setPassword] = useState('');
-  const [authorized, setAuthorized] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [authorized, setAuthorized] = useState(true); // Temporary bypass as requested
+  const [loading, setLoading] = useState(false); // Skip loader for now
   const [activeTab, setActiveTab] = useState('dashboard');
   const [status, setStatus] = useState({ type: '', message: '' });
 
@@ -83,15 +122,25 @@ const Admin = () => {
             <h2 className="text-2xl font-black text-white uppercase tracking-tight">Admin Terminal</h2>
             <p className="text-slate-400 text-sm">Enter credential key to access global controls.</p>
           </div>
-          <div className="space-y-4">
-            <input 
-              type="password" 
-              placeholder="Authorization Key..."
-              className="w-full bg-[#1e293b] border border-white/10 rounded-xl py-4 px-6 text-white focus:outline-none focus:border-orange-500 transition-all placeholder-slate-600"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAuth()}
-            />
+          <div className="space-y-4 relative">
+            <div className="relative group">
+              <input 
+                type={showPassword ? "text" : "password"}
+                placeholder="Authorization Key..."
+                className="w-full bg-[#1e293b] border border-white/10 rounded-xl py-4 flex-1 px-6 pr-14 text-white focus:outline-none focus:border-orange-500 transition-all placeholder-slate-600 font-mono tracking-widest"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAuth()}
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-white transition-colors"
+                title={showPassword ? "Hide Key" : "Show Key"}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
             <button 
               onClick={handleAuth}
               className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-black rounded-xl hover:shadow-lg hover:shadow-orange-600/20 transition-all uppercase tracking-wide text-sm"
@@ -131,8 +180,7 @@ const Admin = () => {
               { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
               { id: 'users', label: 'User Directory', icon: Users },
               { id: 'inventory', label: 'Card Inventory', icon: PlusCircle },
-              { id: 'news', label: 'News Center', icon: Newspaper },
-              { id: 'reports', label: 'Reports', icon: MessageSquare, badge: 1 }, // Hardcoded for demo matching user code
+              { id: 'reports', label: 'Support Hub', icon: MessageSquare }, // Removed hardcoded badge as requested
             ].map((item) => (
               <button
                 key={item.id}
@@ -188,11 +236,13 @@ const Admin = () => {
 
         {/* Content Modules */}
         <div className="space-y-6">
-           {activeTab === 'reports' ? (
-             <TicketManager />
-           ) : (
-             <AdminDashboard activeTab={activeTab} />
-           )}
+           <SafeModule>
+             {activeTab === 'reports' ? (
+               <TicketManager />
+             ) : (
+               <AdminDashboard activeTab={activeTab} />
+             )}
+           </SafeModule>
         </div>
       </main>
     </div>

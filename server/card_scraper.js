@@ -209,5 +209,8 @@ async function runSync() {
 
 // If run directly
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-    runSync();
+    runSync().catch(err => {
+        console.error('[FATAL SCRAPE ERROR]', err);
+        process.exit(1);
+    });
 }
