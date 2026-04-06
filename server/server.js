@@ -1191,14 +1191,14 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
             pending: tickets?.filter(t => ['pending', 'open'].includes(t.status)).length || 0
         };
 
-        // 3. Hourly Momentum Tracker (LAST 12 HOURS)
+        // 3. Hourly Momentum Tracker (LAST 12 HOURS - STRICT UTC)
         // Tracks both New Signups AND Support Thread Activity
         const hourlyActivity = [];
         const now = new Date();
         
         for (let i = 11; i >= 0; i--) {
             const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-            const hours = time.getHours();
+            const hours = time.getUTCHours();
             const ampm = hours >= 12 ? 'PM' : 'AM';
             const h12 = hours % 12 || 12;
             const hourStr = `${h12}${ampm}`;
@@ -1206,7 +1206,7 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
                 name: hourStr, 
                 users: 0, 
                 hour: hours, 
-                date: time.getDate() 
+                date: time.getUTCDate() 
             });
         }
 
@@ -1226,13 +1226,13 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
             .gte('created_at', startOfRange.toISOString())
             .eq('is_admin', false);
 
-        // Combine into buckets
+        // Combine into buckets using STRICT UTC
         const processStats = (list, field) => {
             if (!list) return;
             list.forEach(item => {
                 const itemDate = new Date(item[field]);
-                const itemHour = itemDate.getHours();
-                const itemDay = itemDate.getDate();
+                const itemHour = itemDate.getUTCHours();
+                const itemDay = itemDate.getUTCDate();
                 const bucket = hourlyActivity.find(h => h.hour === itemHour && h.date === itemDay);
                 if (bucket) bucket.users++;
             });
