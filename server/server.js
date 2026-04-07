@@ -681,6 +681,10 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+app.get('/api/auth/me', authenticateToken, (req, res) => {
+    res.json({ success: true, user: req.user });
+});
+
 // --- SIGNUP ENDPOINTS ---
 // --- SIGNUP ENDPOINTS (Modified for Data Integrity) ---
 app.post('/api/auth/signup/init', async (req, res) => {

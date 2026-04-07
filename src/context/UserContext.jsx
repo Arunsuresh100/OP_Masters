@@ -17,18 +17,44 @@ export const UserProvider = ({ children }) => {
         mode: searchParams.get('auth') || 'login'
     };
 
-    // 1. Initial Load from LocalStorage (Fast)
+    // 1. Initial Load & Session Verification
     useEffect(() => {
-        const savedUser = localStorage.getItem('op_user');
-        if (savedUser && savedUser !== 'undefined') {
-            try {
-                setUser(JSON.parse(savedUser));
-            } catch (err) {
-                console.warn('Invalid user data in localStorage. Clearing corrupt session.');
-                localStorage.removeItem('op_user');
+        const checkAuth = async () => {
+            const savedUser = localStorage.getItem('op_user');
+            
+            // Optimistic Load (Speed)
+            if (savedUser && savedUser !== 'undefined') {
+                try {
+                    setUser(JSON.parse(savedUser));
+                } catch (err) {
+                    localStorage.removeItem('op_user');
+                }
             }
-        }
-        setLoading(false);
+
+            // Sync with Server (Security)
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+                    credentials: 'include'
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser(data.user);
+                    localStorage.setItem('op_user', JSON.stringify(data.user));
+                } else if (res.status === 401) {
+                    // Session expired or invalid
+                    console.warn('[AUTH] Session background check failed. Logging out.');
+                    logout();
+                }
+            } catch (err) {
+                console.error('[AUTH] Background sync error:', err);
+                // If network fails, we keep the local state but the next API call will catch it
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkAuth();
     }, []);
 
     // Helper: Global Auth Response Guard

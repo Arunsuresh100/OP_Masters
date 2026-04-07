@@ -128,6 +128,8 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
 
     const handleEmailLogin = async (e) => {
         e.preventDefault();
+        setError('');
+        setSuccess('');
         setLoading(true);
         try {
             const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -155,6 +157,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
     const handleSignupInit = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
         setLoading(true);
 
         if (!signupData.gender) {
