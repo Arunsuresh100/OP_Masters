@@ -283,8 +283,8 @@ const Profile = () => {
                             {[
                                 { id: 'vault', label: 'My Vault', icon: Package },
                                 { id: 'wishlist', label: 'Wishlist', icon: Heart },
-                                { id: 'history', label: 'Support Hub', icon: History },
-                                { id: 'support', label: 'Direct Link', icon: HelpCircle },
+                                { id: 'history', label: 'view message', icon: History },
+                                { id: 'support', label: 'contact', icon: HelpCircle },
                             ].map((item) => {
                                 const hasNotification = item.id === 'history' && userTickets.some(t => t.status === 'replied');
                                 return (
@@ -495,7 +495,7 @@ const Profile = () => {
                                                if (!activeTicket) return null;
                                                return (
                                                    <>
-                                                        {/* 1. Fixed Header (shrink-0) */}
+                                                        {/* 1. Header (shrink-0) */}
                                                         <div className="p-4 md:px-8 md:py-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01] flex-shrink-0 relative z-20">
                                                             <div className="flex items-center gap-4">
                                                                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] font-black border border-[#3b82f6]/20">
@@ -524,17 +524,16 @@ const Profile = () => {
                                                             </div>
                                                         </div>
 
-                                                        {/* 2. Scrollable History (flex-1) */}
+                                                        {/* 2. Scrollable History (flex-1) - Added Padding Bottom for Absolute Footer */}
                                                         <div 
                                                             ref={chatViewportRef}
-                                                            className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 space-y-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"
+                                                            className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 pb-32 md:pb-36 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"
                                                         >
                                                              <div className="space-y-6">
                                                                  {activeTicket.responses && activeTicket.responses.length > 0 ? (
                                                                      activeTicket.responses.map((reply, rid) => (
                                                                          <div key={reply.id || rid} className={`flex ${reply.isUser ? 'justify-end' : 'justify-start'}`}>
                                                                              <div className={`flex flex-col ${reply.isUser ? 'items-end' : 'items-start'} gap-1.5 max-w-[85%] w-fit`}>
-                                                                                 {/* IDENTIFICATION LABEL */}
                                                                                  <div className={`flex items-center gap-2 px-1 mb-0.5 ${reply.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
                                                                                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
                                                                                          reply.isUser 
@@ -566,8 +565,8 @@ const Profile = () => {
                                                              </div>
                                                         </div>
 
-                                                        {/* 3. Fixed Floor Input (shrink-0) */}
-                                                        <div className="p-4 md:p-6 bg-[#0d1425] border-t border-white/10 flex-shrink-0 relative z-20">
+                                                        {/* 3. Pinned Input Bar (Absolute) */}
+                                                        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-[#0a0f1d] border-t border-white/10 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
                                                              {userErrorMessage && (
                                                                  <div className="absolute -top-12 left-4 right-4 z-50 animate-in slide-in-from-bottom-2 fade-in duration-300">
                                                                      <div className="bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-3">
