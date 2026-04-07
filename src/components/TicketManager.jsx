@@ -53,7 +53,8 @@ const TicketManager = () => {
         return (priority[a.status] || 4) - (priority[b.status] || 4);
     });
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (e) => {
+    if (e) e.preventDefault();
     if (!selectedMessage || !replyText.trim()) return;
     const tId = selectedMessage.id;
     setReplyText(''); // Fast clear
@@ -261,7 +262,7 @@ const TicketManager = () => {
               </div>
 
               <div className="p-4 md:p-8 border-t border-white/5 bg-black/40 pb-[env(safe-area-inset-bottom)]">
-                 <div className="relative group">
+                 <form onSubmit={handleSendMessage} className="relative group">
                     <textarea 
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
@@ -269,13 +270,13 @@ const TicketManager = () => {
                       className={theme.input + " pr-14 md:pr-16 min-h-[50px] md:min-h-[60px] bg-[#020618] border-white/5 focus:border-orange-500/50 resize-none p-3 md:p-4 text-xs md:text-sm font-medium leading-tight"}
                     ></textarea>
                     <button 
-                      onClick={handleSendMessage}
+                      type="submit"
                       disabled={!replyText.trim()}
                       className="absolute bottom-3 right-3 md:bottom-4 md:right-4 p-2.5 md:p-3 bg-orange-600 text-white rounded-xl hover:bg-orange-500 transition-all shadow-xl shadow-orange-900/40 disabled:opacity-20 disabled:grayscale group"
                     >
                        <Send className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     </button>
-                 </div>
+                 </form>
                  <div className="flex items-center justify-center gap-4 mt-3 md:mt-4 opacity-10 md:opacity-30">
                     <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/10" />
                     <p className="text-[7px] md:text-[8px] font-black text-slate-500 uppercase tracking-[0.4em]">SECURE ADM LINK</p>

@@ -597,10 +597,6 @@ const Profile = () => {
                                                                 />
                                                                 <button 
                                                                    type="submit"
-                                                                   onClick={() => {
-                                                                       // Fallback for mobile browser submit issues
-                                                                       if (replyText.trim()) document.getElementById('support-response-form')?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                                                                   }}
                                                                    disabled={!replyText.trim()}
                                                                    className="p-4 bg-[#3b82f6] text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20 z-10"
                                                                 >
