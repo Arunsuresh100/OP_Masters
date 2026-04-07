@@ -386,8 +386,27 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
 
       {activeTab === 'dashboard' && (
         <>
-          {/* Analytics Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Mobile Stats Bar (Circular Orbs) */}
+          <div className="md:hidden flex items-center justify-between px-2 py-4 bg-[#0f172a]/30 rounded-2xl border border-white/5 mb-6 backdrop-blur-md">
+            {[
+              { label: 'Users', val: stats?.totalUsers, color: 'text-orange-500' },
+              { label: 'Cards', val: stats?.totalCards, color: 'text-amber-500' },
+              { label: 'Inbox', val: stats?.totalEnquiries, color: 'text-blue-500' },
+              { label: 'Queue', val: stats?.pendingReplies, color: 'text-red-500' }
+            ].map((s, i) => (
+              <div key={i} className="flex flex-col items-center gap-1.5 flex-1">
+                <div className="w-11 h-11 rounded-full border border-white/10 bg-slate-900/50 flex flex-col items-center justify-center shadow-lg group active:scale-95 transition-all">
+                   <span className={`text-[11px] font-black ${s.color}`}>
+                     {s.val > 999 ? (s.val / 1000).toFixed(1) + 'K' : s.val || '0'}
+                   </span>
+                </div>
+                <span className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">{s.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Analytics Summary (Desktop Only) */}
+          <div className="hidden md:grid grid-cols-4 gap-6">
             <div className={theme.card + " p-6 relative overflow-hidden group"}>
               <div className="absolute inset-0 bg-gradient-to-br from-orange-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">User Community</p>
@@ -396,7 +415,7 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
               ) : (
                 <div className="flex items-baseline gap-2">
                   <h3 className="text-3xl font-black text-white">{stats?.totalUsers?.toLocaleString() || '0'}</h3>
-                  <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter italic">Members</span>
+                  <span className="text-[10px] text-orange-500 font-bold uppercase tracking-tighter italic">Members</span>
                 </div>
               )}
             </div>
@@ -450,9 +469,6 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
               <div>
                 <h4 className="text-sm font-black uppercase tracking-widest text-white italic">Daily Active Momentum</h4>
                 <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Past 12-hour interaction tracking</p>
-              </div>
-              <div className="px-3 py-1 bg-white/5 rounded border border-white/10 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Pulse Stream
               </div>
             </div>
             <div className="h-[350px] w-full">
@@ -599,9 +615,47 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
 
       {activeTab === 'users' && (
         <div className={theme.card}>
-          <div className="p-6 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="p-4 md:p-6 border-b border-white/5 space-y-4 md:space-y-0 md:flex md:flex-row md:items-center md:justify-between">
             <h4 className="font-bold uppercase tracking-wider text-sm">Member Directory</h4>
-            <div className="flex items-center gap-3">
+            
+            {/* MOBILE CONTROL BOX (Search & Filter Integration) */}
+            <div className="md:hidden space-y-3 bg-black/20 p-4 rounded-xl border border-white/5 shadow-inner">
+               <div className="relative">
+                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                 <input 
+                    type="text" 
+                    placeholder="Search UIID Registry..." 
+                    className="w-full bg-[#0d1425] border border-white/10 rounded-lg pl-9 pr-4 py-2 text-[10px] font-bold text-white focus:outline-none focus:border-orange-500/50 transition-all uppercase placeholder-slate-700" 
+                 />
+               </div>
+               <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex bg-[#0d1425] border border-white/10 rounded-lg p-1 flex-1 min-w-[120px]">
+                    {['all', 'google', 'email'].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setUserLoginFilter(type)}
+                        className={`flex-1 py-1 rounded text-[9px] font-black uppercase transition-all ${userLoginFilter === type ? 'bg-orange-600/90 text-white shadow-lg' : 'text-slate-500'}`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex bg-[#0d1425] border border-white/10 rounded-lg p-1 flex-1 min-w-[120px]">
+                    {['all', 'online', 'offline'].map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => setUserStatusFilter(status)}
+                        className={`flex-1 py-1 rounded text-[9px] font-black uppercase transition-all ${userStatusFilter === status ? 'bg-orange-600/90 text-white shadow-lg' : 'text-slate-500'}`}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+               </div>
+            </div>
+
+            {/* DESKTOP CONTROLS (Horizontal Legacy Flow) */}
+            <div className="hidden md:flex items-center gap-3">
                 <div className="flex bg-white/5 border border-white/10 rounded-lg p-1">
                   {['all', 'google', 'email'].map((type) => (
                     <button
@@ -626,7 +680,7 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
                 </div>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
-                  <input type="text" placeholder="Search UUID..." className="bg-white/5 border border-white/10 rounded-md pl-9 pr-4 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500" />
+                  <input type="text" placeholder="Search..." className="bg-white/5 border border-white/10 rounded-md pl-9 pr-4 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500" />
                 </div>
               </div>
             </div>
@@ -711,11 +765,13 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
 
                 <div className="mb-6 flex justify-between items-center">
                    <div>
-                     <h4 className="text-lg font-black uppercase tracking-widest text-white italic flex items-center gap-2">
-                       <PlusCircle className="w-5 h-5 text-orange-500 not-italic" /> Asset Registration
+                     <h4 className="text-sm md:text-lg font-black uppercase tracking-widest text-white italic flex items-center gap-2">
+                       <PlusCircle className="w-4 h-4 md:w-5 md:h-5 text-orange-500 not-italic" /> 
+                       <span className="md:hidden">New Asset</span>
+                       <span className="hidden md:block">Asset Registration</span>
                      </h4>
                    </div>
-                   <div className="text-[9px] font-black text-slate-500 uppercase bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                   <div className="hidden md:block text-[9px] font-black text-slate-500 uppercase bg-white/5 px-3 py-1 rounded-full border border-white/5">
                      Manual Mode
                    </div>
                 </div>
@@ -723,13 +779,13 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    {/* LEFT COLUMN: IDENTITY & IMAGE */}
                    <div className="space-y-4">
-                      {/* AUTOMATED IDENTITY: Manual cards now default to OTHERS automatically */}
-                      <div className="bg-orange-500/5 border border-orange-500/10 rounded-xl p-3 flex items-center justify-between">
-                         <div className="flex flex-col">
-                            <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none">Global Registry Type</span>
-                            <span className="text-xs font-black text-white uppercase mt-1">OTHERS – SPECIAL PRODUCTS</span>
+                      {/* AUTOMATED IDENTITY (Simplified for mobile) */}
+                      <div className="bg-orange-500/5 border border-orange-500/10 rounded-xl p-2 md:p-3 flex items-center justify-between">
+                         <div className="flex flex-col md:flex-col gap-0.5">
+                            <span className="text-[7px] md:text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none">Global Registry Type</span>
+                            <span className="text-[9px] md:text-xs font-black text-white uppercase truncate max-w-[140px] md:max-w-none">OTHERS – SPECIAL PRODUCTS</span>
                          </div>
-                         <div className="px-2 py-1 bg-white/5 rounded text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Auto-Assign</div>
+                         <div className="px-1.5 py-0.5 md:px-2 md:py-1 bg-white/5 rounded text-[7px] md:text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Auto-Assign</div>
                       </div>
 
                       <div>
@@ -793,22 +849,22 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
                          <label className={theme.label + " mb-3 text-[10px]"}>Market Valuation</label>
                          <div className="space-y-4 relative z-10">
                             <div className="relative">
-                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 font-black text-lg">$</span>
+                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 font-black text-base md:text-lg">$</span>
                                <input 
                                  type="number" 
                                  placeholder="USD"
-                                 className={theme.input + " pl-10 h-12 bg-white/5 text-xl font-black text-white"}
+                                 className={theme.input + " pl-10 h-10 md:h-12 bg-white/5 text-base md:text-xl font-black text-white"}
                                  value={cardForm.valuation || ''}
                                  onChange={(e) => setCardForm({...cardForm, valuation: e.target.value})}
                                />
                             </div>
-                            <div className="flex items-center gap-4 py-3 px-5 bg-orange-600/10 border border-orange-500/30 rounded-xl">
-                               <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-orange-600/40">
+                            <div className="flex items-center gap-3 md:gap-4 py-2 px-3 md:py-3 md:px-5 bg-orange-600/10 border border-orange-500/30 rounded-xl">
+                               <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-orange-600 flex items-center justify-center text-white text-base md:text-xl font-black shadow-lg shadow-orange-600/40">
                                  ₹
                                </div>
                                <div>
-                                  <p className="text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none">Listing Value</p>
-                                  <p className="text-xl font-black text-white tracking-tighter mt-1">
+                                  <p className="text-[7px] md:text-[9px] font-black text-orange-500 uppercase tracking-widest leading-none">Listing Value</p>
+                                  <p className="text-base md:text-xl font-black text-white tracking-tighter mt-0.5 md:mt-1">
                                      {cardForm.valuation ? (parseFloat(cardForm.valuation) * 84).toLocaleString('en-IN') : '0'}
                                   </p>
                                </div>

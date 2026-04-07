@@ -116,7 +116,30 @@ export const SupportProvider = ({ children }) => {
                 }),
                 credentials: 'include'
             });
-            if (res.ok) await refreshTickets();
+            if (res.ok) {
+                // Optimistic UI: Update locally immediately
+                setTickets(prev => prev.map(t => {
+                    if (t.id === ticketId) {
+                        const newMsg = {
+                            id: Date.now(),
+                            text: responseText,
+                            adminName: 'Admin',
+                            userName: null,
+                            timestamp: new Date().toISOString(),
+                            isUser: false
+                        };
+                        return { 
+                            ...t, 
+                            status: 'replied',
+                            responses: [...(t.responses || []), newMsg],
+                            updatedAt: new Date().toISOString()
+                        };
+                    }
+                    return t;
+                }));
+                // Silently refresh in the background to ensure consistency
+                refreshTickets();
+            }
         } catch (err) {
             console.error("Failed to add response:", err);
         }
@@ -132,7 +155,28 @@ export const SupportProvider = ({ children }) => {
                 credentials: 'include'
             });
             if (res.ok) {
-                await refreshTickets();
+                // Optimistic UI: Update locally immediately
+                setTickets(prev => prev.map(t => {
+                    if (t.id === ticketId) {
+                        const newMsg = {
+                            id: Date.now(),
+                            text: responseText,
+                            adminName: null,
+                            userName: userName || 'User',
+                            timestamp: new Date().toISOString(),
+                            isUser: true
+                        };
+                        return { 
+                            ...t, 
+                            status: 'pending',
+                            responses: [...(t.responses || []), newMsg],
+                            updatedAt: new Date().toISOString()
+                        };
+                    }
+                    return t;
+                }));
+                // Silently refresh in the background to ensure consistency
+                refreshTickets();
                 return true;
             }
         } catch (err) {

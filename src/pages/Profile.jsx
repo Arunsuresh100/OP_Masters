@@ -482,8 +482,8 @@ const Profile = () => {
                                       </div>
                                   </div>
 
-                                  {/* Main Conversation Pane - Full width on mobile/tablet if selected */}
-                                  <div className={`flex-1 flex flex-col bg-[#0b1222] ${!selectedTicketId ? 'hidden md:flex' : 'flex'}`}>
+                                  {/* Main Chat Canvas (Reactive Height for Mobile) */}
+                                  <div className={`flex-1 flex flex-col min-h-[500px] h-[75vh] md:h-[650px] relative overflow-hidden bg-[#0d1425] ${selectedTicketId ? 'flex' : 'hidden md:flex'}`}>
                                       {selectedTicketId ? (
                                           (() => {
                                               const activeTicket = userTickets.find(t => t.id === selectedTicketId);
@@ -564,8 +564,9 @@ const Profile = () => {
                                                            </div>
                                                        </div>
                                                        {/* Message Input (Repositioned to bottom) */}
-                                                       <div className="p-4 md:p-6 bg-black/20 border-t border-white/5 mt-auto">
+                                                       <div className="p-4 md:p-6 bg-black/20 border-t border-white/5 mt-auto pb-[env(safe-area-inset-bottom)]">
                                                             <form 
+                                                               id="support-response-form"
                                                                className="relative max-w-4xl mx-auto flex flex-col gap-2"
                                                                onSubmit={async (e) => {
                                                                    e.preventDefault();
@@ -596,8 +597,12 @@ const Profile = () => {
                                                                 />
                                                                 <button 
                                                                    type="submit"
+                                                                   onClick={() => {
+                                                                       // Fallback for mobile browser submit issues
+                                                                       if (replyText.trim()) document.getElementById('support-response-form')?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                                                                   }}
                                                                    disabled={!replyText.trim()}
-                                                                   className="p-4 bg-[#3b82f6] text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20"
+                                                                   className="p-4 bg-[#3b82f6] text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20 z-10"
                                                                 >
                                                                     <ArrowUpRight className="w-4 h-4 pointer-events-none" />
                                                                 </button>

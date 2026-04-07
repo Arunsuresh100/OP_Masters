@@ -169,7 +169,19 @@ const Admin = () => {
             <img src={logoImg} alt="Logo" className="w-8 h-8 rounded-full object-cover bg-black border border-white/10" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-black tracking-tight bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent uppercase">OP MASTER</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-black tracking-tight bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent uppercase">OP MASTER</span>
+              <div className="w-1 h-1 rounded-full bg-slate-800" />
+              {(() => {
+                const ActiveIcon = [
+                  { id: 'dashboard', icon: LayoutDashboard },
+                  { id: 'users', icon: Users },
+                  { id: 'inventory', icon: PlusCircle },
+                  { id: 'reports', icon: MessageSquare }
+                ].find(i => i.id === activeTab)?.icon || LayoutDashboard;
+                return <ActiveIcon className="w-3.5 h-3.5 text-orange-500/80" />;
+              })()}
+            </div>
             <span className="text-[7px] font-bold text-slate-500 uppercase tracking-[0.2em] -mt-0.5">Admin</span>
           </div>
         </div>
