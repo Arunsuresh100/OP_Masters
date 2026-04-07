@@ -488,153 +488,132 @@ const Profile = () => {
                                   </div>
 
                                   {/* Main Chat Canvas (Reactive Height for Mobile) */}
-                                  <div className={`flex-1 flex flex-col min-h-[500px] h-[75vh] md:h-[650px] relative overflow-hidden bg-[#0d1425] ${selectedTicketId ? 'flex' : 'hidden md:flex'}`}>
-                                      {selectedTicketId ? (
-                                          (() => {
-                                              const activeTicket = userTickets.find(t => String(t.id) === String(selectedTicketId));
-                                              if (!activeTicket) return null;
-                                              return (
-                                                  <>
-                                                       {/* Pane Header (Refined with Subject) */}
-                                                       <div className="p-4 md:px-8 md:py-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-                                                           <div className="flex items-center gap-4">
-                                                               <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] font-black border border-[#3b82f6]/20">
-                                                                   {user.name?.charAt(0).toUpperCase()}
-                                                               </div>
-                                                               <div className="min-w-0">
-                                                                   <h4 className="text-xs md:text-sm font-black text-white uppercase tracking-tight truncate flex items-center gap-2">
-                                                                       {activeTicket.subject || 'GENERAL INQUIRY'}
-                                                                       <span className="text-[8px] bg-white/5 px-2 py-0.5 rounded border border-white/5 text-slate-500 tracking-widest">#{activeTicket.id.toString().slice(-4)}</span>
-                                                                   </h4>
-                                                                   <p className="text-[9px] md:text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-[0.2em] opacity-60">
-                                                                       Transmitted: {new Date(activeTicket.updatedAt).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                   </p>
-                                                               </div>
-                                                           </div>
-                                                           <div className="flex items-center gap-3">
-                                                               <button 
-                                                                  onClick={() => setShowDeleteConfirm(true)} 
-                                                                  className="p-2 text-slate-700 hover:text-rose-500 transition-all hover:bg-rose-500/10 rounded-lg"
-                                                               >
-                                                                   <Trash2 className="w-4 h-4" /> 
-                                                               </button>
-                                                               <button onClick={() => setSelectedTicketId(null)} className="p-2 text-slate-700 hover:text-white transition-all hover:bg-white/5 rounded-lg">
-                                                                   <X className="w-4 h-4" /> 
-                                                               </button>
-                                                           </div>
-                                                       </div>
-
-                                                       {/* Chat Messages Feed (Corrected Scroll Wrapper) */}
-                                                       <div ref={chatViewportRef} className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 space-y-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
-                                                            <div className="space-y-6">
-                                                                {activeTicket.responses && activeTicket.responses.length > 0 ? (
-                                                                    activeTicket.responses.map((reply, rid) => (
-                                                                        <div key={reply.id || rid} className={`flex ${reply.isUser ? 'justify-end' : 'justify-start'}`}>
-                                                                            <div className={`flex flex-col ${reply.isUser ? 'items-end' : 'items-start'} gap-1.5 max-w-[85%] w-fit`}>
-                                                                                
-                                                                                {/* IDENTIFICATION LABEL */}
-                                                                                <div className={`flex items-center gap-2 px-1 mb-0.5 ${reply.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                                                                                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
-                                                                                        reply.isUser 
-                                                                                            ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
-                                                                                            : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                                                                    }`}>
-                                                                                        {reply.isUser ? 'YOU' : 'ADMIN'}
-                                                                                    </span>
-                                                                                    <span className="text-[7px] font-bold text-slate-600 uppercase tracking-tight italic opacity-60">
-                                                                                        {new Date(reply.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                                    </span>
-                                                                                </div>
-
-                                                                                {/* MESSAGE BUBBLE */}
-                                                                                <div className={`p-4 text-[12.5px] font-bold leading-relaxed shadow-2xl rounded-2xl w-fit transition-all hover:scale-[1.01] ${
-                                                                                    reply.isUser 
-                                                                                        ? 'bg-[#1e293b] text-slate-200 border border-white/5 rounded-tr-none text-right' 
-                                                                                        : 'bg-indigo-600 border border-indigo-400 rounded-tl-none text-left text-white'
-                                                                                }`}>
-                                                                                    {reply.text}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))
-                                                                ) : (
-                                                                    <div className="flex flex-col items-center justify-center py-20 opacity-30">
-                                                                        <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-6" />
-                                                                        <div className="text-[10px] sm:text-xs font-black bg-white/5 border border-white/10 p-6 rounded-3xl text-slate-400 italic tracking-[0.2em] uppercase mb-4 text-center text-balance">
-                                                                            Protocol: Syncing... Awaiting Command Feed.
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                <div ref={messagesEndRef} />
+                                   <div className={`flex-1 flex flex-col min-h-[500px] h-[75vh] md:h-[650px] relative overflow-hidden bg-[#0d1425] border border-white/5 rounded-3xl ${selectedTicketId ? 'flex' : 'hidden md:flex'}`}>
+                                       {selectedTicketId ? (
+                                           (() => {
+                                               const activeTicket = userTickets.find(t => String(t.id) === String(selectedTicketId));
+                                               if (!activeTicket) return null;
+                                               return (
+                                                   <>
+                                                        {/* 1. Fixed Header (shrink-0) */}
+                                                        <div className="p-4 md:px-8 md:py-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01] flex-shrink-0 relative z-20">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] font-black border border-[#3b82f6]/20">
+                                                                    {user.name?.charAt(0).toUpperCase()}
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <h4 className="text-xs md:text-sm font-black text-white uppercase tracking-tight truncate flex items-center gap-2">
+                                                                        {activeTicket.subject || 'GENERAL INQUIRY'}
+                                                                        <span className="text-[8px] bg-white/5 px-2 py-0.5 rounded border border-white/5 text-slate-500 tracking-widest">#{activeTicket.id.toString().slice(-4)}</span>
+                                                                    </h4>
+                                                                    <p className="text-[9px] md:text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-[0.2em] opacity-60">
+                                                                        Transmitted: {new Date(activeTicket.updatedAt).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                    </p>
+                                                                </div>
                                                             </div>
-                                                       </div>
-                                                       {/* Message Input (Repositioned to bottom) */}
-                                                       <div className="p-4 md:p-6 bg-black/20 border-t border-white/5 mt-auto pb-[env(safe-area-inset-bottom)] relative">
-                                                                                                                        {userErrorMessage && (
-                                                                <div className="absolute -top-12 left-4 right-4 z-50 animate-in slide-in-from-bottom-2 fade-in duration-300">
-                                                                    <div className="bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-3">
-                                                                        <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                                                                        <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">{userErrorMessage}</p>
-                                                                        <button onClick={() => setUserErrorMessage(null)} className="ml-auto text-slate-500 hover:text-white"><X className="w-3 h-3" /></button>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            <form id="support-response-form"
-                                                                className="relative max-w-4xl mx-auto flex flex-col gap-2"
-                                                                onSubmit={async (e) => {
-                                                                    e.preventDefault();
-                                                                    if (replyText.trim() && !isSendingUser) {
-                                                                        setIsSendingUser(true);
-                                                                        setUserErrorMessage(null);
-                                                                        try {
-                                                                            const success = await addUserResponse(activeTicket.id, replyText, user?.name || 'User');
-                                                                            if (success) {
-                                                                                setReplyText('');
-                                                                                setShowSupportSuccess(true);
-                                                                                setTimeout(() => setShowSupportSuccess(false), 2500);
-                                                                                setTimeout(scrollToBottom, 100);
-                                                                            } else {
-                                                                                setUserErrorMessage("Operational Halt: Transmission failed. Please verify your connection or session status.");
-                                                                                setTimeout(() => setUserErrorMessage(null), 5000);
-                                                                            }
-                                                                        } catch (err) {
-                                                                            setUserErrorMessage("System Error: An unexpected fault occurred during data broadcast.");
-                                                                            setTimeout(() => setUserErrorMessage(null), 5000);
-                                                                        } finally {
-                                                                            setIsSendingUser(false);
-                                                                        }
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {showSupportSuccess && (
-                                                                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
-                                                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                                                                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Message sent as <span className="text-white">{user?.name || 'User'}</span></span>
-                                                                    </div>
-                                                                )}
-                                                                <div className="flex items-center gap-3">
-                                                                <input 
-                                                                   type="text" 
-                                                                   value={replyText}
-                                                                   onChange={(e) => setReplyText(e.target.value)}
-                                                                   placeholder="Transmit data to command center..." 
-                                                                   className="flex-1 bg-[#131b2d] border border-white/5 rounded-2xl px-6 py-4 text-xs font-bold text-white placeholder-slate-700 focus:outline-none focus:border-[#3b82f6]/30 transition-all shadow-inner" 
-                                                                />
+                                                            <div className="flex items-center gap-3">
                                                                 <button 
-                                                                   type="submit"
-                                                                   disabled={!replyText.trim() || isSendingUser}
-                                                                   className="p-4 bg-[#3b82f6] text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20 z-10"
+                                                                   onClick={() => setShowDeleteConfirm(true)} 
+                                                                   className="p-2 text-slate-700 hover:text-rose-500 transition-all hover:bg-rose-500/10 rounded-lg"
                                                                 >
-                                                                    {isSendingUser ? (
-                                                                        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                                                    ) : (
-                                                                        <ArrowUpRight className="w-4 h-4 pointer-events-none" />
-                                                                    )}
+                                                                    <Trash2 className="w-4 h-4" /> 
                                                                 </button>
-                                                                </div>
-                                                            </form>
-                                                       </div>
-                                                  </>
+                                                                <button onClick={() => setSelectedTicketId(null)} className="p-2 text-slate-700 hover:text-white transition-all hover:bg-white/5 rounded-lg">
+                                                                    <X className="w-4 h-4" /> 
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 2. Scrollable History (flex-1) */}
+                                                        <div 
+                                                            ref={chatViewportRef}
+                                                            className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 space-y-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"
+                                                        >
+                                                             <div className="space-y-6">
+                                                                 {activeTicket.responses && activeTicket.responses.length > 0 ? (
+                                                                     activeTicket.responses.map((reply, rid) => (
+                                                                         <div key={reply.id || rid} className={`flex ${reply.isUser ? 'justify-end' : 'justify-start'}`}>
+                                                                             <div className={`flex flex-col ${reply.isUser ? 'items-end' : 'items-start'} gap-1.5 max-w-[85%] w-fit`}>
+                                                                                 {/* IDENTIFICATION LABEL */}
+                                                                                 <div className={`flex items-center gap-2 px-1 mb-0.5 ${reply.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                                                                                     <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
+                                                                                         reply.isUser 
+                                                                                             ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
+                                                                                             : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                                                                     }`}>
+                                                                                         {reply.isUser ? 'YOU' : 'ADMIN'}
+                                                                                     </span>
+                                                                                     <span className="text-[7px] font-bold text-slate-600 uppercase tracking-tight italic opacity-60">
+                                                                                         {new Date(reply.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                                     </span>
+                                                                                 </div>
+                                                                                 <div className={`p-4 text-[12.5px] font-bold leading-relaxed shadow-2xl rounded-2xl w-fit transition-all hover:scale-[1.01] ${
+                                                                                     reply.isUser 
+                                                                                         ? 'bg-[#1e293b] text-slate-200 border border-white/5 rounded-tr-none text-right' 
+                                                                                         : 'bg-indigo-600 border border-indigo-400 rounded-tl-none text-left text-white'
+                                                                                 }`}>
+                                                                                     {reply.text}
+                                                                                 </div>
+                                                                             </div>
+                                                                         </div>
+                                                                     ))
+                                                                 ) : (
+                                                                     <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                                                                         <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-6" />
+                                                                     </div>
+                                                                 )}
+                                                                 <div ref={messagesEndRef} />
+                                                             </div>
+                                                        </div>
+
+                                                        {/* 3. Fixed Floor Input (shrink-0) */}
+                                                        <div className="p-4 md:p-6 bg-[#0d1425] border-t border-white/10 flex-shrink-0 relative z-20">
+                                                             {userErrorMessage && (
+                                                                 <div className="absolute -top-12 left-4 right-4 z-50 animate-in slide-in-from-bottom-2 fade-in duration-300">
+                                                                     <div className="bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-3">
+                                                                         <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                                                         <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">{userErrorMessage}</p>
+                                                                         <button onClick={() => setUserErrorMessage(null)} className="ml-auto text-slate-500 hover:text-white"><X className="w-3 h-3" /></button>
+                                                                     </div>
+                                                                 </div>
+                                                             )}
+                                                             <form id="support-response-form"
+                                                                 className="relative max-w-4xl mx-auto flex items-center gap-3"
+                                                                 onSubmit={async (e) => {
+                                                                     e.preventDefault();
+                                                                     if (replyText.trim() && !isSendingUser) {
+                                                                         setIsSendingUser(true);
+                                                                         try {
+                                                                             const success = await addUserResponse(activeTicket.id, replyText, user?.name || 'User');
+                                                                             if (success) {
+                                                                                 setReplyText('');
+                                                                                 setShowSupportSuccess(true);
+                                                                                 setTimeout(() => setShowSupportSuccess(false), 2500);
+                                                                                 setTimeout(scrollToBottom, 100);
+                                                                             }
+                                                                         } finally {
+                                                                             setIsSendingUser(false);
+                                                                         }
+                                                                     }
+                                                                 }}
+                                                             >
+                                                                 <input 
+                                                                    type="text" 
+                                                                    value={replyText}
+                                                                    onChange={(e) => setReplyText(e.target.value)}
+                                                                    placeholder="Transmit followup message..." 
+                                                                    className="flex-1 bg-[#131b2d] border border-white/10 rounded-2xl px-6 py-4 text-xs font-bold text-white placeholder-slate-700 focus:outline-none focus:border-[#3b82f6]/30 transition-all shadow-inner" 
+                                                                 />
+                                                                 <button 
+                                                                    type="submit"
+                                                                    disabled={!replyText.trim() || isSendingUser}
+                                                                    className="p-4 bg-[#3b82f6] text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20 z-10"
+                                                                 >
+                                                                     <ArrowUpRight className="w-4 h-4 pointer-events-none" />
+                                                                 </button>
+                                                             </form>
+                                                        </div>
+                                                   </>
                                                );
                                            })()
                                        ) : (
