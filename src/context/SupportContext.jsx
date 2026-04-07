@@ -3,12 +3,7 @@ import { useUser } from './UserContext';
 
 const SupportContext = createContext();
 
-const API_DEFAULT = 'http://localhost:3001';
-const API_BASE = import.meta.env.VITE_API_URL || API_DEFAULT;
-
-if (import.meta.env.PROD && API_BASE === API_DEFAULT) {
-    console.warn("[PRODUCTION ALERT] VITE_API_URL is missing! Defaulting to 'localhost'. Mobile/External devices WILL fail. Set Render URL in Vercel.");
-}
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export const SupportProvider = ({ children }) => {
     const [tickets, setTickets] = useState([]);

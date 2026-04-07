@@ -13,9 +13,6 @@ import {
 import { formatPrice } from '../utils';
 import { USD_TO_INR, RARITIES } from '../constants';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-// Helper for deterministic pseudo-random values (0.8 to 1.5)
 const getDeterministicChange = (cardId, userEmail) => {
     const seed = `${cardId}-${userEmail || 'guest'}`;
     let hash = 0;
@@ -109,7 +106,7 @@ const Profile = () => {
         if (loadingCards && (activeTab === 'vault' || activeTab === 'wishlist')) {
             const fetchCards = async () => {
                 try {
-                    const response = await fetch(`${API_BASE}/api/cards`);
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
                     const data = await response.json();
                     setAllCards(data);
                 } catch (err) {
@@ -295,6 +292,8 @@ const Profile = () => {
                                     key={item.id}
                                     onClick={() => setActiveTab(item.id)}
                                     className={`flex-none md:w-full flex items-center gap-3 md:gap-4 p-3.5 px-6 md:p-4.5 md:px-6 rounded-xl md:rounded-2xl border transition-all snap-start relative ${
+                                        (item.id === 'history' || item.id === 'support') ? 'hidden md:flex' : ''
+                                    } ${
                                         activeTab === item.id 
                                             ? 'bg-white border-white text-slate-950 shadow-xl' 
                                             : 'bg-transparent border-transparent text-slate-500 hover:text-white hover:bg-white/5'
@@ -624,12 +623,12 @@ const Profile = () => {
                                                                 <button 
                                                                    type="submit"
                                                                    disabled={!replyText.trim() || isSendingUser}
-                                                                   className="p-4 bg-[#3b82f6] text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20 z-10 touch-manipulation min-w-[56px] min-h-[56px]"
+                                                                   className="p-4 bg-[#3b82f6] text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20 z-10"
                                                                 >
                                                                     {isSendingUser ? (
                                                                         <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                                                                     ) : (
-                                                                        <ArrowUpRight className="w-5 h-5 pointer-events-none" />
+                                                                        <ArrowUpRight className="w-4 h-4 pointer-events-none" />
                                                                     )}
                                                                 </button>
                                                                 </div>
