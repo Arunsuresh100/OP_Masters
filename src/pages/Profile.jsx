@@ -70,7 +70,10 @@ const Profile = () => {
     const [isEditingName, setIsEditingName] = useState(false);
     const [tempName, setTempName] = useState(user?.name || user?.username || '');
     
-    const { getUserTickets, createTicket, addUserResponse, deleteTicket, tickets: allTickets } = useSupport();
+    const { 
+        getUserTickets, createTicket, addUserResponse, refreshTickets,
+        markAsRead, deleteTicket, tickets: allTickets 
+    } = useSupport();
     const userTickets = user ? getUserTickets(user.email) : [];
     const [showSupportSuccess, setShowSupportSuccess] = useState(false);
     const [selectedTicketId, setSelectedTicketId] = useState(null);
@@ -86,24 +89,42 @@ const Profile = () => {
     useEffect(() => {
         if (selectedTicketId) {
             setTimeout(scrollToBottom, 100);
-        }
-    }, [selectedTicketId, allTickets]);
-
-    // Fetch all cards for Vault selection
-    useEffect(() => {
-        const fetchCards = async () => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
-                const data = await response.json();
-                setAllCards(data);
-            } catch (err) {
-                console.error("Error fetching cards for vault:", err);
-            } finally {
-                setLoadingCards(false);
+            
+            // Mark as read if it has a reply
+            const ticket = userTickets.find(t => t.id === selectedTicketId);
+            if (ticket && ticket.status === 'replied') {
+                markAsRead(selectedTicketId);
             }
-        };
-        fetchCards();
-    }, []);
+        }
+    }, [selectedTicketId, allTickets, userTickets]);
+
+    // Optimized Defered Fetch: Only pull all cards if user enters the Vault/Wishlist
+    useEffect(() => {
+        if (loadingCards && (activeTab === 'vault' || activeTab === 'wishlist')) {
+            const fetchCards = async () => {
+                try {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
+                    const data = await response.json();
+                    setAllCards(data);
+                } catch (err) {
+                    console.error("Error fetching cards for vault:", err);
+                } finally {
+                    setLoadingCards(false);
+                }
+            };
+            fetchCards();
+        } else if (activeTab === 'history') {
+             // If we land on history, we don't need cards immediately
+             setLoadingCards(false); 
+        }
+    }, [activeTab, loadingCards]);
+
+    // Force aggressive sync when Support Hub is opened
+    useEffect(() => {
+        if (activeTab === 'history') {
+             refreshTickets();
+        }
+    }, [activeTab]);
 
     // Portfolio Worth Calculation
     const portfolioStats = useMemo(() => {

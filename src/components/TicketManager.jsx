@@ -11,12 +11,20 @@ import {
 import { useSupport } from '../context/SupportContext';
 
 const TicketManager = () => {
-  const { tickets, getAllTickets, updateTicketStatus, addResponse, deleteTicket, getStats } = useSupport();
+  const { 
+    tickets, getAllTickets, refreshTickets, 
+    updateTicketStatus, addResponse, deleteTicket, getStats 
+  } = useSupport();
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [reportFilter, setReportFilter] = useState('all');
   const [replyText, setReplyText] = useState('');
   const messagesEndRef = useRef(null);
   const stats = getStats();
+  
+  // Force a fresh sync on mount
+  useEffect(() => {
+    refreshTickets();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,7 +37,15 @@ const TicketManager = () => {
   };
 
   const filteredMessages = [...tickets]
-    .filter(msg => reportFilter === 'all' || msg.status === reportFilter)
+    .filter(msg => {
+        if (reportFilter === 'all') return true;
+        const thread = msg.responses || [];
+        const lastIsUser = thread.length === 0 ? true : thread[thread.length - 1].isUser;
+        
+        if (reportFilter === 'replied') return !lastIsUser;
+        if (reportFilter === 'pending') return lastIsUser;
+        return true;
+    })
     .sort((a, b) => {
         const priority = { 'pending': 1, 'open': 1, 'replied': 2, 'closed': 3 };
         return (priority[a.status] || 4) - (priority[b.status] || 4);
@@ -102,7 +118,13 @@ const TicketManager = () => {
                    )}
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400 truncate opacity-80 leading-relaxed pr-8">{m.message || m.responses?.[0]?.text}</p>
+              <p className="text-[11px] text-slate-400 truncate opacity-80 leading-relaxed pr-8">
+                 {(() => {
+                   const thread = m.responses || [];
+                   if (thread.length > 0) return thread[thread.length - 1].text;
+                   return m.message || 'No content';
+                 })()}
+               </p>
               <button 
                 onClick={(e) => handleDelete(e, m.id)}
                 className="absolute right-4 bottom-4 p-2 text-slate-600 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100"

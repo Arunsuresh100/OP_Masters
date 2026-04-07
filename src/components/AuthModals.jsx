@@ -347,9 +347,10 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     </button>
                                 </div>
                                 
-                                <div className="mt-6 text-center">
-                                    <button type="button" onClick={() => { setError(''); setSuccess(''); setView('signup'); }} className="text-white text-xs hover:underline transition-all tracking-wider font-bold">
-                                        Wait, I'm new here
+                                <div className="mt-6 flex items-center justify-center gap-1.5 text-xs font-bold tracking-wider">
+                                    <span className="text-slate-400 capitalize">I'm new here</span>
+                                    <button type="button" onClick={() => { setError(''); setSuccess(''); setView('signup'); }} className="text-orange-500 hover:underline transition-all capitalize">
+                                        Create account
                                     </button>
                                 </div>
                             </form>
@@ -427,9 +428,10 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     <button type="submit" disabled={loading} className={`w-full font-black py-3 rounded-[12px] uppercase text-[11px] tracking-widest transition-all mt-4 shadow-xl transform active:scale-[0.98] ${loading ? 'bg-slate-700 text-slate-400 opacity-50' : 'bg-white text-slate-950 hover:bg-amber-500'}`}>Create Account</button>
                                 </div>
                                 
-                                <div className="mt-6 text-center">
-                                    <button type="button" onClick={() => { setError(''); setSuccess(''); setView('login'); }} className="text-white text-xs hover:underline transition-all tracking-wider font-bold">
-                                        I already have access
+                                <div className="mt-6 flex items-center justify-center gap-1.5 text-xs font-bold tracking-wider">
+                                    <span className="text-slate-400 capitalize">I already have access</span>
+                                    <button type="button" onClick={() => { setError(''); setSuccess(''); setView('login'); }} className="text-orange-500 hover:underline transition-all capitalize">
+                                        Sign In
                                     </button>
                                 </div>
                             </form>

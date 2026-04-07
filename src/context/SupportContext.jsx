@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useUser } from './UserContext';
 
 const SupportContext = createContext();
 
@@ -6,12 +7,13 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export const SupportProvider = ({ children }) => {
     const [tickets, setTickets] = useState([]);
+    const { user } = useUser();
 
     // 1. Fetch Tickets from Cloud
     const refreshTickets = async () => {
         try {
-            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
-            const res = await fetch(`${API_BASE}/api/support/tickets?admin_secret=${secret}`, { credentials: 'include' });
+            // ENFORCED IAM: Strict JWT validation only inside user scope
+            const res = await fetch(`${API_BASE}/api/support/tickets`, { credentials: 'include' });
             if (res.ok) {
                 const data = await res.json();
                 setTickets(data);
@@ -22,13 +24,21 @@ export const SupportProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        refreshTickets();
-        // Polling for new messages every 30 seconds
-        const interval = setInterval(refreshTickets, 30000);
+        // ENFORCED PRIVACY: Wipe memory on identity change to prevent ghosting
+        setTickets([]);
+        
+        // Fetch tickets for the active session (User OR Admin)
+        refreshTickets(); 
+        
+        // Polling for new messages every 60 seconds
+        const interval = setInterval(() => {
+            refreshTickets();
+        }, 60000);
+        
         return () => clearInterval(interval);
-    }, []);
+    }, [user?.id]); // Deep reactive dependency on specific identity
 
-    // Create a new ticket (User auth via cookie — no admin_secret)
+    // Create a new ticket (Strict IAM Cookie Authorization)
     const createTicket = async (ticketData) => {
         try {
             const res = await fetch(`${API_BASE}/api/support/tickets`, {
@@ -41,24 +51,16 @@ export const SupportProvider = ({ children }) => {
                 await refreshTickets();
                 return true;
             }
-            // If cookie auth fails, fall back with admin_secret but flag as user
-            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
-            const res2 = await fetch(`${API_BASE}/api/support/tickets?admin_secret=${secret}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...ticketData, is_admin: false }),
-                credentials: 'include'
-            });
-            if (res2.ok) { await refreshTickets(); return true; }
         } catch (err) {
             console.error("Failed to create ticket:", err);
         }
         return false;
     };
 
-    // Get tickets for a specific user (Already filtered by API for non-admins)
+    // Get tickets for a specific user (Zero-Trust double-filter)
     const getUserTickets = (userEmail) => {
-        return tickets;
+        if (!userEmail) return [];
+        return tickets.filter(t => t.userEmail === userEmail);
     };
 
     // Get all tickets (Already handled by API for admins)
@@ -120,10 +122,9 @@ export const SupportProvider = ({ children }) => {
         }
     };
 
-    // Add user response to ticket (User auth via cookie — no admin_secret)
+    // Add user response to ticket (Strict IAM Cookie Authorization)
     const addUserResponse = async (ticketId, responseText, userName) => {
         try {
-            // Try cookie-based auth first (identifies sender as user)
             const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -134,19 +135,33 @@ export const SupportProvider = ({ children }) => {
                 await refreshTickets();
                 return true;
             }
-            // Fallback with explicit is_admin: false
-            const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
-            const res2 = await fetch(`${API_BASE}/api/support/tickets/${ticketId}/messages?admin_secret=${secret}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: responseText, is_admin: false }),
-                credentials: 'include'
-            });
-            if (res2.ok) { await refreshTickets(); return true; }
         } catch (err) {
             console.error("Failed to add response:", err);
         }
         return false;
+    };
+
+    // Mark ticket as read (User views the reply)
+    const markAsRead = async (ticketId) => {
+        try {
+            // Optimistic UI: Update locally first for snappy experience
+            setTickets(prev => prev.map(t => 
+                t.id === ticketId && t.status === 'replied' 
+                    ? { ...t, status: 'seen' } 
+                    : t
+            ));
+
+            const res = await fetch(`${API_BASE}/api/support/tickets/${ticketId}/read`, {
+                method: 'PATCH',
+                credentials: 'include'
+            });
+            if (!res.ok) {
+                // If backend fails, the next refreshTickets() will restore the correct state
+                console.error("Failed to sync read status with backend");
+            }
+        } catch (err) {
+            console.error("Read receipt error:", err);
+        }
     };
 
     // Delete ticket (Cloud Sync)
@@ -170,8 +185,20 @@ export const SupportProvider = ({ children }) => {
     const getStats = () => {
         return {
             total: tickets.length,
-            replied: tickets.filter(t => t.status === 'replied').length,
-            pending: tickets.filter(t => t.status === 'pending' || t.status === 'open').length
+            replied: tickets.filter(t => {
+                const thread = t.responses || [];
+                if (thread.length === 0) return false;
+                // Replied IF last message was from admin
+                const lastMsg = thread[thread.length - 1];
+                return !lastMsg.isUser;
+            }).length,
+            pending: tickets.filter(t => {
+                const thread = t.responses || [];
+                if (thread.length === 0) return true; // Initial user message needs reply
+                // Pending IF last message was from user
+                const lastMsg = thread[thread.length - 1];
+                return lastMsg.isUser;
+            }).length
         };
     };
 
@@ -179,12 +206,14 @@ export const SupportProvider = ({ children }) => {
         <SupportContext.Provider value={{
             tickets,
             createTicket,
+            refreshTickets,
             getUserTickets,
             getAllTickets,
             updateTicketStatus,
             updateTicketPriority,
             addResponse,
             addUserResponse,
+            markAsRead,
             deleteTicket,
             getStats
         }}>

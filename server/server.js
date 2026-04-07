@@ -17,6 +17,7 @@ import Joi from 'joi';
 import { exec } from 'child_process';
 import bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
+import disposableDomains from 'disposable-email-domains' with { type: 'json' };
 
 // Google Client Init
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -629,6 +630,7 @@ app.post('/api/auth/login', async (req, res) => {
         console.log(`[AUTH SUCCESS] Admin access granted.`);
         const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
         const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+        res.clearCookie('auth_token'); // Enforce single session
         res.cookie('admin_token', token, {
             httpOnly: true,
             secure: isProd,
@@ -665,6 +667,7 @@ app.post('/api/auth/login', async (req, res) => {
         }, JWT_SECRET, { expiresIn: '24h' });
 
         const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+        res.clearCookie('admin_token'); // Rip apart ghost admin session
         res.cookie('auth_token', sessionToken, {
             httpOnly: true,
             secure: isProd,
@@ -687,9 +690,38 @@ app.post('/api/auth/signup/init', async (req, res) => {
         return res.status(400).json({ error: 'Please provide all required fields' });
     }
 
+    if (password.length < 4) {
+        return res.status(400).json({ error: 'Password must be at least 4 characters long.' });
+    }
+
     // Normalization (Standardize for Security)
     email = email.toLowerCase().trim();
     phone = phone?.replace(/\D/g, '') || '';
+
+    // ZERO-DAY SECURITY OVERRIDE: Extended Disposable Email Blocker
+    const emailDomain = email.split('@')[1];
+    let isDisposable = false;
+
+    // 1. Dynamic Live Check (Defeats day-1 Telegram bots like DropMail)
+    try {
+        const debounceRes = await fetch(`https://disposable.debounce.io/?email=${email}`);
+        const debounceData = await debounceRes.json();
+        if (debounceData.disposable === 'true') {
+            isDisposable = true;
+        }
+    } catch (err) {
+        console.warn('Debounce API network timeout, relying on local offline vault.');
+    }
+
+    // 2. Offline Vault Fallback (Catches 30k+ known spam domains)
+    if (!isDisposable && emailDomain && disposableDomains.includes(emailDomain)) {
+        isDisposable = true;
+    }
+
+    if (isDisposable) {
+        console.warn(`[SECURITY] Blocked disposable email signup attempt: ${email}`);
+        return res.status(400).json({ error: 'Disposable & temporary email addresses are strictly prohibited.' });
+    }
 
     try {
         // 1. Check if Email or Phone already exists (Improved Syntax)
@@ -742,6 +774,7 @@ app.post('/api/auth/signup/init', async (req, res) => {
         }, JWT_SECRET, { expiresIn: '24h' });
 
         const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+        res.clearCookie('admin_token'); // Rip apart ghost admin session
         res.cookie('auth_token', sessionToken, {
             httpOnly: true,
             secure: isProd,
@@ -1013,6 +1046,7 @@ app.post('/api/auth/google', async (req, res) => {
         }, JWT_SECRET, { expiresIn: '24h' });
 
         const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+        res.clearCookie('admin_token'); // Rip apart ghost admin session
         res.cookie('auth_token', sessionToken, {
             httpOnly: true,
             secure: isProd,
@@ -1520,8 +1554,11 @@ app.get('/api/support/tickets', authenticateAny, async (req, res) => {
             `)
             .order('updated_at', { ascending: false });
         
-        // If not admin, filter by user_id
+        // STRICT SCOPING: Force filter by user_id for non-admins
         if (req.user.role !== 'admin') {
+            if (!req.user.id) {
+                 return res.status(401).json({ error: 'User mapping failed. Access Denied.' });
+            }
             query = query.eq('user_id', req.user.id);
         }
 
@@ -1621,6 +1658,19 @@ app.post('/api/support/tickets/:id/messages', authenticateAny, async (req, res) 
     }
 
     try {
+        // ENFORCED ACL: Verify ticket ownership before posting a message
+        if (req.user.role !== 'admin') {
+            const { data: ticket, error: checkError } = await supabase
+                .from('support_tickets')
+                .select('user_id')
+                .eq('id', ticketId)
+                .single();
+            
+            if (checkError || !ticket || ticket.user_id !== req.user.id) {
+                return res.status(403).json({ error: 'Access Denied: You do not own this ticket.' });
+            }
+        }
+
         const { error: mError } = await supabase
             .from('support_messages')
             .insert([{ 
@@ -1642,6 +1692,37 @@ app.post('/api/support/tickets/:id/messages', authenticateAny, async (req, res) 
     } catch (err) {
         console.error('Response error:', err);
         res.status(500).json({ error: 'Failed to send message.' });
+    }
+});
+
+// 4. Mark Ticket as Read (Transition from 'replied' to 'open')
+app.patch('/api/support/tickets/:id/read', authenticateAny, async (req, res) => {
+    const ticketId = req.params.id;
+    try {
+        // ENFORCED ACL: Verify ticket ownership before marking as read
+        if (req.user.role !== 'admin') {
+            const { data: ticket, error: checkError } = await supabase
+                .from('support_tickets')
+                .select('user_id')
+                .eq('id', ticketId)
+                .single();
+            
+            if (checkError || !ticket || ticket.user_id !== req.user.id) {
+                return res.status(403).json({ error: 'Access Denied: You do not own this ticket.' });
+            }
+        }
+
+        const { error } = await supabase
+            .from('support_tickets')
+            .update({ status: 'seen', updated_at: new Date().toISOString() })
+            .eq('id', ticketId)
+            .eq('status', 'replied'); // Only transition if it was a reply
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Read receipt error:', err);
+        res.status(500).json({ error: 'Failed to update read status.' });
     }
 });
 
