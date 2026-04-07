@@ -32,7 +32,12 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
     const [touched, setTouched] = useState({});
     
     const { login } = useUser();
-    const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const API_DEFAULT = 'http://localhost:3001';
+    const rawApiUrl = import.meta.env.VITE_API_URL || API_DEFAULT;
+    
+    if (import.meta.env.PROD && rawApiUrl === API_DEFAULT) {
+        console.warn("[PRODUCTION ALERT] Auth: VITE_API_URL is missing. Production auth will fail on mobile.");
+    }
     const API_BASE = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
     // MOBILE-ONLY BACKGROUND LOCK
