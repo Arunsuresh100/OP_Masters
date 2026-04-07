@@ -66,7 +66,6 @@ const Profile = () => {
     const [currency, setCurrency] = useState('INR');
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
     const [showSupportModal, setShowSupportModal] = useState(false);
-    const [vaultFilter, setVaultFilter] = useState('all');
     const [isEditingName, setIsEditingName] = useState(false);
     const [tempName, setTempName] = useState(user?.name || user?.username || '');
     
@@ -78,11 +77,16 @@ const Profile = () => {
     const [showSupportSuccess, setShowSupportSuccess] = useState(false);
     const [selectedTicketId, setSelectedTicketId] = useState(null);
     const [replyText, setReplyText] = useState('');
+    const [isSendingUser, setIsSendingUser] = useState(false);
+    const [userErrorMessage, setUserErrorMessage] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const messagesEndRef = React.useRef(null);
+    const chatViewportRef = React.useRef(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (chatViewportRef.current) {
+            chatViewportRef.current.scrollTop = chatViewportRef.current.scrollHeight;
+        }
     };
 
     // Auto-scroll when messages change or ticket is selected
@@ -107,7 +111,7 @@ const Profile = () => {
                     const data = await response.json();
                     setAllCards(data);
                 } catch (err) {
-                    console.error("Error fetching cards for vault:", err);
+                    // console.error("Error fetching cards for vault:", err);
                 } finally {
                     setLoadingCards(false);
                 }
@@ -486,7 +490,7 @@ const Profile = () => {
                                   <div className={`flex-1 flex flex-col min-h-[500px] h-[75vh] md:h-[650px] relative overflow-hidden bg-[#0d1425] ${selectedTicketId ? 'flex' : 'hidden md:flex'}`}>
                                       {selectedTicketId ? (
                                           (() => {
-                                              const activeTicket = userTickets.find(t => t.id === selectedTicketId);
+                                              const activeTicket = userTickets.find(t => String(t.id) === String(selectedTicketId));
                                               if (!activeTicket) return null;
                                               return (
                                                   <>
@@ -520,7 +524,7 @@ const Profile = () => {
                                                        </div>
 
                                                        {/* Chat Messages Feed (Corrected Scroll Wrapper) */}
-                                                       <div className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 space-y-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+                                                       <div ref={chatViewportRef} className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 space-y-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
                                                             <div className="space-y-6">
                                                                 {activeTicket.responses && activeTicket.responses.length > 0 ? (
                                                                     activeTicket.responses.map((reply, rid) => (
@@ -552,34 +556,54 @@ const Profile = () => {
                                                                             </div>
                                                                         </div>
                                                                     ))
-                                                               ) : (
-                                                                   <div className="flex flex-col items-center justify-center py-20 opacity-30">
-                                                                       <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-6" />
-                                                                       <div className="text-[10px] sm:text-xs font-black bg-white/5 border border-white/10 p-6 rounded-3xl text-slate-400 italic tracking-[0.2em] uppercase mb-4 text-center text-balance">
-                                                                           Protocol: Syncing... Awaiting Command Feed.
-                                                                       </div>
-                                                                   </div>
-                                                               )}
-                                                               <div ref={messagesEndRef} />
-                                                           </div>
+                                                                ) : (
+                                                                    <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                                                                        <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-6" />
+                                                                        <div className="text-[10px] sm:text-xs font-black bg-white/5 border border-white/10 p-6 rounded-3xl text-slate-400 italic tracking-[0.2em] uppercase mb-4 text-center text-balance">
+                                                                            Protocol: Syncing... Awaiting Command Feed.
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                <div ref={messagesEndRef} />
+                                                            </div>
                                                        </div>
                                                        {/* Message Input (Repositioned to bottom) */}
-                                                       <div className="p-4 md:p-6 bg-black/20 border-t border-white/5 mt-auto pb-[env(safe-area-inset-bottom)]">
-                                                            <form 
-                                                               id="support-response-form"
-                                                               className="relative max-w-4xl mx-auto flex flex-col gap-2"
-                                                               onSubmit={async (e) => {
-                                                                   e.preventDefault();
-                                                                   if (replyText.trim()) {
-                                                                       const success = await addUserResponse(activeTicket.id, replyText, user.name);
-                                                                       if (success) {
-                                                                           setReplyText('');
-                                                                           setShowSupportSuccess(true);
-                                                                           setTimeout(() => setShowSupportSuccess(false), 2500);
-                                                                           setTimeout(scrollToBottom, 100);
-                                                                       }
-                                                                   }
-                                                               }}
+                                                       <div className="p-4 md:p-6 bg-black/20 border-t border-white/5 mt-auto pb-[env(safe-area-inset-bottom)] relative">
+                                                                                                                        {userErrorMessage && (
+                                                                <div className="absolute -top-12 left-4 right-4 z-50 animate-in slide-in-from-bottom-2 fade-in duration-300">
+                                                                    <div className="bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-3">
+                                                                        <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                                                        <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">{userErrorMessage}</p>
+                                                                        <button onClick={() => setUserErrorMessage(null)} className="ml-auto text-slate-500 hover:text-white"><X className="w-3 h-3" /></button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            <form id="support-response-form"
+                                                                className="relative max-w-4xl mx-auto flex flex-col gap-2"
+                                                                onSubmit={async (e) => {
+                                                                    e.preventDefault();
+                                                                    if (replyText.trim() && !isSendingUser) {
+                                                                        setIsSendingUser(true);
+                                                                        setUserErrorMessage(null);
+                                                                        try {
+                                                                            const success = await addUserResponse(activeTicket.id, replyText, user?.name || 'User');
+                                                                            if (success) {
+                                                                                setReplyText('');
+                                                                                setShowSupportSuccess(true);
+                                                                                setTimeout(() => setShowSupportSuccess(false), 2500);
+                                                                                setTimeout(scrollToBottom, 100);
+                                                                            } else {
+                                                                                setUserErrorMessage("Operational Halt: Transmission failed. Please verify your connection or session status.");
+                                                                                setTimeout(() => setUserErrorMessage(null), 5000);
+                                                                            }
+                                                                        } catch (err) {
+                                                                            setUserErrorMessage("System Error: An unexpected fault occurred during data broadcast.");
+                                                                            setTimeout(() => setUserErrorMessage(null), 5000);
+                                                                        } finally {
+                                                                            setIsSendingUser(false);
+                                                                        }
+                                                                    }
+                                                                }}
                                                             >
                                                                 {showSupportSuccess && (
                                                                     <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
@@ -597,27 +621,31 @@ const Profile = () => {
                                                                 />
                                                                 <button 
                                                                    type="submit"
-                                                                   disabled={!replyText.trim()}
+                                                                   disabled={!replyText.trim() || isSendingUser}
                                                                    className="p-4 bg-[#3b82f6] text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20 z-10"
                                                                 >
-                                                                    <ArrowUpRight className="w-4 h-4 pointer-events-none" />
+                                                                    {isSendingUser ? (
+                                                                        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                                                    ) : (
+                                                                        <ArrowUpRight className="w-4 h-4 pointer-events-none" />
+                                                                    )}
                                                                 </button>
                                                                 </div>
                                                             </form>
                                                        </div>
                                                   </>
-                                              );
-                                          })()
-                                      ) : (
-                                          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-30">
-                                              <History className="w-12 h-12 text-slate-500 mb-6" />
-                                              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest italic">Initialize Protocol</h3>
-                                          </div>
-                                      )}
-                                  </div>
+                                               );
+                                           })()
+                                       ) : (
+                                           <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-30">
+                                               <History className="w-12 h-12 text-slate-500 mb-6" />
+                                               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest italic">Initialize Protocol</h3>
+                                           </div>
+                                       )}
+                                   </div>
 
-                               </div>
-                          )}
+                                </div>
+                           )}
 
                         {/* TAB: SUPPORT (Compact Full-Width Terminal) */}
                         {activeTab === 'support' && (
@@ -751,4 +779,3 @@ const Profile = () => {
 };
 
 export default Profile;
-

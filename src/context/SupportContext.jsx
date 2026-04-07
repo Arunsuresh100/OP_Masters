@@ -139,9 +139,12 @@ export const SupportProvider = ({ children }) => {
                 }));
                 // Silently refresh in the background to ensure consistency
                 refreshTickets();
+                return true;
             }
+            return false;
         } catch (err) {
             console.error("Failed to add response:", err);
+            return false;
         }
     };
 

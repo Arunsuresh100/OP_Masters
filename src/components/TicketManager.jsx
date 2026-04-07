@@ -13,20 +13,22 @@ import { useSupport } from '../context/SupportContext';
 
 const TicketManager = () => {
   const { 
-    tickets, getAllTickets, refreshTickets, 
+    tickets, refreshTickets, 
     updateTicketStatus, addResponse, deleteTicket, getStats 
   } = useSupport();
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [reportFilter, setReportFilter] = useState('all');
   const [replyText, setReplyText] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(null);
+   const [isSending, setIsSending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
   const messagesEndRef = useRef(null);
   const stats = getStats();
   
   // Force a fresh sync on mount
   useEffect(() => {
     refreshTickets();
-  }, []);
+  }, [refreshTickets]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -55,10 +57,24 @@ const TicketManager = () => {
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
-    if (!selectedMessage || !replyText.trim()) return;
-    const tId = selectedMessage.id;
-    setReplyText(''); // Fast clear
-    await addResponse(tId, replyText, 'Admin');
+    if (!selectedMessage || !replyText.trim() || isSending) return;
+    
+    setIsSending(true);
+    setErrorMessage(null);
+    try {
+        const success = await addResponse(selectedMessage.id, replyText, 'Admin');
+        if (success) {
+            setReplyText('');
+        } else {
+            setErrorMessage("Transmission Failure: Could not reach the command center. Check your connection or admin secret.");
+            setTimeout(() => setErrorMessage(null), 5000);
+        }
+    } catch (err) {
+        setErrorMessage("System Error: An unexpected fault occurred during transmission.");
+        setTimeout(() => setErrorMessage(null), 5000);
+    } finally {
+        setIsSending(false);
+    }
   };
 
   // Sync selected message with ticket array from context whenever it changes
@@ -213,7 +229,7 @@ const TicketManager = () => {
                     {selectedMessage.responses && selectedMessage.responses.length > 0 ? (
                       selectedMessage.responses.map((resp, i) => (
                         <div key={i} className={`flex flex-col gap-1.5 ${resp.isUser ? 'items-start' : 'items-end'}`}>
-                          {/* IDENTIFICATION LABEL */}
+                          {/* IDENTIFICATION LABEL (The "Top Side" Fix) */}
                           <div className={`flex items-center gap-2 px-1 mb-0.5 ${resp.isUser ? 'flex-row' : 'flex-row-reverse'}`}>
                              <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
                                resp.isUser 
@@ -261,7 +277,18 @@ const TicketManager = () => {
                   </div>
               </div>
 
-              <div className="p-4 md:p-8 border-t border-white/5 bg-black/40 pb-[env(safe-area-inset-bottom)]">
+              <div className="p-4 md:p-8 border-t border-white/5 bg-black/40 pb-[env(safe-area-inset-bottom)] relative">
+                 {/* Error Popup Indicator */}
+                 {errorMessage && (
+                    <div className="absolute -top-12 left-4 right-4 z-50 animate-in slide-in-from-bottom-2 fade-in duration-300">
+                        <div className="bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-3">
+                             <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                             <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">{errorMessage}</p>
+                             <button onClick={() => setErrorMessage(null)} className="ml-auto text-slate-500 hover:text-white"><X className="w-3 h-3" /></button>
+                        </div>
+                    </div>
+                 )}
+                 
                  <form onSubmit={handleSendMessage} className="relative group">
                     <textarea 
                       value={replyText}
@@ -271,10 +298,14 @@ const TicketManager = () => {
                     ></textarea>
                     <button 
                       type="submit"
-                      disabled={!replyText.trim()}
+                      disabled={!replyText.trim() || isSending}
                       className="absolute bottom-3 right-3 md:bottom-4 md:right-4 p-2.5 md:p-3 bg-orange-600 text-white rounded-xl hover:bg-orange-500 transition-all shadow-xl shadow-orange-900/40 disabled:opacity-20 disabled:grayscale group"
                     >
-                       <Send className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                       {isSending ? (
+                         <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                       ) : (
+                         <Send className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                       )}
                     </button>
                  </form>
                  <div className="flex items-center justify-center gap-4 mt-3 md:mt-4 opacity-10 md:opacity-30">
