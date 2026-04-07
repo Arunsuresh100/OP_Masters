@@ -4,11 +4,132 @@ import { RARITIES, USD_TO_INR } from '../constants';
 import { formatPrice } from '../utils';
 import { useUser } from '../context/UserContext';
 
+const getCardImageUrl = (url) => {
+  if (!url) return '';
+  // If it's a direct upload (base64) or a blob, return it directly
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return `${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
+};
+
+const ImageWithLoader = ({ src, alt, className }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <div className={`absolute inset-0 bg-slate-800 transition-opacity duration-500 ${imageLoaded ? 'opacity-0' : 'opacity-100 animate-pulse'}`} />
+      <img 
+        src={src} alt={alt} 
+        className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setImageLoaded(true)} loading="lazy"
+      />
+    </div>
+  );
+};
+
+const CardSetFilter = ({ value, onChange, onToggle, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (onToggle) onToggle(isOpen);
+  }, [isOpen, onToggle]);
+
+  const [filterQuery, setFilterQuery] = useState('');
+  const dropdownRef = React.useRef(null);
+  const inputRef = React.useRef(null);
+
+  const filteredOptions = (options || []).filter(opt => 
+    (opt?.name || '').toLowerCase().includes(filterQuery.toLowerCase()) || 
+    (opt?.id || '').toLowerCase().includes(filterQuery.toLowerCase())
+  );
+
+  const selectedOption = (options || []).find(s => s.id === value) || (options || [])[0] || { id: 'all', name: 'Loading...' };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownRef]);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (inputRef.current) inputRef.current.focus();
+      dropdownRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isOpen]);
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-white/20 transition-all shadow-lg"
+      >
+        <div className="flex flex-col items-start min-w-0">
+           <span className="text-[11px] text-white font-black uppercase tracking-wider truncate max-w-[180px]">
+              {selectedOption.id !== 'all' ? `${selectedOption.id} - ` : ''}{selectedOption.name}
+           </span>
+        </div>
+        <Filter className={`w-4 h-4 text-slate-500 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-amber-500' : 'group-hover:text-white'}`} />
+      </button>
+
+      {isOpen && (
+        <div className={`mt-3 bg-slate-950 border border-white/15 rounded-2xl shadow-[0_30px_70_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in zoom-in-95 duration-500 cubic-bezier(0.19, 1, 0.22, 1) ring-1 ring-white/5 ${
+          'lg:absolute lg:z-[1000] lg:left-[calc(100%+1.5rem)] lg:bottom-[-90px] lg:top-auto lg:mt-0 lg:w-[320px] w-full'
+        }`}>
+          <div className="p-3 border-b border-white/5 bg-slate-950/20">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Find set..."
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-9 pr-3 text-[10px] text-white focus:outline-none focus:border-amber-500/50 transition-all font-bold placeholder:text-slate-600"
+              />
+            </div>
+          </div>
+          <div className="max-h-[30vh] sm:max-h-[500px] overflow-y-auto overflow-x-hidden custom-scrollbar py-1 overscroll-contain">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.id);
+                    setIsOpen(false);
+                    setFilterQuery('');
+                  }}
+                  className={`w-full px-5 py-3 text-left text-[10px] font-black transition-all flex items-center justify-between group ${value === opt.id ? 'bg-amber-500/15 text-amber-500' : 'text-slate-400 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-amber-500/30'}`}
+                >
+                  <div className="flex flex-col min-w-0">
+                     {opt.id !== 'all' && <span className={`uppercase tracking-widest text-[8px] mb-0.5 ${value === opt.id ? 'text-amber-500/70' : 'text-slate-600'}`}>{opt.id}</span>}
+                     <span className="truncate uppercase tracking-wider">{opt.name}</span>
+                  </div>
+                  {value === opt.id && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] flex-shrink-0 ml-2" />
+                  )}
+                </button>
+              ))
+            ) : (
+              <div className="px-5 py-8 text-[10px] text-slate-600 text-center font-bold italic">No results</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLocale }) => {
   const { ownedCards, toggleOwnedCard } = useUser();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchQuery || '');
+  const [isSetFilterOpen, setIsSetFilterOpen] = useState(false);
   
   useEffect(() => {
     setSearchTerm(searchQuery || '');
@@ -67,13 +188,6 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
     { id: 'ST', name: 'ST - Full Starter Decks' },
     { id: 'Other', name: 'OTHER - Special Products' }
   ];
-
-  const getCardImageUrl = (url) => {
-    if (!url) return '';
-    // If it's a direct upload (base64) or a blob, return it directly
-    if (url.startsWith('data:') || url.startsWith('blob:')) return url;
-    return `${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
-  };
 
   const fileInputRef = React.useRef(null);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
@@ -146,113 +260,6 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-
-  const CardSetFilter = ({ value, onChange }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [filterQuery, setFilterQuery] = useState('');
-    const dropdownRef = React.useRef(null);
-    const inputRef = React.useRef(null);
-
-    const filteredOptions = dynamicSets.filter(opt => 
-      (opt?.name || '').toLowerCase().includes(filterQuery.toLowerCase()) || 
-      (opt?.id || '').toLowerCase().includes(filterQuery.toLowerCase())
-    );
-
-    const selectedOption = dynamicSets.find(s => s.id === value) || dynamicSets[0];
-
-    useEffect(() => {
-      const handleClickOutside = (event) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-          setIsOpen(false);
-        }
-      };
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    useEffect(() => {
-      if (isOpen) {
-        if (inputRef.current) inputRef.current.focus();
-        // Optional: Scroll into view if it's potentially off-screen
-        dropdownRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }, [isOpen]);
-
-    return (
-      <div className="relative w-full" ref={dropdownRef}>
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-white/20 transition-all shadow-lg"
-        >
-          <div className="flex flex-col items-start min-w-0">
-             <span className="text-[11px] text-white font-black uppercase tracking-wider truncate max-w-[180px]">
-                {selectedOption.id !== 'all' ? `${selectedOption.id} - ` : ''}{selectedOption.name}
-             </span>
-          </div>
-          <Filter className={`w-4 h-4 text-slate-500 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-amber-500' : 'group-hover:text-white'}`} />
-        </button>
-
-        {isOpen && (
-          <div className="absolute z-[1000] lg:left-[calc(100%+1.5rem)] lg:bottom-[-90px] lg:top-auto lg:mt-0 lg:w-[320px] w-full mt-3 bg-slate-950 border border-white/15 rounded-2xl shadow-[0_30px_70px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in zoom-in-95 lg:slide-in-from-left-2 slide-in-from-top-2 duration-500 cubic-bezier(0.19, 1, 0.22, 1) ring-1 ring-white/5">
-            <div className="p-3 border-b border-white/5 bg-slate-950/20">
-              <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Find set..."
-                  value={filterQuery}
-                  onChange={(e) => setFilterQuery(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-9 pr-3 text-[10px] text-white focus:outline-none focus:border-amber-500/50 transition-all font-bold placeholder:text-slate-600"
-                />
-              </div>
-            </div>
-            <div className="max-h-[30vh] sm:max-h-[500px] overflow-y-auto overflow-x-hidden custom-scrollbar py-1 overscroll-contain">
-              {filteredOptions.length > 0 ? (
-                filteredOptions.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => {
-                      onChange(opt.id);
-                      setIsOpen(false);
-                      setFilterQuery('');
-                    }}
-                    className={`w-full px-5 py-3 text-left text-[10px] font-black transition-all flex items-center justify-between group ${value === opt.id ? 'bg-amber-500/15 text-amber-500' : 'text-slate-400 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-amber-500/30'}`}
-                  >
-                    <div className="flex flex-col min-w-0">
-                       {opt.id !== 'all' && <span className={`uppercase tracking-widest text-[8px] mb-0.5 ${value === opt.id ? 'text-amber-500/70' : 'text-slate-600'}`}>{opt.id}</span>}
-                       <span className="truncate uppercase tracking-wider">{opt.name}</span>
-                    </div>
-                    {value === opt.id && (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] flex-shrink-0 ml-2" />
-                    )}
-                  </button>
-                ))
-              ) : (
-                <div className="px-5 py-8 text-[10px] text-slate-600 text-center font-bold italic">No results</div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const ImageWithLoader = ({ src, alt, className }) => {
-    const [imageLoaded, setImageLoaded] = useState(false);
-    return (
-      <div className={`relative overflow-hidden ${className}`}>
-        <div className={`absolute inset-0 bg-slate-800 transition-opacity duration-500 ${imageLoaded ? 'opacity-0' : 'opacity-100 animate-pulse'}`} />
-        <img 
-          src={src} alt={alt} 
-          className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setImageLoaded(true)} loading="lazy"
-        />
-      </div>
-    );
-  };
 
   const filteredCards = cards.filter(card => {
     const searchLower = searchTerm.toLowerCase().trim();
@@ -374,9 +381,13 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/5">
+              <div className="pt-2 border-t border-white/5">
                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Set</h3>
-                <CardSetFilter value={selectedSet} onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} />
+                <CardSetFilter 
+                    value={selectedSet} 
+                    options={dynamicSets}
+                    onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} 
+                />
               </div>
               
               <button 
@@ -392,81 +403,77 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
         <div className={`lg:hidden fixed inset-0 z-[1000] transition-all duration-300 ${mobileFilterOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
           <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${mobileFilterOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setMobileFilterOpen(false)} />
           
-          <div className={`absolute top-0 right-0 bottom-0 w-full max-w-xs bg-slate-950 border-l border-white/10 transition-transform duration-500 cubic-bezier(0.19, 1, 0.22, 1) flex flex-col z-10 ${mobileFilterOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className={`absolute top-20 right-0 ${isSetFilterOpen ? 'bottom-0' : 'h-fit'} w-full max-w-xs bg-slate-950/95 backdrop-blur-2xl border-l border-b border-white/10 rounded-bl-3xl shadow-2xl transition-all duration-500 cubic-bezier(0.19, 1, 0.22, 1) flex flex-col z-10 ${mobileFilterOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             {/* Drawer Header - Traditional Professional Sidebar */}
-            <div className="flex-shrink-0 bg-slate-950 px-6 py-6 border-b border-white/5 flex items-center justify-between">
+            <div className="flex-shrink-0 bg-slate-950 px-5 py-5 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <SlidersHorizontal className="w-5 h-5 text-white" />
-                <h2 className="text-xl font-black text-white uppercase tracking-widest italic">Filters</h2>
+                <SlidersHorizontal className="w-4 h-4 text-white" />
+                <h2 className="text-lg font-black text-white uppercase tracking-widest italic">Filters</h2>
                 {isFilterActive && (
-                  <div className="ml-2 px-2.5 py-0.5 bg-white text-slate-950 text-[10px] font-black rounded-full uppercase">
+                  <div className="ml-2 px-2 py-0.5 bg-white text-slate-950 text-[9px] font-black rounded-full uppercase">
                     {[selectedSet !== 'all', searchTerm, selectedRarity !== 'all'].filter(Boolean).length}
                   </div>
                 )}
               </div>
               <button 
                 onClick={() => setMobileFilterOpen(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-all border border-transparent hover:border-white/10"
+                className="p-1.5 hover:bg-white/10 rounded-full transition-all border border-transparent hover:border-white/10"
               >
-                <X className="w-6 h-6 text-white" />
+                <X className="w-5 h-5 text-white" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto drawer-scrollbar px-6 py-2 space-y-6">
-              <div className="pb-2 border-b border-white/5">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Market Rate</h3>
-                <div className="flex p-1 bg-black border border-white/5 rounded-[10px] h-11 relative overflow-hidden">
-                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-[8px] transition-all duration-300 shadow-[0_0_20px_rgba(251,191,36,0.2)] ${marketLocale === 'EN' ? 'translate-x-0' : 'translate-x-full'}`} />
-                    <button onClick={() => setMarketLocale('EN')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${marketLocale === 'EN' ? 'text-white' : 'text-slate-400'}`}>GLOBAL</button>
-                    <button onClick={() => setMarketLocale('JP')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${marketLocale === 'JP' ? 'text-white' : 'text-slate-400'}`}>JAPANESE</button>
+            <div className="flex-1 overflow-y-auto drawer-scrollbar px-5 py-4 space-y-5">
+              <div className="pb-1 border-b border-white/5">
+                <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5">Market Rate</h3>
+                <div className="flex p-1 bg-black border border-white/5 rounded-lg h-9 relative overflow-hidden">
+                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-md transition-all duration-300 shadow-[0_0_20px_rgba(251,191,36,0.2)] ${marketLocale === 'EN' ? 'translate-x-0' : 'translate-x-full'}`} />
+                    <button onClick={() => setMarketLocale('EN')} className={`relative z-10 flex-1 text-[9px] font-black transition-all ${marketLocale === 'EN' ? 'text-white' : 'text-slate-400'}`}>GLOBAL</button>
+                    <button onClick={() => setMarketLocale('JP')} className={`relative z-10 flex-1 text-[9px] font-black transition-all ${marketLocale === 'JP' ? 'text-white' : 'text-slate-400'}`}>JAPANESE</button>
                 </div>
               </div>
 
-              <div className="pt-2">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Find Card</h3>
+              <div className="pt-1">
+                <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5">Find Card</h3>
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
                   <input 
                     type="text" placeholder="Card name or ID..." value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-black border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 text-white text-sm focus:outline-none focus:border-white/50 transition-all font-bold"
+                    className="w-full bg-black border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white text-xs focus:outline-none focus:border-white/50 transition-all font-bold"
                   />
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-white/5">
-                 <button onClick={() => fileInputRef.current?.click()} className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black flex items-center justify-center gap-3 active:scale-95 transition-all">
-                    <Upload className="w-5 h-5" />
-                    <span className="text-[10px] uppercase tracking-widest">Identify By Image</span>
+              <div className="pt-1 border-t border-white/5">
+                 <button onClick={() => fileInputRef.current?.click()} className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-black flex items-center justify-center gap-3 active:scale-95 transition-all">
+                    <Upload className="w-4 h-4" />
+                    <span className="text-[9px] uppercase tracking-widest">Identify By Image</span>
                  </button>
               </div>
 
-              <div className="pt-2 border-t border-white/5">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Market Region</h3>
-                <div className="flex p-1 bg-black border border-white/5 rounded-2xl h-11 relative overflow-hidden">
-                    <div className={`absolute top-1 bottom-1 w-[calc(50%-2px)] bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(251,191,36,0.2)] ${marketLocale === 'EN' ? 'translate-x-0' : 'translate-x-full'}`} />
-                    <button onClick={() => setMarketLocale('EN')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${marketLocale === 'EN' ? 'text-white' : 'text-slate-400'}`}>GLOBAL (EN)</button>
-                    <button onClick={() => setMarketLocale('JP')} className={`relative z-10 flex-1 text-[10px] font-black transition-all ${marketLocale === 'JP' ? 'text-white' : 'text-slate-400'}`}>LOCAL (JP)</button>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-white/5">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Expansion Set</h3>
-                <CardSetFilter value={selectedSet} onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} />
+              <div className="pt-1 border-t border-white/5">
+                <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2.5">Expansion Set</h3>
+                <CardSetFilter 
+                    value={selectedSet} 
+                    options={dynamicSets}
+                    onChange={(val) => { setSelectedSet(val); setCurrentPage(1); }} 
+                    onToggle={(open) => setIsSetFilterOpen(open)}
+                />
               </div>
               
-              <div className="pt-6 pb-12 border-t border-white/5">
-                <div className="flex flex-col gap-3">
+              <div className="pt-4 pb-8 border-t border-white/5">
+                <div className="flex flex-col gap-2.5">
                   <button 
                     onClick={() => setMobileFilterOpen(false)}
-                    className="w-full py-4 rounded-xl bg-white text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
+                    className="w-full py-3.5 rounded-lg bg-white text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
                   >
                     View Results
                   </button>
                   <button 
                     onClick={resetFilters}
                     disabled={!isFilterActive}
-                    className={`w-full py-4 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${isFilterActive ? 'bg-black text-white border-white/20' : 'bg-slate-900 text-slate-700 border-white/5 cursor-not-allowed opacity-30'}`}
+                    className={`w-full py-3.5 rounded-lg border text-[10px] font-black uppercase tracking-widest transition-all ${isFilterActive ? 'bg-black text-white border-white/20' : 'bg-slate-900 text-slate-700 border-white/5 cursor-not-allowed opacity-30'}`}
                   >
                     Reset
                   </button>
@@ -544,12 +551,14 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
 
            {/* Card Grid */}
            {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {[...Array(8)].map((_, i) => <div key={i} className="aspect-[2.5/3.5] rounded-2xl bg-white/5 animate-pulse" />)}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+              {[...Array(itemsPerPage)].map((_, i) => (
+                <div key={i} className="aspect-[2.5/3.5] bg-slate-900 rounded-2xl animate-pulse border border-white/5" />
+              ))}
             </div>
           ) : (
             <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                 {paginatedCards.length > 0 ? (
                     paginatedCards.map((card, index) => (
                         <div 
@@ -597,7 +606,6 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
 
                         <button 
                             onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} 
-                            disabled={currentPage === totalPages}
                             className={`px-4 sm:px-5 py-2.5 rounded-lg sm:rounded-xl border transition-all text-[10px] sm:text-[11px] font-black uppercase tracking-widest ${currentPage === totalPages ? 'bg-slate-900/50 text-slate-700 border-white/5 cursor-not-allowed' : 'bg-slate-900/80 border-white/10 text-white hover:bg-white/5 active:scale-95'}`}
                         >
                             Next

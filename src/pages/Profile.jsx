@@ -68,6 +68,60 @@ const Profile = () => {
     const [isEditingName, setIsEditingName] = useState(false);
     const [tempName, setTempName] = useState(user?.name || user?.username || '');
     
+    const [vaultPage, setVaultPage] = useState(1);
+    const [wishlistPage, setWishlistPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
+
+    const Pagination = ({ currentPage, totalItems, onPageChange }) => {
+        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+        if (totalPages <= 1) return null;
+
+        const getPageNumbers = () => {
+            if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+            if (currentPage <= 4) return [1, 2, 3, 4, 5, '...', totalPages];
+            if (currentPage > totalPages - 4) return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+            return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+        };
+
+        return (
+            <div className="flex justify-center items-center gap-2 mt-12 pb-4">
+                <button 
+                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+                >
+                    Prev
+                </button>
+                <div className="flex items-center gap-1.5">
+                    {getPageNumbers().map((page, i) => (
+                        page === '...' ? (
+                            <span key={`dots-${i}`} className="text-slate-700 text-[10px] px-1">...</span>
+                        ) : (
+                            <button
+                                key={page}
+                                onClick={() => onPageChange(page)}
+                                className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all border ${
+                                    currentPage === page 
+                                        ? 'bg-white text-slate-950 shadow-lg scale-105 select-none' 
+                                        : 'bg-white/5 text-slate-500 border-white/5 hover:bg-white/10 cursor-pointer'
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        )
+                    ))}
+                </div>
+                <button 
+                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+                >
+                    Next
+                </button>
+            </div>
+        );
+    };
+
     const { 
         getUserTickets, createTicket, addUserResponse, refreshTickets,
         markAsRead, deleteTicket, tickets: allTickets 
@@ -169,535 +223,552 @@ const Profile = () => {
 
 
     return (
-        <div className="min-h-screen bg-slate-950 pt-24 pb-12 sm:pt-28" style={{ fontFamily: 'Arial, sans-serif' }}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-amber-500/30">
+            {/* Ambient Background Elements */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-amber-500/5 blur-[120px] rounded-full animate-pulse-glow" />
+                <div className="absolute top-[20%] -right-[10%] w-[30%] h-[30%] bg-blue-500/5 blur-[120px] rounded-full" />
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-24 pb-32 relative z-10">
                 
-                {/* 1. Dashboard Header (Condensed & High Impact) */}
-                <div className="relative mb-10 overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full -mr-32 -mt-32 pointer-events-none" />
-                    
-                    <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6 md:gap-8 text-center md:text-left pt-6 md:pt-0">
-                        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
-                            <div className="relative group">
-                                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-950 p-[2px] border border-white/10 overflow-hidden transition-transform group-hover:scale-105 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-                                    <div className="w-full h-full rounded-full overflow-hidden">
-                                        <img src={currentAvatar.image} alt="Profile" className="w-full h-full object-cover" />
-                                    </div>
-                                </div>
-                                <button 
-                                    onClick={() => setShowAvatarSelector(!showAvatarSelector)}
-                                    className="absolute bottom-1 right-1 w-8 h-8 bg-amber-500 text-slate-950 rounded-full flex items-center justify-center shadow-lg border-4 border-slate-950 hover:scale-110 active:scale-90 transition-all pointer-events-auto z-20"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                </button>
+                {/* 1. Dashboard Header: Premium Profile Hub */}
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-12">
+                    <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left w-full lg:w-auto">
+                        <div className="relative group flex-shrink-0">
+                            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-white/10 overflow-hidden shadow-2xl bg-slate-900 ring-4 ring-white/5 transition-transform duration-500 group-hover:scale-105">
+                                <img src={currentAvatar.image} alt="Profile" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                             </div>
-                            <div className="flex flex-col items-center md:items-start">
-                                <div className="flex flex-col gap-1 mb-2">
-                                    {isEditingName ? (
-                                        <input 
-                                            type="text" 
-                                            value={tempName}
-                                            onChange={(e) => setTempName(e.target.value)}
-                                            onBlur={() => { setIsEditingName(false); if(tempName.trim()) updateName(tempName); }}
-                                            onKeyDown={(e) => { if(e.key === 'Enter') { setIsEditingName(false); if(tempName.trim()) updateName(tempName); }}}
-                                            autoFocus
-                                            className="bg-white/5 border border-white/20 rounded-lg px-3 py-1 text-2xl font-black text-white capitalize tracking-tight focus:outline-none focus:border-amber-500/50 w-full max-w-xs text-center md:text-left"
-                                        />
-                                    ) : (
-                                        <h1 
-                                            onClick={() => setIsEditingName(true)}
-                                            className="text-2xl sm:text-4xl font-black text-white capitalize tracking-tight flex items-center gap-3 group/name cursor-pointer"
-                                        >
-                                            {user.name || user.username}
-                                            <Settings className="w-4 h-4 opacity-0 group-hover/name:opacity-50 transition-opacity" />
-                                        </h1>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl">
-                                        <Mail className="w-3 h-3 text-slate-500" />
-                                        <span className="text-[12px] font-bold text-slate-400 lowercase tracking-tight">{user.email}</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <button 
+                                onClick={() => setShowAvatarSelector(true)}
+                                className="absolute bottom-0 right-0 w-8 h-8 bg-amber-500 text-slate-950 rounded-full flex items-center justify-center shadow-lg border-2 border-[#020617] hover:scale-110 active:scale-90 transition-all z-20"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </button>
                         </div>
 
-                        <div className="flex flex-row items-center gap-4 w-full md:w-auto">
-                            <div className="flex-1 md:flex-none p-5 sm:p-6 rounded-3xl bg-white/[0.03] border border-white/5 backdrop-blur-md" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                <div className="text-[10px] sm:text-[11px] font-bold text-slate-400 capitalize tracking-tight mb-1.5">Estimated Vault Value</div>
-                                <div className="flex items-end justify-center md:justify-start gap-3">
-                                    <span className="text-2xl sm:text-3xl font-black text-white font-mono leading-none tracking-tighter">
-                                        {formatPrice(portfolioStats.totalWorth, currency, USD_TO_INR)}
-                                    </span>
-                                    <span className={`text-[10px] font-black pb-1 ${portfolioStats.percentChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                                        {portfolioStats.percentChange >= 0 ? '+' : ''}{portfolioStats.percentChange.toFixed(2)}%
-                                    </span>
-                                </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="space-y-1 sm:space-y-2 mb-4">
+                                
+                                {isEditingName ? (
+                                    <div className="flex items-center justify-center sm:justify-start gap-2">
+                                        <input 
+                                            autoFocus
+                                            className="bg-white/5 border border-amber-500/30 rounded-xl px-4 py-2 text-xl font-black text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 w-full max-w-sm"
+                                            value={tempName}
+                                            onChange={(e) => setTempName(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && updateName(tempName) && setIsEditingName(false)}
+                                        />
+                                        <button onClick={() => { updateName(tempName); setIsEditingName(false); }} className="p-2 bg-amber-500 text-slate-950 rounded-lg hover:bg-amber-400 transition-colors"><CheckCircle2 className="w-5 h-5" /></button>
+                                        <button onClick={() => setIsEditingName(false)} className="p-2 bg-white/5 text-slate-400 rounded-lg hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                                    </div>
+                                ) : (
+                                    <h1 
+                                        onClick={() => setIsEditingName(true)}
+                                        className="text-2xl sm:text-3xl font-black text-white tracking-tighter flex items-center justify-center sm:justify-start gap-2.5 cursor-pointer group/name"
+                                    >
+                                        {user.name || user.username}
+                                        <Settings className="w-3.5 h-3.5 opacity-0 group-hover/name:opacity-30 transition-opacity" />
+                                    </h1>
+                                )}
                             </div>
-                            <div className="flex flex-col gap-2">
-                                <button onClick={() => setCurrency('USD')} className={`px-3 py-1.5 rounded-lg text-[9px] font-bold transition-all ${currency === 'USD' ? 'bg-white text-slate-950' : 'bg-white/5 text-slate-500 border border-white/5'}`}>USD</button>
-                                <button onClick={() => setCurrency('INR')} className={`px-3 py-1.5 rounded-lg text-[9px] font-bold transition-all ${currency === 'INR' ? 'bg-white text-slate-950' : 'bg-white/5 text-slate-500 border border-white/5'}`}>INR</button>
+
+                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 relative z-10">
+                                <div className="px-3 py-1.5 bg-white/5 backdrop-blur-xl border border-white/5 rounded-lg flex items-center gap-2.5">
+                                    <Shield className="w-3 h-3 text-slate-500" />
+                                    <span className="text-[9px] sm:text-[10px] font-black text-slate-400 tracking-tight">{user.email}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Compact Professional Avatar Selector */}
-                {showAvatarSelector && (
-                    <div className="mb-10 p-6 bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-3xl animate-in fade-in zoom-in-95 duration-300 shadow-2xl relative overflow-hidden group">
-                        <div className="flex items-center justify-between mb-6 relative z-10">
-                             <div className="flex items-center gap-3">
-                                 <div className="w-1 h-4 bg-amber-500 rounded-full" />
-                                 <h3 className="text-sm font-bold text-white tracking-tight uppercase">Update Identity</h3>
-                             </div>
-                             <button onClick={() => setShowAvatarSelector(false)} className="p-1 text-slate-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-4 relative z-10">
-                            {CHARACTER_AVATARS.map((avatar) => (
-                                <button
-                                    key={avatar.id}
-                                    onClick={() => { updateAvatar(avatar.id); setShowAvatarSelector(false); }}
-                                    className={`group relative w-16 h-16 rounded-2xl transition-all duration-300 ${user.selectedAvatar === avatar.id ? 'ring-2 ring-amber-500 ring-offset-4 ring-offset-slate-950' : 'opacity-60 hover:opacity-100 hover:scale-105'}`}
-                                    title={avatar.name}
-                                >
-                                    <div className="w-full h-full rounded-2xl overflow-hidden bg-slate-950 border border-white/10 shadow-inner">
-                                        <img src={avatar.image} alt={avatar.name} className="w-full h-full object-cover" />
+                    {/* Integrated Vault Stats Bento Card */}
+                    <div className="flex items-center gap-2 w-full lg:w-auto mt-4 lg:mt-0">
+                        <div className="flex-1 lg:min-w-[200px] p-5 rounded-2xl bg-white/[0.02] border border-white/5 backdrop-blur-3xl relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-3xl -mr-12 -mt-12" />
+                            <div className="relative z-10">
+                                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-600 mb-2 block leading-none">Net Worth</span>
+                                <div className="flex items-baseline gap-2.5">
+                                    <h2 className="text-xl sm:text-2xl font-black text-white tracking-tighter font-mono leading-none">
+                                        {formatPrice(portfolioStats.totalWorth, currency, USD_TO_INR)}
+                                    </h2>
+                                    <div className={`px-1.5 py-0.5 rounded text-[8px] font-black border leading-none ${
+                                        portfolioStats.percentChange >= 0 
+                                            ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' 
+                                            : 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+                                    }`}>
+                                        {portfolioStats.percentChange >= 0 ? '+' : ''}{portfolioStats.percentChange.toFixed(2)}%
                                     </div>
-                                    {user.selectedAvatar === avatar.id && (
-                                        <div className="absolute -top-2 -right-2 bg-amber-500 text-slate-950 rounded-full p-0.5 shadow-lg"><CheckCircle2 className="w-3 h-3" /></div>
-                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            {['USD', 'INR'].map(cur => (
+                                <button 
+                                    key={cur}
+                                    onClick={() => setCurrency(cur)} 
+                                    className={`w-10 h-7 rounded-lg text-[8px] font-black transition-all border ${
+                                        currency === cur 
+                                            ? 'bg-white text-slate-950 shadow-lg scale-105' 
+                                            : 'bg-white/5 text-slate-500 border-white/5 hover:bg-white/10'
+                                    }`}
+                                >
+                                    {cur}
                                 </button>
                             ))}
                         </div>
                     </div>
-                )}
+                </div>
 
-                {/* 2. Command Dashboard Layout */}
-                <div className="relative h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-10" />
-
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-12 items-start">
-                    
-                    {/* Navigation Rail - App-Style horizontal on mobile */}
-                    <div className="md:col-span-3 md:sticky md:top-32 h-fit mb-8 md:mb-0">
-                        <div className="flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0 scroll-smooth snap-x px-1">
-                            {[
-                                { id: 'vault', label: 'My Vault', icon: Package },
-                                { id: 'wishlist', label: 'Wishlist', icon: Heart },
-                                { id: 'history', label: 'view message', icon: History },
-                                { id: 'support', label: 'contact', icon: HelpCircle },
-                            ].map((item) => {
-                                const hasNotification = item.id === 'history' && userTickets.some(t => t.status === 'replied');
-                                return (
+                {/* 2. Navigation Command Hub - Optimized for ALL Screens (Mobile Top Tabs) */}
+                <div className="flex justify-center mb-10 sticky top-[72px] sm:top-24 z-[40] pointer-events-none">
+                    <div className="p-1 sm:p-1.5 bg-slate-900/60 backdrop-blur-3xl border border-white/10 rounded-2xl flex items-center gap-0.5 sm:gap-1 shadow-2xl pointer-events-auto">
+                        {[
+                            { id: 'vault', short: 'Vault', full: 'Card Vault', icon: Package, mobile: true },
+                            { id: 'wishlist', short: 'Watch', full: 'Watchlist', icon: Heart, mobile: true },
+                            { id: 'history', short: 'Logs', full: 'Messages', icon: History, mobile: false },
+                            { id: 'support', short: 'Trans', full: 'Support Hub', icon: HelpCircle, mobile: false },
+                        ].map((item) => {
+                            const active = activeTab === item.id;
+                            const hasNotification = item.id === 'history' && userTickets.some(t => t.status === 'replied');
+                            
+                            return (
                                 <button
                                     key={item.id}
-                                    onClick={() => setActiveTab(item.id)}
-                                    className={`flex-none md:w-full flex items-center gap-3 md:gap-4 p-3.5 px-6 md:p-4.5 md:px-6 rounded-xl md:rounded-2xl border transition-all snap-start relative ${
-                                        (item.id === 'history' || item.id === 'support') ? 'hidden md:flex' : ''
+                                    onClick={() => {
+                                        setActiveTab(item.id);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                    className={`relative items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all duration-300 ${
+                                        item.mobile ? 'flex' : 'hidden sm:flex'
                                     } ${
-                                        activeTab === item.id 
-                                            ? 'bg-white border-white text-slate-950 shadow-xl' 
-                                            : 'bg-transparent border-transparent text-slate-500 hover:text-white hover:bg-white/5'
+                                        active 
+                                            ? 'bg-white text-slate-950 shadow-xl' 
+                                            : 'text-slate-500 hover:text-white hover:bg-white/5'
                                     }`}
                                 >
-                                    <div className="relative">
-                                        <item.icon className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                                        {hasNotification && (
-                                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-slate-950 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
-                                        )}
-                                    </div>
-                                    <span className="text-xs md:text-[15px] font-extrabold capitalize tracking-tight whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>{item.label}</span>
+                                    <item.icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${active ? 'fill-slate-950' : ''}`} />
+                                    <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest leading-none">
+                                        <span className="sm:hidden">{item.short}</span>
+                                        <span className="hidden sm:inline">{item.full}</span>
+                                    </span>
+                                    {hasNotification && (
+                                        <div className="absolute top-1 right-1 w-1 sm:w-1.5 h-1 sm:h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse" />
+                                    )}
+                                    {active && (
+                                        <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-0.5 h-0.5 bg-amber-500 rounded-full" />
+                                    )}
                                 </button>
                             );
-                            })}
-                        </div>
+                        })}
                     </div>
+                </div>
 
+                <div className="grid grid-cols-1 gap-12">
                     {/* Content Stage */}
-                    <div className="md:col-span-9">
+                    <div className="w-full">
                         
                         {/* TAB: THE VAULT (Collection Manager - Simplified to Owned Items) */}
                         {activeTab === 'vault' && (
-                            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
                                 {loadingCards ? (
-                                    <div className="py-20 flex flex-col items-center justify-center">
-                                        <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Accessing Vault Data...</p>
+                                    <div className="py-24 flex flex-col items-center justify-center">
+                                        <div className="w-12 h-12 border-4 border-amber-500/10 border-t-amber-500 rounded-full animate-spin mb-4" />
+                                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] animate-pulse">Decrypting Vault Data...</p>
                                     </div>
                                 ) : portfolioStats.ownedCount === 0 ? (
-                                    <div className="py-20 md:py-24 text-center bg-white/[0.02] border border-white/5 rounded-3xl md:rounded-[3rem] px-6">
-                                        <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
-                                            <Package className="w-6 h-6 md:w-8 md:h-8 text-slate-800" />
+                                    <div className="py-24 text-center bg-white/[0.01] border border-white/5 rounded-3xl px-8 relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                        <div className="w-16 h-16 bg-slate-900/50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-2xl relative z-10">
+                                            <Package className="w-8 h-8 text-slate-700" />
                                         </div>
-                                        <h3 className="text-base md:text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Vault is Empty</h3>
-                                        <p className="text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-8 max-w-[200px] mx-auto md:max-w-none">You haven't listed any digital assets in your personal vault yet.</p>
-                                        <button onClick={() => navigate('/cards')} className="px-8 md:px-10 py-3.5 md:py-4 bg-white text-slate-950 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl">Discover Cards</button>
+                                        <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2 italic relative z-10">Vault Protocol Empty</h3>
+                                        <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-8 max-w-sm mx-auto leading-relaxed relative z-10">Your secure storage is offline. Initialize tracking.</p>
+                                        <button onClick={() => navigate('/cards')} className="px-10 py-4 bg-white text-slate-950 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-amber-400 hover:scale-105 active:scale-95 shadow-xl relative z-10">Initialize</button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8 lg:gap-12">
-                                        {allCards.filter(card => (ownedCards[card.id] || 0) > 0).map((card) => {
-                                            const qty = ownedCards[card.id] || 0;
-                                            const cardWorth = (card.priceEnglish || 50) * qty;
-                                            return (
-                                                <div 
-                                                    key={card.id} 
-                                                    className="group relative flex flex-col bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[10px] min-w-[100px] overflow-hidden hover:border-white/20 transition-all duration-700 shadow-3xl hover:shadow-orange-900/10 hover:-translate-y-3"
-                                                >
-                                                    {/* Background Glow */}
-                                                    <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                                                    
-                                                    {/* Asset Case (Image Container) */}
-                                                    <div className="relative aspect-[0.7/1] sm:aspect-[1/1.4] overflow-hidden rounded-t-[10px]">
-                                                        <img 
-                                                            src={getCardImageUrl(card.image)} 
-                                                            alt={card.name} 
-                                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                                                        />
-                                                        
-                                                        {/* Digital Status Overlays */}
-                                                        <div className="absolute top-4 left-4 flex flex-col gap-2">
-                                                            <div className="px-3 py-1.5 bg-black/80 backdrop-blur-xl rounded-xl border border-white/10 flex items-center gap-2 shadow-2xl">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                                                <span className="text-[8px] font-black text-white uppercase tracking-widest">{formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="absolute top-4 right-4 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
-                                                            <div className="w-12 h-12 bg-white text-slate-950 rounded-2xl flex flex-col items-center justify-center shadow-2xl">
-                                                                <span className="text-[14px] font-black leading-none">{qty}</span>
-                                                                <span className="text-[7px] font-black uppercase tracking-tighter opacity-50">Units</span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Integrated Valuation (Bottom of Image) */}
-                                                        <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black via-black/90 to-transparent">
-                                                            <div className="text-[9px] font-black text-orange-500 uppercase tracking-[0.3em] mb-1 opacity-80">{card.id}</div>
-                                                            <h4 className="text-sm sm:text-lg font-black text-white uppercase tracking-tight line-clamp-1 mb-2 italic">{card.name}</h4>
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Global Worth</div>
-                                                                <div className="text-xs font-black text-white font-mono tracking-tighter">{formatPrice(cardWorth, currency, USD_TO_INR)}</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {/* Control Console (Static at Bottom) */}
-                                                    <div className="p-3 bg-black/40 border-t border-white/5 flex items-center gap-3">
-                                                        <div className="flex-1 flex items-center justify-between px-3 py-2 bg-white/5 border border-white/5 rounded-xl">
-                                                            <button onClick={() => updateOwnedCard(card.id, qty - 1)} className="p-1 text-slate-600 hover:text-rose-500 transition-colors"><Minus className="w-3.5 h-3.5" /></button>
-                                                            <span className="text-xs font-black text-white font-mono">{qty}</span>
-                                                            <button onClick={() => updateOwnedCard(card.id, qty + 1)} className="p-1 text-slate-600 hover:text-emerald-500 transition-colors"><Plus className="w-3.5 h-3.5" /></button>
-                                                        </div>
-                                                        <button 
-                                                            onClick={() => updateOwnedCard(card.id, 0)}
-                                                            className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+                                    <>
+                                        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+                                            {(() => {
+                                                const vaultCards = allCards.filter(card => (ownedCards[card.id] || 0) > 0);
+                                                const start = (vaultPage - 1) * ITEMS_PER_PAGE;
+                                                return vaultCards.slice(start, start + ITEMS_PER_PAGE).map((card) => {
+                                                    const qty = ownedCards[card.id] || 0;
+                                                    const cardWorth = (card.priceEnglish || 50) * qty;
+                                                    return (
+                                                        <div 
+                                                            key={card.id} 
+                                                            className="group relative flex flex-col bg-[#0f172a]/40 backdrop-blur-3xl border border-white/5 rounded-2xl overflow-hidden hover:border-amber-500/30 transition-all duration-500 shadow-xl"
                                                         >
-                                                            <X className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                                            {/* Asset ID Ribbon - Scaled Down */}
+                                                            <div className="absolute top-2 left-2 z-20">
+                                                                <div className="px-1.5 py-0.5 bg-black/60 backdrop-blur-xl rounded-md border border-white/10 flex items-center gap-1">
+                                                                    <div className="w-0.5 h-0.5 rounded-full bg-amber-500" />
+                                                                    <span className="text-[6px] font-black text-white uppercase tracking-tighter">{card.id}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Portfolio Control */}
+                                                            <div className="absolute top-2 right-2 z-20 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300">
+                                                                <button 
+                                                                    onClick={() => updateOwnedCard(card.id, 0)}
+                                                                    className="w-6 h-6 bg-rose-500/20 backdrop-blur-xl border border-rose-500/30 text-rose-500 rounded-md flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all shadow-lg"
+                                                                >
+                                                                    <X className="w-3 h-3" />
+                                                                </button>
+                                                            </div>
+                                                            
+                                                            {/* Image Container */}
+                                                            <div className="relative aspect-[0.75/1] overflow-hidden">
+                                                                <img 
+                                                                    src={getCardImageUrl(card.image)} 
+                                                                    alt={card.name} 
+                                                                    className="w-full h-full object-cover transition-transform duration-1000 md:group-hover:scale-110"
+                                                                />
+                                                                
+                                                                {/* Unit Counter Overlay - Mobile optimized */}
+                                                                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between p-1 bg-black/60 backdrop-blur-2xl rounded-lg border border-white/5 shadow-xl">
+                                                                    <button onClick={() => updateOwnedCard(card.id, qty - 1)} className="p-1 text-white/40"><Minus className="w-3 h-3" /></button>
+                                                                    <div className="flex flex-col items-center">
+                                                                        <span className="text-[10px] font-black text-white leading-none">{qty}</span>
+                                                                        <span className="text-[5px] font-bold text-white/40 uppercase tracking-tighter">Units</span>
+                                                                    </div>
+                                                                    <button onClick={() => updateOwnedCard(card.id, qty + 1)} className="p-1 text-white/40"><Plus className="w-3 h-3" /></button>
+                                                                </div>
+
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-transparent to-transparent opacity-60" />
+                                                            </div>
+                                                            
+                                                            {/* Content Info - Very Compact */}
+                                                            <div className="p-2.5 sm:p-4 space-y-2">
+                                                                <div className="space-y-0.5">
+                                                                    <h4 className="text-[10px] sm:text-sm font-black text-white uppercase tracking-tighter line-clamp-1 italic-gradient">{card.name}</h4>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="text-[6px] sm:text-[8px] font-bold text-slate-600 uppercase tracking-widest">Worth</span>
+                                                                        <span className="text-[10px] sm:text-sm font-black text-white font-mono tracking-tighter">{formatPrice(cardWorth, currency, USD_TO_INR)}</span>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div className="pt-1.5 border-t border-white/5 flex items-center justify-between">
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Activity className="w-2 h-2 text-emerald-500" />
+                                                                        <span className="text-[6px] sm:text-[7px] font-black text-emerald-500 uppercase tracking-widest">Live</span>
+                                                                    </div>
+                                                                    <span className="text-[7px] sm:text-[8px] font-black text-slate-500 font-mono italic">{formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                });
+                                            })()}
+                                        </div>
+                                        <Pagination 
+                                            currentPage={vaultPage} 
+                                            totalItems={allCards.filter(card => (ownedCards[card.id] || 0) > 0).length} 
+                                            onPageChange={(p) => { setVaultPage(p); window.scrollTo({ top: 300, behavior: 'smooth' }); }} 
+                                        />
+                                    </>
                                 )}
                             </div>
                         )}
 
                         {/* TAB: WISHLIST HUB */}
                         {activeTab === 'wishlist' && (
-                            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+                            <div className="space-y-8 animate-in fade-in slide-in-from-right-6 duration-700">
                                 {loadingCards ? (
-                                    <div className="py-20 flex flex-col items-center justify-center">
-                                        <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Scanning Watchlist...</p>
+                                    <div className="py-24 flex flex-col items-center justify-center">
+                                        <div className="w-12 h-12 border-4 border-amber-500/10 border-t-amber-500 rounded-full animate-spin mb-4" />
+                                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] animate-pulse">Scanning...</p>
                                     </div>
                                 ) : wishlist.length === 0 ? (
-                                    <div className="py-20 md:py-24 text-center bg-white/[0.02] border border-white/5 rounded-3xl md:rounded-[3rem] px-6">
-                                        <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
-                                            <Heart className="w-6 h-6 md:w-8 md:h-8 text-slate-800" />
+                                    <div className="py-24 text-center bg-white/[0.01] border border-white/5 rounded-3xl px-8 relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                        <div className="w-16 h-16 bg-slate-900/50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-2xl relative z-10">
+                                            <Heart className="w-8 h-8 text-slate-700" />
                                         </div>
-                                        <h3 className="text-base md:text-lg font-black text-white uppercase tracking-tighter mb-2 italic">Watchlist Static</h3>
-                                        <p className="text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-widest mb-8 max-w-[200px] mx-auto md:max-w-none">Save upcoming assets to monitor their daily valuation metrics.</p>
-                                        <button onClick={() => navigate('/marketplace')} className="px-8 md:px-10 py-3.5 md:py-4 bg-white text-slate-950 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all">Open Marketplace</button>
+                                        <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2 italic relative z-10">Watchlist Inactive</h3>
+                                        <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-8 max-w-sm mx-auto leading-relaxed relative z-10">Awaiting target parameters.</p>
+                                        <button onClick={() => navigate('/marketplace')} className="px-10 py-4 bg-white text-slate-950 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-amber-400 hover:scale-105 active:scale-95 shadow-xl relative z-10">Catalog</button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-                                        {allCards.filter(c => wishlist.includes(c.id)).map(card => (
-                                            <div key={card.id} className="group relative bg-white/[0.01] border border-white/10 p-4 rounded-[15px] hover:border-amber-500/30 transition-all duration-700 flex items-center gap-6 overflow-hidden shadow-2xl hover:bg-white/[0.03]">
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[50px] rounded-full -mr-16 -mt-16 pointer-events-none" />
-                                                <div className="w-24 h-32 sm:w-28 sm:h-40 rounded-xl overflow-hidden bg-black flex-shrink-0 shadow-2xl border border-white/5">
-                                                    <img src={getCardImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
-                                                </div>
-                                                <div className="flex-1 py-1 relative z-10 min-w-0">
-                                                    <div className="text-[8px] font-black text-amber-500 uppercase tracking-[0.3em] mb-1.5 opacity-60 line-clamp-1">{card.id}</div>
-                                                    <h4 className="text-sm sm:text-base font-black text-white uppercase tracking-tight mb-6 line-clamp-2 leading-tight italic">{card.name}</h4>
-                                                    
-                                                    <div className="flex items-center justify-between gap-4">
-                                                        <div>
-                                                            <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">Market Equilibrium</div>
-                                                            <div className="text-sm font-black text-white font-mono tracking-tighter">{formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</div>
+                                    <>
+                                        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+                                            {(() => {
+                                                const wishlistCards = allCards.filter(c => wishlist.includes(c.id));
+                                                const start = (wishlistPage - 1) * ITEMS_PER_PAGE;
+                                                return wishlistCards.slice(start, start + ITEMS_PER_PAGE).map(card => (
+                                                    <div 
+                                                        key={card.id} 
+                                                        className="group relative flex flex-col bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-2xl overflow-hidden hover:border-amber-500/20 transition-all duration-500 shadow-xl"
+                                                    >
+                                                        {/* Monitoring Status Badge - Compact */}
+                                                        <div className="absolute top-2 left-2 z-20 flex items-center gap-1 px-1.5 py-0.5 bg-black/60 backdrop-blur-xl rounded-md border border-white/10 outline outline-1 outline-white/5">
+                                                            <div className="w-0.5 h-0.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                            <span className="text-[6px] font-black text-white uppercase tracking-tighter leading-none">Live</span>
                                                         </div>
-                                                        <button 
-                                                            onClick={() => toggleWishlist(card.id)}
-                                                            className="p-2.5 bg-white text-slate-950 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95 group/x"
-                                                        >
-                                                            <X className="w-3.5 h-3.5 group-hover/x:rotate-90 transition-transform" />
-                                                        </button>
+
+                                                        {/* Quick Action Overlay */}
+                                                        <div className="absolute top-2 right-2 z-20 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300">
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); toggleWishlist(card.id); }}
+                                                                className="w-6 h-6 bg-rose-500/20 backdrop-blur-xl border border-rose-500/30 text-rose-500 rounded-md flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all shadow-lg"
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                        
+                                                        {/* Image Core */}
+                                                        <div className="relative aspect-[0.75/1] overflow-hidden grayscale-[0.4] md:group-hover:grayscale-0 transition-all duration-700">
+                                                            <img 
+                                                                src={getCardImageUrl(card.image)} 
+                                                                alt={card.name} 
+                                                                className="w-full h-full object-cover transition-transform duration-1000 md:group-hover:scale-105"
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+                                                        </div>
+                                                        
+                                                        {/* Terminal Info - Highly Compact */}
+                                                        <div className="p-2.5 sm:p-4 space-y-2 relative">
+                                                            <div className="space-y-0.5">
+                                                                <div className="flex items-center justify-between mb-0.5">
+                                                                    <span className="text-[6px] font-black text-amber-500/60 uppercase tracking-widest font-mono">{card.id}</span>
+                                                                    <div className="w-0.5 h-0.5 rounded-full bg-blue-500/30" />
+                                                                </div>
+                                                                <h4 className="text-[10px] sm:text-[11px] font-black text-white uppercase tracking-tighter line-clamp-1 italic-gradient leading-none">{card.name}</h4>
+                                                            </div>
+
+                                                            <div className="pt-2 border-t border-white/5 flex items-end justify-between gap-1.5">
+                                                                <div className="space-y-0.5">
+                                                                    <span className="text-[6px] font-bold text-slate-600 uppercase tracking-widest block leading-none">Price</span>
+                                                                    <span className="text-[10px] sm:text-sm font-black text-white font-mono tracking-tighter leading-none">{formatPrice(card.priceEnglish || 50, currency, USD_TO_INR)}</span>
+                                                                </div>
+                                                                <button 
+                                                                    onClick={() => navigate('/marketplace')}
+                                                                    className="px-2 py-1 bg-white/5 hover:bg-white text-slate-500 hover:text-slate-950 rounded-md text-[7px] font-black uppercase tracking-widest transition-all border border-white/10 hover:border-white"
+                                                                >
+                                                                    Trade
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Background Scan Animation */}
+                                                        <div className="absolute top-0 left-0 w-full h-[1px] bg-white/5 group-hover:bg-amber-500/10 -translate-y-1 group-hover:translate-y-[200px] transition-all duration-[3000ms] pointer-events-none" />
                                                     </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                                ));
+                                            })()}
+                                        </div>
+                                        <Pagination 
+                                            currentPage={wishlistPage} 
+                                            totalItems={allCards.filter(c => wishlist.includes(c.id)).length} 
+                                            onPageChange={(p) => { setWishlistPage(p); window.scrollTo({ top: 300, behavior: 'smooth' }); }} 
+                                        />
+                                    </>
                                 )}
                             </div>
                         )}
 
-                          {/* TAB: EXACT VISUAL MATCH MESSAGE CENTER (FLIPPED ALIGNMENT & COMPACT) */}
-                          {activeTab === 'history' && (
-                                <div className="flex flex-col md:flex-row h-[500px] md:h-[550px] bg-[#0a0f1c] border border-white/5 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden animate-in fade-in zoom-in-95 duration-500 shadow-2xl" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                  
-                                  {/* Sidebar (List of Reports) - Hidden on smaller screens if a ticket is selected */}
-                                  <div className={`w-full md:w-80 flex flex-col border-r border-white/5 bg-[#0a0f1c] ${selectedTicketId ? 'hidden md:flex' : 'flex'}`}>
-                                      <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
-                                          {userTickets.length === 0 ? (
-                                              <div className="py-20 text-center px-4">
-                                                  <History className="w-10 h-10 text-slate-800 mx-auto mb-4 opacity-20" />
-                                                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">No Records Found</p>
-                                              </div>
-                                          ) : (
-                                              userTickets.map((ticket) => (
-                                                  <button
-                                                      key={ticket.id}
-                                                      onClick={() => setSelectedTicketId(ticket.id)}
-                                                      className={`w-full p-5 rounded-xl text-left transition-all border ${
-                                                          selectedTicketId === ticket.id 
-                                                              ? 'bg-[#131b2d] border-[#3b82f6]/50' 
-                                                              : 'bg-[#131b2d]/40 border-white/5 hover:bg-[#131b2d]/60'
-                                                      }`}
-                                                  >
-                                                       <div className="flex justify-between items-start mb-2">
-                                                           <span className={`text-[12px] font-black uppercase tracking-tight ${selectedTicketId === ticket.id ? 'text-white' : 'text-slate-400'}`}>
-                                                               Ticket #{ticket.id.toString().slice(-4)}
-                                                           </span>
-                                                       </div>
-                                                       <p className="text-[10px] text-slate-500 line-clamp-1 leading-relaxed opacity-60 font-bold uppercase tracking-widest italic">
-                                                           "{ticket.message}"
-                                                       </p>
-                                                   </button>
-                                              ))
-                                          )}
-                                      </div>
-                                  </div>
-
-                                  {/* Main Chat Canvas (Reactive Height for Mobile) */}
-                                   <div className={`flex-1 flex flex-col min-h-[500px] h-[75vh] md:h-[650px] relative overflow-hidden bg-[#0d1425] border border-white/5 rounded-3xl ${selectedTicketId ? 'flex' : 'hidden md:flex'}`}>
-                                       {selectedTicketId ? (
-                                           (() => {
-                                               const activeTicket = userTickets.find(t => String(t.id) === String(selectedTicketId));
-                                               if (!activeTicket) return null;
-                                               return (
-                                                   <>
-                                                        {/* 1. Header (shrink-0) */}
-                                                        <div className="p-4 md:px-8 md:py-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01] flex-shrink-0 relative z-20">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] font-black border border-[#3b82f6]/20">
-                                                                    {user.name?.charAt(0).toUpperCase()}
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <h4 className="text-xs md:text-sm font-black text-white uppercase tracking-tight truncate flex items-center gap-2">
-                                                                        {activeTicket.subject || 'GENERAL INQUIRY'}
-                                                                        <span className="text-[8px] bg-white/5 px-2 py-0.5 rounded border border-white/5 text-slate-500 tracking-widest">#{activeTicket.id.toString().slice(-4)}</span>
-                                                                    </h4>
-                                                                    <p className="text-[9px] md:text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-[0.2em] opacity-60">
-                                                                        Transmitted: {new Date(activeTicket.updatedAt).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <button 
-                                                                   onClick={() => setShowDeleteConfirm(true)} 
-                                                                   className="p-2 text-slate-700 hover:text-rose-500 transition-all hover:bg-rose-500/10 rounded-lg"
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" /> 
-                                                                </button>
-                                                                <button onClick={() => setSelectedTicketId(null)} className="p-2 text-slate-700 hover:text-white transition-all hover:bg-white/5 rounded-lg">
-                                                                    <X className="w-4 h-4" /> 
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* 2. Scrollable History (flex-1) - Added Padding Bottom for Absolute Footer */}
-                                                        <div 
-                                                            ref={chatViewportRef}
-                                                            className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 pb-32 md:pb-36 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"
-                                                        >
-                                                             <div className="space-y-6">
-                                                                 {activeTicket.responses && activeTicket.responses.length > 0 ? (
-                                                                     activeTicket.responses.map((reply, rid) => (
-                                                                         <div key={reply.id || rid} className={`flex ${reply.isUser ? 'justify-end' : 'justify-start'}`}>
-                                                                             <div className={`flex flex-col ${reply.isUser ? 'items-end' : 'items-start'} gap-1.5 max-w-[85%] w-fit`}>
-                                                                                 <div className={`flex items-center gap-2 px-1 mb-0.5 ${reply.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                                                                                     <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
-                                                                                         reply.isUser 
-                                                                                             ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' 
-                                                                                             : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                                                                     }`}>
-                                                                                         {reply.isUser ? 'YOU' : 'ADMIN'}
-                                                                                     </span>
-                                                                                     <span className="text-[7px] font-bold text-slate-600 uppercase tracking-tight italic opacity-60">
-                                                                                         {new Date(reply.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                                     </span>
-                                                                                 </div>
-                                                                                 <div className={`p-4 text-[12.5px] font-bold leading-relaxed shadow-2xl rounded-2xl w-fit transition-all hover:scale-[1.01] ${
-                                                                                     reply.isUser 
-                                                                                         ? 'bg-[#1e293b] text-slate-200 border border-white/5 rounded-tr-none text-right' 
-                                                                                         : 'bg-indigo-600 border border-indigo-400 rounded-tl-none text-left text-white'
-                                                                                 }`}>
-                                                                                     {reply.text}
-                                                                                 </div>
-                                                                             </div>
-                                                                         </div>
-                                                                     ))
-                                                                 ) : (
-                                                                     <div className="flex flex-col items-center justify-center py-20 opacity-30">
-                                                                         <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-6" />
-                                                                     </div>
-                                                                 )}
-                                                                 <div ref={messagesEndRef} />
-                                                             </div>
-                                                        </div>
-
-                                                        {/* 3. Pinned Input Bar (Absolute) */}
-                                                        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-[#0a0f1d] border-t border-white/10 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-                                                             {userErrorMessage && (
-                                                                 <div className="absolute -top-12 left-4 right-4 z-50 animate-in slide-in-from-bottom-2 fade-in duration-300">
-                                                                     <div className="bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-3">
-                                                                         <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                                                                         <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">{userErrorMessage}</p>
-                                                                         <button onClick={() => setUserErrorMessage(null)} className="ml-auto text-slate-500 hover:text-white"><X className="w-3 h-3" /></button>
-                                                                     </div>
-                                                                 </div>
-                                                             )}
-                                                             <form id="support-response-form"
-                                                                 className="relative max-w-4xl mx-auto flex items-center gap-3"
-                                                                 onSubmit={async (e) => {
-                                                                     e.preventDefault();
-                                                                     if (replyText.trim() && !isSendingUser) {
-                                                                         setIsSendingUser(true);
-                                                                         try {
-                                                                             const success = await addUserResponse(activeTicket.id, replyText, user?.name || 'User');
-                                                                             if (success) {
-                                                                                 setReplyText('');
-                                                                                 setShowSupportSuccess(true);
-                                                                                 setTimeout(() => setShowSupportSuccess(false), 2500);
-                                                                                 setTimeout(scrollToBottom, 100);
-                                                                             }
-                                                                         } finally {
-                                                                             setIsSendingUser(false);
-                                                                         }
-                                                                     }
-                                                                 }}
-                                                             >
-                                                                 <input 
-                                                                    type="text" 
-                                                                    value={replyText}
-                                                                    onChange={(e) => setReplyText(e.target.value)}
-                                                                    placeholder="Transmit followup message..." 
-                                                                    className="flex-1 bg-[#131b2d] border border-white/10 rounded-2xl px-6 py-4 text-xs font-bold text-white placeholder-slate-700 focus:outline-none focus:border-[#3b82f6]/30 transition-all shadow-inner" 
-                                                                 />
-                                                                 <button 
-                                                                    type="submit"
-                                                                    disabled={!replyText.trim() || isSendingUser}
-                                                                    className="p-4 bg-[#3b82f6] text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-20 z-10"
-                                                                 >
-                                                                     <ArrowUpRight className="w-4 h-4 pointer-events-none" />
-                                                                 </button>
-                                                             </form>
-                                                        </div>
-                                                   </>
-                                               );
-                                           })()
-                                       ) : (
-                                           <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-30">
-                                               <History className="w-12 h-12 text-slate-500 mb-6" />
-                                               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest italic">Initialize Protocol</h3>
-                                           </div>
-                                       )}
-                                   </div>
-
+                        {/* TAB: EXACT VISUAL MATCH MESSAGE CENTER (FLIPPED ALIGNMENT & COMPACT) */}
+                        {activeTab === 'history' && (
+                            <div className="flex flex-col md:flex-row h-[500px] md:h-[550px] bg-[#0d1425]/40 backdrop-blur-3xl border border-white/5 rounded-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-500 shadow-2xl">
+                                
+                                {/* Sidebar (List of Reports) */}
+                                <div className={`w-full md:w-72 flex flex-col border-r border-white/5 bg-slate-900/20 ${selectedTicketId ? 'hidden md:flex' : 'flex'}`}>
+                                    <div className="p-5 border-b border-white/5">
+                                        <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-0.5">Message History</h3>
+                                        <p className="text-[10px] font-bold text-slate-600 uppercase">Interactive Logs</p>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+                                        {userTickets.length === 0 ? (
+                                            <div className="py-12 text-center px-4 opacity-20">
+                                                <History className="w-8 h-8 text-slate-600 mx-auto mb-3" />
+                                                <p className="text-[10px] font-black uppercase tracking-widest">No Transmissions</p>
+                                            </div>
+                                        ) : (
+                                            userTickets.map((ticket) => (
+                                                <button
+                                                    key={ticket.id}
+                                                    onClick={() => setSelectedTicketId(ticket.id)}
+                                                    className={`w-full p-4 rounded-xl text-left transition-all border group/item ${
+                                                        selectedTicketId === ticket.id 
+                                                            ? 'bg-blue-600 border-blue-400 shadow-lg shadow-blue-500/15' 
+                                                            : 'bg-white/[0.02] border-white/5 hover:bg-white/5'
+                                                    }`}
+                                                >
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <span className={`text-[10px] font-black capitalize tracking-widest ${selectedTicketId === ticket.id ? 'text-white' : 'text-slate-400'} truncate mr-2`}>
+                                                            {ticket.priority}
+                                                        </span>
+                                                        <div className={`w-1.5 h-1.5 rounded-full ${ticket.status === 'replied' ? 'bg-emerald-500' : 'bg-slate-400'} shadow-lg flex-shrink-0`} />
+                                                    </div>
+                                                    <p className={`text-sm font-bold line-clamp-1 italic ${selectedTicketId === ticket.id ? 'text-blue-100' : 'text-slate-500 group-hover/item:text-slate-400'}`}>
+                                                        "{ticket.message}"
+                                                    </p>
+                                                </button>
+                                            ))
+                                        )}
+                                    </div>
                                 </div>
-                           )}
+
+                                {/* Main Chat Canvas */}
+                                <div className={`flex-1 flex flex-col relative overflow-hidden bg-slate-950/20 ${selectedTicketId ? 'flex' : 'hidden md:flex'}`}>
+                                    {selectedTicketId ? (
+                                        (() => {
+                                            const activeTicket = userTickets.find(t => String(t.id) === String(selectedTicketId));
+                                            if (!activeTicket) return null;
+                                            return (
+                                                <>
+                                                    <div className="p-4 md:p-5 border-b border-white/5 flex items-center justify-between bg-white/[0.01] flex-shrink-0 relative z-20">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-sm font-black border border-blue-500/20 shadow-inner">
+                                                                {user.name?.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-sm font-black text-white capitalize tracking-tight truncate flex items-center gap-2.5">
+                                                                    {activeTicket.priority || 'Transmission'}
+                                                                </h4>
+                                                                <p className="text-[10px] font-bold text-slate-600 mt-1 uppercase tracking-[0.2em] italic">
+                                                                    {new Date(activeTicket.updatedAt).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <button 
+                                                                onClick={() => setShowDeleteConfirm(true)} 
+                                                                className="w-8 h-8 rounded-lg text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 transition-all flex items-center justify-center"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" /> 
+                                                            </button>
+                                                            <button onClick={() => setSelectedTicketId(null)} className="w-8 h-8 rounded-lg text-slate-600 hover:text-white transition-all flex items-center justify-center">
+                                                                <X className="w-4 h-4" /> 
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div ref={chatViewportRef} className="flex-1 overflow-y-auto custom-scrollbar p-5 md:p-8 pb-28 space-y-6">
+                                                        {activeTicket.responses?.map((reply, rid) => (
+                                                            <div key={reply.id || rid} className={`flex ${reply.isUser ? 'justify-end' : 'justify-start'}`}>
+                                                                <div className={`flex flex-col ${reply.isUser ? 'items-end' : 'items-start'} max-w-[85%] gap-2`}>
+                                                                    <div className="flex items-center gap-2 px-1">
+                                                                        <span className={`text-[8px] font-black tracking-widest px-2 py-0.5 rounded-full border ${
+                                                                            reply.isUser ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                                        }`}>
+                                                                            {reply.isUser ? 'User' : 'Admin'}
+                                                                        </span>
+                                                                        <span className="text-[8px] font-bold text-slate-700 uppercase italic">
+                                                                            {new Date(reply.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className={`p-4 rounded-2xl text-sm font-bold leading-relaxed shadow-xl relative ${
+                                                                        reply.isUser 
+                                                                            ? 'bg-[#1e293b] text-slate-300 border border-white/5 rounded-tr-none' 
+                                                                            : 'bg-gradient-to-br from-blue-700 to-blue-600 text-white border border-blue-400 rounded-tl-none'
+                                                                    }`}>
+                                                                        {reply.text}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        <div ref={messagesEndRef} />
+                                                    </div>
+
+                                                    <div className="absolute bottom-4 left-4 right-4 p-3 bg-[#0a0f1d]/95 backdrop-blur-3xl border border-white/10 rounded-2xl z-30 shadow-2xl">
+                                                        <form className="relative flex items-center gap-3"
+                                                            onSubmit={async (e) => {
+                                                                e.preventDefault();
+                                                                if (replyText.trim() && !isSendingUser) {
+                                                                    setIsSendingUser(true);
+                                                                    try {
+                                                                        const success = await addUserResponse(activeTicket.id, replyText, user?.name || 'User');
+                                                                        if (success) { setReplyText(''); setShowSupportSuccess(true); setTimeout(() => setShowSupportSuccess(false), 2500); setTimeout(scrollToBottom, 100); }
+                                                                    } catch(err) { setUserErrorMessage("Transmission Failure"); } finally { setIsSendingUser(false); }
+                                                                }
+                                                            }}
+                                                        >
+                                                            <input 
+                                                                type="text" 
+                                                                value={replyText}
+                                                                onChange={(e) => setReplyText(e.target.value)}
+                                                                placeholder="Enter Followup Sequence..." 
+                                                                className="flex-1 bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white placeholder-slate-800 focus:outline-none focus:border-blue-500/40 transition-all" 
+                                                            />
+                                                            <button 
+                                                                type="submit"
+                                                                disabled={!replyText.trim() || isSendingUser}
+                                                                className="w-11 h-11 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-20"
+                                                            >
+                                                                <ArrowUpRight className="w-5 h-5" />
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()
+                                    ) : (
+                                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center opacity-20">
+                                            <div className="w-16 h-16 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center mb-6">
+                                                <History className="w-8 h-8 text-slate-500" />
+                                            </div>
+                                            <h3 className="text-[11px] font-black text-slate-600 uppercase tracking-[0.3em] italic">Awaiting Selection</h3>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* TAB: SUPPORT (Compact Full-Width Terminal) */}
                         {activeTab === 'support' && (
-                            <div className="animate-in fade-in slide-in-from-right-4 duration-700">
-                                {/* Direct Transmission Form - Full Width & Compact */}
-                                <div className="bg-white/[0.02] border border-white/10 rounded-[15px] p-5 sm:p-6 shadow-2xl relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 blur-[120px] rounded-full -mr-48 -mt-48 pointer-events-none transition-opacity opacity-0 group-hover:opacity-100" />
+                            <div className="animate-in fade-in slide-in-from-right-4 duration-700 max-w-3xl mx-auto pb-20 md:pb-0">
+                                <div className="bg-[#0d1425]/40 backdrop-blur-3xl border border-white/5 rounded-3xl p-5 sm:p-8 shadow-2xl relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-blue-500/5 blur-[80px] rounded-full -mr-32 -mt-32 transition-opacity opacity-0 group-hover:opacity-100" />
                                     
-                                    <div className="relative z-10">
-                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
+                                    <div className="relative z-10 space-y-6 sm:space-y-8">
+                                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-11 h-11 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-inner">
-                                                    <Mail className="w-5 h-5 text-indigo-400" />
+                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-inner">
+                                                    <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-xl font-bold text-white tracking-tight leading-none mb-1">support hub</h3>
-                                                    <p className="text-[10px] font-medium text-slate-500 tracking-tight opacity-70">We'll get back to you as soon as possible</p>
+                                                    <h3 className="text-xl sm:text-2xl font-black text-white tracking-tighter uppercase leading-none mb-1">Central Transmission</h3>
+                                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-600 tracking-[0.2em] uppercase">Priority Protocol: Active</p>
                                                 </div>
-                                            </div>
-                                            <div className="px-5 py-2.5 bg-black/40 border border-white/5 rounded-xl flex items-center gap-3">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">System Status: Active</span>
                                             </div>
                                         </div>
 
-                                        <form className="space-y-5" onSubmit={async (e) => {
+                                        <form className="space-y-5 sm:space-y-6" onSubmit={async (e) => {
                                             e.preventDefault();
                                             const formData = new FormData(e.target);
-                                            const msgText = formData.get('message');
-                                            const priority = formData.get('priority');
-                                            
-                                            const success = await createTicket({
-                                                userEmail: user.email,
-                                                message: msgText,
-                                                priority: priority,
-                                                category: 'General Inquiry'
-                                            });
-                                            
-                                            if (success) {
-                                                setShowSupportSuccess(true);
-                                                e.target.reset();
-                                                setTimeout(() => {
-                                                    setShowSupportSuccess(false);
-                                                    setActiveTab('history');
-                                                }, 2000);
-                                            }
+                                            const success = await createTicket({ userEmail: user.email, message: formData.get('message'), priority: formData.get('priority'), category: 'General Inquiry' });
+                                            if (success) { setShowSupportSuccess(true); e.target.reset(); setTimeout(() => { setShowSupportSuccess(false); setActiveTab('history'); }, 2000); }
                                         }}>
-                                            <div className="space-y-5" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                                <div className="space-y-1.5">
-                                                    <label className="text-xs font-bold text-white/70 capitalize tracking-tight ml-1">Type of Issue</label>
-                                                    <input name="priority" required type="text" placeholder="e.g. Card Sync, Login Issue, Bug..." className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 sm:px-5 py-3 text-sm font-medium text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 transition-all" />
+                                            <div className="grid grid-cols-1 gap-5 sm:gap-6">
+                                                <div className="space-y-2.5">
+                                                    <label className="text-[11px] sm:text-sm font-medium text-white capitalize ml-1">Subject Identification</label>
+                                                    <input name="priority" required type="text" placeholder="Protocol ID..." className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3.5 sm:py-4 text-sm font-medium text-white placeholder-slate-700 focus:outline-none focus:border-blue-500/40 transition-all shadow-inner" />
+                                                </div>
+                                                <div className="space-y-2.5">
+                                                    <label className="text-[11px] sm:text-sm font-medium text-white capitalize ml-1">Sequence Metadata</label>
+                                                    <textarea name="message" required rows="4" placeholder="Input parameters..." className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3.5 sm:py-4 text-sm font-medium text-white placeholder-slate-700 focus:outline-none focus:border-blue-500/40 transition-all resize-none shadow-inner"></textarea>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-1.5" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                                <label className="text-xs font-bold text-white/70 capitalize tracking-tight ml-1">Message</label>
-                                                <textarea name="message" required rows="3" placeholder="Input parameters for admin analysis..." className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 sm:px-5 py-4 text-sm font-medium text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
-                                            </div>
-
                                             {showSupportSuccess && (
-                                                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                    <span className="text-[10px] font-bold text-emerald-400 capitalize">Secure transmission initiated. Protocol recorded.</span>
+                                                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 sm:p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                                                    <span className="text-[9px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-widest">Broadcast Successful.</span>
                                                 </div>
                                             )}
 
                                             <div className="pt-2 flex flex-col md:flex-row items-center justify-between gap-6">
-                                                <p className="text-[10px] font-bold text-white/60 capitalize tracking-widest italic">
-                                                    Authorizing response broadcast to: <span className="text-indigo-400 font-mono tracking-tight">{user.email}</span>
-                                                </p>
-                                                <button type="submit" className="w-full md:w-auto px-12 py-4 bg-white text-slate-950 rounded-2xl font-bold capitalize text-[13px] tracking-tight shadow-2xl hover:bg-amber-400 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group/send whitespace-nowrap" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                                    Send
-                                                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                                                    <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 capitalize leading-none">
+                                                        Relay: <span className="text-white ml-1 lowercase font-normal">{user.email}</span>
+                                                    </p>
+                                                </div>
+                                                <button type="submit" className="w-full md:w-auto px-10 py-4 sm:px-12 sm:py-5 bg-white text-slate-950 rounded-xl font-black uppercase text-[10px] sm:text-[11px] tracking-[0.2em] shadow-xl hover:bg-amber-400 transition-all flex items-center justify-center gap-3 group/send whitespace-nowrap">
+                                                    Transmit
+                                                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                                                 </button>
                                             </div>
                                         </form>
@@ -708,6 +779,7 @@ const Profile = () => {
                     </div>
                 </div>
             </div>
+
 
             <SupportTicketModal isOpen={showSupportModal} onClose={() => setShowSupportModal(false)} />
             {/* DELETE CONFIRMATION MODAL (SMALL COMPACT POPUP) */}
@@ -744,11 +816,68 @@ const Profile = () => {
                                 </button>
                                 <button 
                                     onClick={() => setShowDeleteConfirm(false)}
-                                    className="w-full py-3.5 bg-slate-900/50 border border-white/5 hover:border-white/10 hover:bg-slate-800 text-slate-500 hover:text-white rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all"
+                                    className="w-full py-3.5 bg-white/5 hover:bg-white/10 text-slate-500 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all"
                                 >
-                                    Abort
+                                    Cancel
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* AVATAR SELECTOR MODAL - HIGH DENSITY COMPACT VERSION */}
+            {showAvatarSelector && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="w-full max-w-[360px] bg-[#0a0f1c]/90 border border-white/10 rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 duration-500 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 blur-[80px] -mr-24 -mt-24" />
+                        
+                        <div className="relative flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-base font-black text-white tracking-tight uppercase leading-none mb-1.5">Change Identity</h3>
+                                <p className="text-[9px] font-black text-slate-600 tracking-[0.2em] uppercase">Select Active Protocol</p>
+                            </div>
+                            <button 
+                                onClick={() => setShowAvatarSelector(false)}
+                                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-white transition-all"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                            {CHARACTER_AVATARS.map((avatar) => {
+                                const isActive = (user.selectedAvatar || 'luffy') === avatar.id;
+                                return (
+                                    <button
+                                        key={avatar.id}
+                                        onClick={async () => {
+                                            await updateAvatar(avatar.id);
+                                            setShowAvatarSelector(false);
+                                        }}
+                                        className={`group relative flex flex-col items-center p-3 rounded-2xl border transition-all duration-500 ${
+                                            isActive 
+                                                ? 'bg-amber-500 border-amber-400 shadow-xl shadow-amber-500/20' 
+                                                : 'bg-white/[0.03] border-white/5 hover:border-white/20 hover:bg-white/[0.06]'
+                                        }`}
+                                    >
+                                        <div className={`w-12 h-12 rounded-full overflow-hidden border transition-transform duration-500 group-hover:scale-110 mb-2 ${
+                                            isActive ? 'border-white/40' : 'border-white/10'
+                                        }`}>
+                                            <img src={avatar.image} alt={avatar.name} className="w-full h-full object-cover" />
+                                        </div>
+                                        <span className={`text-[8px] font-black uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
+                                            {avatar.id}
+                                        </span>
+                                        {isActive && (
+                                            <div className="absolute top-1 right-1">
+                                                <div className="w-3 h-3 bg-slate-900 rounded-full flex items-center justify-center">
+                                                    <CheckCircle2 className="w-2 h-2 text-white" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
