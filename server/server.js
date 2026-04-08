@@ -16,7 +16,7 @@ import { OAuth2Client } from 'google-auth-library';
 import Joi from 'joi';
 import { exec } from 'child_process';
 import bcrypt from 'bcrypt';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import crypto from 'crypto';
 import disposableDomains from 'disposable-email-domains' with { type: 'json' };
 
@@ -141,32 +141,8 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
-// --- EMAIL CONFIGURATION (Hardened for Cloud Port 587) ---
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use TLS (STARTTLS)
-    requireTLS: true,
-    auth: {
-        user: (process.env.EMAIL_USER || '').trim(),
-        pass: (process.env.EMAIL_PASS || '').trim()
-    },
-    pool: true,
-    connectionTimeout: 30000, // 30s for slow handshakes
-    greetingTimeout: 30000,
-    socketTimeout: 45000      
-});
-
-// Verify connection configuration on startup
-/* 🛠️ SILENCED FOR INSTANT DEPLOYMENT
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('[AUTH][EMAIL_ERROR] Transporter initialization failed:', error);
-    } else {
-        console.log('[AUTH][EMAIL] Server is ready to send verification codes');
-    }
-});
-*/
+// --- EMAIL CONFIGURATION (Resend API - Cloud Safe) ---
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Temporary storage for OTPs (In-memory for now)
 const otps = new Map(); // email -> { hashedOtp, userData, expiresAt, attempts, lastSentAt }
@@ -187,8 +163,8 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 const sendOTPEmail = async (email, otp) => {
-    const mailOptions = {
-        from: `"OP Master Support" <${process.env.EMAIL_USER}>`,
+    const { error } = await resend.emails.send({
+        from: 'OP Master Support <onboarding@resend.dev>',
         to: email,
         subject: '🏴‍☠️ Email Verification from OP Masters Support Team',
         html: `
@@ -230,8 +206,8 @@ const sendOTPEmail = async (email, otp) => {
                 </div>
             </div>
         `
-    };
-    return transporter.sendMail(mailOptions);
+    });
+    if (error) throw new Error(error.message);
 };
 
 // --- EMAIL DIAGNOSTIC TOOL ---
