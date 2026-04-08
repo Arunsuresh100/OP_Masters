@@ -17,7 +17,21 @@ import Joi from 'joi';
 import { exec } from 'child_process';
 import bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 import disposableDomains from 'disposable-email-domains' with { type: 'json' };
+
+// --- UTILITIES & HELPERS ---
+const hashOTP = (otp) => crypto.createHash('sha256').update(otp).digest('hex');
+
+const maskEmail = (email) => {
+    if (!email) return 'N/A';
+    const [user, domain] = email.split('@');
+    if (!domain) return email;
+    const maskedUser = user.length > 2 ? user[0] + '***' + user[user.length - 1] : user + '***';
+    return `${maskedUser}@${domain}`;
+};
+
+const randomDelay = () => new Promise(r => setTimeout(r, 200 + Math.random() * 300));
 
 // Google Client Init
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -134,23 +148,65 @@ const transporter = nodemailer.createTransport({
 });
 
 // Temporary storage for OTPs (In-memory for now)
-const otps = new Map(); // email -> { otp, userData, expires }
+const otps = new Map(); // email -> { hashedOtp, userData, expiresAt, attempts, lastSentAt }
+
+// --- BACKGROUND JANITOR (Clean expired OTPs every 5 mins) ---
+setInterval(() => {
+    const now = Date.now();
+    let cleaned = 0;
+    for (const [email, record] of otps.entries()) {
+        if (now > record.expiresAt) {
+            otps.delete(email);
+            cleaned++;
+        }
+    }
+    if (cleaned > 0) {
+        console.log(`[AUTH][JANITOR] Purged ${cleaned} expired OTP sessions.`);
+    }
+}, 5 * 60 * 1000);
 
 const sendOTPEmail = async (email, otp) => {
     const mailOptions = {
         from: `"OP Master Support" <${process.env.EMAIL_USER}>`,
         to: email,
-        subject: '🔒 Your One Piece Trade Verification Code',
+        subject: '🏴‍☠️ Email Verification from OP Masters Support Team',
         html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                <h2 style="color: #f59e0b; text-align: center;">Identity Verification</h2>
-                <p>Welcome to <strong>OP Master</strong>! To complete your registration and secure your collection, please enter the following verification code:</p>
-                <div style="background: #fdf2f2; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
-                    <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #b91c1c;">${otp}</span>
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 40px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 24px; color: #f8fafc; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                <div style="padding: 40px 30px; text-align: center;">
+                    <div style="margin-bottom: 32px;">
+                        <span style="display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border-radius: 10px; font-weight: 800; letter-spacing: 1.5px; color: #ffffff; text-transform: uppercase; font-size: 12px;">
+                            OP MASTER
+                        </span>
+                    </div>
+                    
+                    <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.5px; text-align: center;">Email Verification</h1>
+                    <p style="color: #94a3b8; font-size: 15px; line-height: 1.6; margin: 0 auto 32px auto; max-width: 440px; text-align: center;">
+                        To secure your collection and start trading on the Grand Line, please use the code below.
+                    </p>
+                    
+                    <div style="background-color: rgba(255, 255, 255, 0.03); padding: 32px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 24px; position: relative;">
+                        <div style="font-size: 48px; font-weight: 900; letter-spacing: 12px; color: #f59e0b; font-family: 'Courier New', monospace; text-align: center; width: 100%;">
+                            ${otp}
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <div style="display: inline-block; padding-bottom: 8px; border-bottom: 1px solid rgba(248, 113, 113, 0.3);">
+                            <span style="color: #f87171; font-size: 12px; font-weight: 700;">
+                                <span style="font-size: 14px; vertical-align: middle; margin-right: 6px;">⚠️</span> Expiring in 3 minutes
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid #1e293b; padding-top: 30px; text-align: center;">
+                        <p style="font-size: 12px; color: #64748b; margin: 0 0 8px 0; text-align: center;">
+                            If you didn't request this, please ignore this email.
+                        </p>
+                        <p style="font-size: 11px; font-weight: 800; color: #f59e0b; text-transform: uppercase; letter-spacing: 2px; margin: 0; text-align: center;">
+                            Mastering the Grand Line
+                        </p>
+                    </div>
                 </div>
-                <p style="color: #666; font-size: 12px; text-align: center;">This code will expire in 10 minutes. If you didn't request this, please ignore this email.</p>
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                <p style="font-size: 10px; color: #999; text-align: center;">Mastering the Grand Line of Card Trading.</p>
             </div>
         `
     };
@@ -230,12 +286,22 @@ app.get('/api/card-image', async (req, res) => {
 });
 
 // 3. Rate Limiting (Expanded for Development)
+// 3. Rate Limiting (General)
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10000, // limit each IP to 10,000 requests per windowMs
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 1000, // limit each IP to 1,000 requests per windowMs
     message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
+
+// 4. Stricter Auth Rate Limiter
+const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10, // Limit each IP to 10 OTP requests per hour (increased slightly for testing)
+    message: { error: 'Security Alert: Too many verification attempts. Please try again in an hour.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -687,7 +753,8 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 
 // --- SIGNUP ENDPOINTS ---
 // --- SIGNUP ENDPOINTS (Modified for Data Integrity) ---
-app.post('/api/auth/signup/init', async (req, res) => {
+// --- SIGNUP ENDPOINTS (REFACTORED FOR OTP) ---
+app.post('/api/auth/signup/init', authLimiter, async (req, res) => {
     let { name, email, phone, password, gender, dob } = req.body;
     
     if (!name || !email || !password) {
@@ -702,74 +769,147 @@ app.post('/api/auth/signup/init', async (req, res) => {
     email = email.toLowerCase().trim();
     phone = phone?.replace(/\D/g, '') || '';
 
-    // ZERO-DAY SECURITY OVERRIDE: Extended Disposable Email Blocker
+    // Disposable Check
     const emailDomain = email.split('@')[1];
     let isDisposable = false;
-
-    // 1. Dynamic Live Check (Defeats day-1 Telegram bots like DropMail)
     try {
         const debounceRes = await fetch(`https://disposable.debounce.io/?email=${email}`);
         const debounceData = await debounceRes.json();
-        if (debounceData.disposable === 'true') {
-            isDisposable = true;
-        }
+        if (debounceData.disposable === 'true') isDisposable = true;
     } catch (err) {
-        console.warn('Debounce API network timeout, relying on local offline vault.');
-    }
-
-    // 2. Offline Vault Fallback (Catches 30k+ known spam domains)
-    if (!isDisposable && emailDomain && disposableDomains.includes(emailDomain)) {
-        isDisposable = true;
+        if (emailDomain && disposableDomains.includes(emailDomain)) isDisposable = true;
     }
 
     if (isDisposable) {
-        console.warn(`[SECURITY] Blocked disposable email signup attempt: ${email}`);
-        return res.status(400).json({ error: 'Disposable & temporary email addresses are strictly prohibited.' });
+        console.warn(`[SECURITY] Blocked disposable email: ${maskEmail(email)}`);
+        return res.status(400).json({ error: 'Disposable email addresses are not allowed.' });
     }
 
     try {
-        // 1. Check if Email or Phone already exists (Improved Syntax)
+        // 1. Double Check Existing User
         const { data: existingUser, error: checkError } = await supabase
             .from('users')
             .select('email, phone')
             .or(`email.eq.${email},phone.eq.${phone}`)
             .maybeSingle();
 
-        if (checkError) {
-            console.error('🔍 Supabase Check Error:', checkError.message);
-            throw new Error('Verification failed. Try again.');
-        }
-
+        if (checkError) throw new Error('Database verification failed.');
         if (existingUser) {
             if (existingUser.email === email) return res.status(400).json({ error: 'Email already registered.' });
             if (existingUser.phone === phone) return res.status(400).json({ error: 'Phone number already registered.' });
         }
 
-        // 2. Hash Password and Create User immediately
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // 2. Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const hashedOtp = hashOTP(otp);
+
+        // 3. Save to memory Map
+        otps.set(email, {
+            hashedOtp,
+            userData: { name, email, phone, password, gender, dob },
+            expiresAt: Date.now() + 3 * 60 * 1000, // 3 minutes
+            attempts: 0,
+            lastSentAt: Date.now()
+        });
+
+        // 4. Send Email (Non-blocking for faster UI feel)
+        sendOTPEmail(email, otp).catch(e => console.error('[AUTH][EMAIL_ERROR]', e.message));
+        console.log(`[AUTH][OTP] Triggered for: ${maskEmail(email)}`);
+
+        res.json({ success: true, message: 'OTP sent to your email ID' });
+    } catch (err) {
+        console.error('[AUTH][ERROR] Signup Init:', err.message);
+        res.status(500).json({ error: 'Failed to initiate signup. Please try again.' });
+    }
+});
+
+app.post('/api/auth/signup/resend', async (req, res) => {
+    let { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required.' });
+    email = email.toLowerCase().trim();
+
+    const record = otps.get(email);
+    if (!record) return res.status(400).json({ error: 'No active session found. Please restart signup.' });
+
+    // Backend Cooldown Enforcement (60s)
+    const timeSinceLast = Date.now() - record.lastSentAt;
+    if (timeSinceLast < 60000) {
+        return res.status(429).json({ error: `Please wait ${Math.ceil((60000 - timeSinceLast) / 1000)}s before resending.` });
+    }
+
+    try {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        record.hashedOtp = hashOTP(otp);
+        record.lastSentAt = Date.now();
+        record.attempts = 0; // Reset attempts on resend
+
+        await sendOTPEmail(email, otp);
+        console.log(`[AUTH][OTP] Resent to: ${maskEmail(email)}`);
+        res.json({ success: true, message: 'New verification code sent!' });
+    } catch (err) {
+        console.error('[AUTH][ERROR] Resend failed:', err.message);
+        res.status(500).json({ error: 'Failed to resend code.' });
+    }
+});
+
+app.post('/api/auth/signup/verify', async (req, res) => {
+    let { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ error: 'Email and code are required.' });
+    email = email.toLowerCase().trim();
+
+    // Mitigation for timing attacks
+    await randomDelay();
+
+    const record = otps.get(email);
+    if (!record) return res.status(400).json({ error: 'Session expired or not found.' });
+
+    // Check expiration
+    if (Date.now() > record.expiresAt) {
+        otps.delete(email); // Instant cleanup
+        return res.status(400).json({ error: 'Verification code expired. Please restart signup.' });
+    }
+
+    // Attempt protection
+    if (record.attempts >= 5) {
+        otps.delete(email);
+        return res.status(401).json({ error: 'Security Alert: Max attempts reached. Please restart signup.' });
+    }
+
+    // Verify OTP
+    if (hashOTP(otp) !== record.hashedOtp) {
+        record.attempts++;
+        console.warn(`[AUTH][WARN] Failed OTP attempt for ${maskEmail(email)} (${record.attempts}/5)`);
+        return res.status(400).json({ error: `Invalid code. ${5 - record.attempts} attempts remaining.` });
+    }
+
+    try {
+        // RACE CONDITION SAFETY: Re-check DB right before creating user
+        const { data: doubleCheck } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
+        if (doubleCheck) {
+            otps.delete(email);
+            return res.status(400).json({ error: 'Account already created. Please log in.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(record.userData.password, 10);
         const newUser = {
             id: 'user_' + Date.now(),
-            name,
-            email,
-            phone: phone || '',
+            name: record.userData.name,
+            email: record.userData.email,
+            phone: record.userData.phone || '',
             password: hashedPassword,
-            gender: gender || '',
-            dob: dob || null,
-            auth_provider: 'local',
             role: 'user',
+            auth_provider: 'local',
             joined_at: new Date().toISOString()
         };
 
         const { error: insertError } = await supabase.from('users').insert([newUser]);
-        if (insertError) {
-            console.error('Supabase Insert Error:', insertError);
-            if (insertError.code === '23505') {
-                return res.status(400).json({ error: 'This email or phone is already registered.' });
-            }
-            throw new Error('Database insertion failed.');
-        }
+        if (insertError) throw insertError;
 
-        // 3. Auto-Login after Signup
+        // Cleanup
+        otps.delete(email);
+        console.log(`[AUTH][SUCCESS] User verified and created: ${maskEmail(email)}`);
+
+        // Automatically log in
         const sessionToken = jwt.sign({ 
             id: newUser.id,
             email: newUser.email,
@@ -778,7 +918,6 @@ app.post('/api/auth/signup/init', async (req, res) => {
         }, JWT_SECRET, { expiresIn: '24h' });
 
         const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
-        res.clearCookie('admin_token'); // Rip apart ghost admin session
         res.cookie('auth_token', sessionToken, {
             httpOnly: true,
             secure: isProd,
@@ -786,64 +925,22 @@ app.post('/api/auth/signup/init', async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000
         });
 
-        res.json({ 
-            success: true, 
-            message: 'Account created successfully!', 
-            user: { email: newUser.email, name: newUser.name } 
-        });
+        res.json({ success: true, message: 'Account verified successfully!', user: { email: newUser.email, name: newUser.name } });
     } catch (err) {
-        console.error('Signup error:', err);
-        res.status(500).json({ error: err.message || 'Failed to create account.' });
-    }
-});
-
-app.post('/api/auth/signup/verify', async (req, res) => {
-    const { email, otp } = req.body;
-    
-    if (!email || !otp) {
-        return res.status(400).json({ error: 'Email and OTP are required' });
-    }
-
-    const record = otps.get(email);
-    if (!record || record.otp !== otp) {
-        return res.status(400).json({ error: 'Invalid verification code' });
-    }
-
-    if (Date.now() > record.expires) {
-        otps.delete(email);
-        return res.status(400).json({ error: 'Verification code expired' });
-    }
-
-    try {
-        const hashedPassword = await bcrypt.hash(record.userData.password, 10);
-        
-        // SAVE TO SUPABASE
-        const { error } = await supabase.from('users').insert([{
-            id: 'user_' + Date.now(),
-            name: record.userData.name,
-            email: record.userData.email,
-            phone: record.userData.phone || '',
-            password: hashedPassword,
-            role: 'user',
-            joined_at: new Date().toISOString()
-        }]);
-
-        if (error) {
-            console.error('Supabase Insert Error:', error);
-            return res.status(500).json({ error: 'Database error: Could not save user.' });
-        }
-
-        otps.delete(email);
-        res.json({ success: true, message: 'Account created successfully! You can now log in.' });
-    } catch (err) {
-        console.error('Signup error:', err);
-        res.status(500).json({ error: 'Failed to create account.' });
+        console.error('[AUTH][ERROR] Final Verification:', err.message);
+        res.status(500).json({ error: 'Verification succeeded but account creation failed. Please contact support.' });
     }
 });
 
 app.post('/api/auth/logout', (req, res) => {
-    res.clearCookie('admin_token');
-    res.clearCookie('auth_token');
+    const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+    const cookieOptions = {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+    };
+    res.clearCookie('admin_token', cookieOptions);
+    res.clearCookie('auth_token', cookieOptions);
     res.json({ success: true, message: 'Logged out successfully' });
 });
 

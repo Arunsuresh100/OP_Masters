@@ -153,7 +153,16 @@ export const UserProvider = ({ children }) => {
         localStorage.setItem('op_user', JSON.stringify(userData));
     };
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } catch (err) {
+            console.error('[AUTH] Logout notification failed:', err);
+        }
+
         setUser(null);
         setTransactions([]);
         setWishlist([]);

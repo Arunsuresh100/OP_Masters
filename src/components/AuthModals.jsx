@@ -22,12 +22,21 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
         dob: ''
     });
 
-    const [otpArray, setOtpArray] = useState(['', '', '', '', '']);
+    const [otpArray, setOtpArray] = useState(['', '', '', '', '', '']);
     const otpRefs = useRef([]);
+
+    const maskEmail = (email) => {
+        if (!email) return '';
+        const [user, domain] = email.split('@');
+        if (!domain) return email;
+        const maskedUser = user.length > 2 ? user[0] + '***' + user[user.length - 1] : user + '***';
+        return `${maskedUser}@${domain}`;
+    };
 
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [timer, setTimer] = useState(180);
+    const [timer, setTimer] = useState(180); // 3 minutes standard
+    const [resendCooldown, setResendCooldown] = useState(0);
     const [isValidating, setIsValidating] = useState(false);
     const [touched, setTouched] = useState({});
     
@@ -56,18 +65,20 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             setError('');
             setSuccess('');
             setIsValidating(false);
-            setOtpArray(['', '', '', '', '']);
+            setOtpArray(['', '', '', '', '', '']);
+            setResendCooldown(0);
         }
     }, [isOpen, initialMode]);
 
     const handleReset = (newView = 'login') => {
         setFormData({ email: '', password: '' });
         setSignupData({ name: '', email: '', phone: '', password: '', gender: '', dob: '' });
-        setOtpArray(['', '', '', '', '']);
+        setOtpArray(['', '', '', '', '', '']);
         setError('');
         setSuccess('');
         setView(newView);
         setTimer(180);
+        setResendCooldown(0);
         setIsValidating(false);
     };
 
@@ -77,11 +88,19 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             interval = setInterval(() => {
                 setTimer((prev) => prev - 1);
             }, 1000);
-        } else if (timer === 0) {
-            clearInterval(interval);
         }
         return () => clearInterval(interval);
     }, [view, timer]);
+
+    useEffect(() => {
+        let interval = null;
+        if (resendCooldown > 0) {
+            interval = setInterval(() => {
+                setResendCooldown((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [resendCooldown]);
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -94,10 +113,11 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
         if (!isOpen) {
             setFormData({ email: '', password: '' });
             setSignupData({ name: '', email: '', phone: '', password: '', gender: '', dob: '' });
-            setOtpArray(['', '', '', '', '']);
+            setOtpArray(['', '', '', '', '', '']);
             setError('');
             setSuccess('');
-            setTimer(180);
+            setTimer(600);
+            setResendCooldown(0);
             setIsValidating(false);
         }
     }, [isOpen]);
@@ -198,15 +218,14 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Signup failed');
 
-            // Direct Login on Success
-            setSuccess('Account created successfully!');
-            login(data.user);
+            setSuccess('OTP sent to your email ID');
             
+            // Wait 1 second so user sees it on the signup form, then move to OTP
             setTimeout(() => {
-                navigate('/');
-                onClose();
-            }, 1500);
-
+                setSuccess(''); // Clear it so it doesn't show in the OTP box
+                setView('otp');
+                setTimer(180);
+            }, 1000);
         } catch (err) {
             console.error('Signup Error:', err);
             setError(err.message || 'Could not connect to server.');
@@ -221,7 +240,26 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
         const newOtp = [...otpArray];
         newOtp[index] = value.slice(-1);
         setOtpArray(newOtp);
-        if (value && index < 4) otpRefs.current[index + 1]?.focus();
+        if (value && index < 5) otpRefs.current[index + 1]?.focus();
+    };
+
+    const handleOtpPaste = (e) => {
+        e.preventDefault();
+        if (timer === 0 || isValidating) return;
+        
+        const pasteData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        if (!pasteData) return;
+
+        const newOtp = [...otpArray];
+        pasteData.split('').forEach((char, idx) => {
+            if (idx < 6) newOtp[idx] = char;
+        });
+        
+        setOtpArray(newOtp);
+        
+        // Focus the last filled box or the next empty one
+        const nextIndex = Math.min(pasteData.length, 5);
+        otpRefs.current[nextIndex]?.focus();
     };
 
     const handleOtpKeyDown = (index, e) => {
@@ -230,27 +268,68 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
         }
     };
 
-    const handleResend = () => {
-        setOtpArray(['', '', '', '', '']);
-        setTimer(180);
+    const handleResend = async () => {
+        if (resendCooldown > 0 || loading) return;
+        
+        setLoading(true);
         setError('');
-        setSuccess('New code sent!');
+        setSuccess('');
+        
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/signup/resend`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: signupData.email }),
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            
+            setOtpArray(['', '', '', '', '', '']);
+            setTimer(600);
+            setResendCooldown(60);
+            setSuccess('New code sent to your email!');
+        } catch (err) {
+            setError(err.message || 'Failed to resend code.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
         const fullOtp = otpArray.join('');
-        if (fullOtp.length === 5 && timer > 0 && !isValidating) {
-            if (fullOtp.toUpperCase() === 'OPMST') {
+        if (fullOtp.length === 6 && timer > 0 && !isValidating) {
+            const verifyOtp = async () => {
                 setIsValidating(true);
                 setError('');
-                setTimeout(() => {
-                    login({ name: signupData.name || 'Master User', email: signupData.email || 'user@opmasters.com', role: 'user' });
-                    navigate('/');
-                    onClose();
-                }, 2000); 
-            } else {
-                setError('Verification failed. System code required.');
-            }
+                try {
+                    const res = await fetch(`${API_BASE}/api/auth/signup/verify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            email: signupData.email, 
+                            otp: fullOtp 
+                        }),
+                        credentials: 'include'
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error);
+
+                    setSuccess('Identity Verified! Welcome aboard.');
+                    setTimeout(() => {
+                        login(data.user);
+                        navigate('/');
+                        onClose();
+                    }, 1500);
+                } catch (err) {
+                    setError(err.message || 'Verification failed.');
+                    setIsValidating(false);
+                    // Clear OTP array on failure for retry
+                    setOtpArray(['', '', '', '', '', '']);
+                    otpRefs.current[0]?.focus();
+                }
+            };
+            verifyOtp();
         }
     }, [otpArray, timer, isValidating]);
 
@@ -294,14 +373,14 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                             {view === 'login' ? 'Welcome' : view === 'signup' ? 'Create Account' : 'Verify Email'}
                         </h1>
                         <p className="text-slate-400 text-sm normal-case px-4">
-                            {view === 'login' ? 'Access your One Piece card collection' : view === 'signup' ? 'Join the Grand Line of card traders' : `Enter code sent to ${signupData.email || 'your email'}`}
+                            {view === 'login' ? 'Access your One Piece card collection' : view === 'signup' ? 'Join the Grand Line of card traders' : `Enter code sent to ${maskEmail(signupData.email)}`}
                         </p>
                     </div>
 
                     {(error || success) && (
                         <div className={`mb-4 mx-auto w-full p-2.5 border rounded-[10px] flex items-center gap-3 animate-in slide-in-from-top-2 ${error ? 'bg-rose-500/10 border-rose-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
                             {error ? <X className="w-4 h-4 text-rose-500" /> : <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-                            <p className={`text-[10px] font-bold ${error ? 'text-rose-400' : 'text-emerald-400'}`}>{error || success}</p>
+                            <p className={`text-xs font-bold ${error ? 'text-rose-400' : 'text-emerald-400'}`}>{error || success}</p>
                         </div>
                     )}
 
@@ -428,7 +507,9 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                 </div>
 
                                 <div className="w-full">
-                                    <button type="submit" disabled={loading} className={`w-full font-black py-3 rounded-[12px] uppercase text-[11px] tracking-widest transition-all mt-4 shadow-xl transform active:scale-[0.98] ${loading ? 'bg-slate-700 text-slate-400 opacity-50' : 'bg-white text-slate-950 hover:bg-amber-500'}`}>Create Account</button>
+                                    <button type="submit" disabled={loading} className={`w-full font-black py-3 rounded-[12px] uppercase text-[11px] tracking-widest transition-all mt-4 shadow-xl transform active:scale-[0.98] ${loading ? 'bg-slate-700 text-slate-400 opacity-50' : 'bg-white text-slate-950 hover:bg-amber-500'}`}>
+                                        {loading ? 'Sending Code...' : 'Create Account'}
+                                    </button>
                                 </div>
                                 
                                 <div className="mt-6 flex items-center justify-center gap-1.5 text-xs font-bold tracking-wider">
@@ -465,6 +546,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                         value={digit}
                                         onChange={(e) => handleOtpChange(idx, e.target.value)}
                                         onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                                        onPaste={handleOtpPaste}
                                         className={`w-12 h-12 md:w-14 md:h-14 bg-white/5 border-2 rounded-[12px] text-center text-2xl font-black transition-all ${isValidating ? 'border-emerald-500 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : timer === 0 ? 'border-rose-500/20 text-rose-500/50 cursor-not-allowed' : 'border-white/20 text-white focus:border-amber-500 focus:bg-white/10 outline-none'}`}
                                         autoFocus={idx === 0}
                                     />
@@ -473,15 +555,20 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
 
                             <div className="text-center space-y-4">
                                 {timer === 0 ? (
-                                    <button 
-                                        onClick={handleResend}
-                                        className="flex items-center gap-2 mx-auto text-xs text-white font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 px-6 py-3 rounded-[12px] transition-all border border-white/5 shadow-xl"
-                                    >
-                                        <RotateCcw className="w-4 h-4" />
-                                        Resend Code
-                                    </button>
+                                    <div className="space-y-4">
+                                        <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest">Verification Session Expired</p>
+                                        <button 
+                                            onClick={() => setView('signup')}
+                                            className="flex items-center gap-2 mx-auto text-xs text-white font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 px-6 py-3 rounded-[12px] transition-all border border-white/5 shadow-xl"
+                                        >
+                                            <RotateCcw className="w-4 h-4" />
+                                            Restart Signup
+                                        </button>
+                                    </div>
                                 ) : (
-                                    <button onClick={() => setView('signup')} className="text-xs text-amber-500 font-bold uppercase hover:underline tracking-widest">Change Email</button>
+                                    <div className="flex flex-col items-center gap-4">
+                                        <button onClick={() => setView('signup')} className="text-[10px] text-slate-500 font-bold uppercase hover:underline tracking-widest">Change Email Address / Restart</button>
+                                    </div>
                                 )}
                             </div>
                         </div>
