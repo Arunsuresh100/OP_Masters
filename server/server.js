@@ -16,7 +16,6 @@ import { OAuth2Client } from 'google-auth-library';
 import Joi from 'joi';
 import { exec } from 'child_process';
 import bcrypt from 'bcrypt';
-import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import disposableDomains from 'disposable-email-domains' with { type: 'json' };
 
@@ -141,30 +140,64 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
-// --- EMAIL CONFIGURATION (Brevo SMTP - Cloud & Free Friendly) ---
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false, // Use STARTTLS
-    auth: {
-        user: 'arunforgame100@gmail.com',
-        pass: (process.env.BREVO_SMTP_KEY || '').trim()
-    },
-    pool: true,
-    connectionTimeout: 10000, // 10s
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-    debug: true // Log SMTP traffic to Render logs
-});
+// --- EMAIL CONFIGURATION (Brevo API - Unblockable) ---
+const sendOTPEmail = async (email, otp) => {
+    try {
+        const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
+            sender: { name: "OP Master Support", email: "arunforgame100@gmail.com" },
+            to: [{ email: email }],
+            subject: '🏴‍☠️ Email Verification from OP Masters Support Team',
+            htmlContent: `
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 40px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 24px; color: #f8fafc; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                    <div style="padding: 40px 30px; text-align: center;">
+                        <div style="margin-bottom: 32px;">
+                            <span style="display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border-radius: 10px; font-weight: 800; letter-spacing: 1.5px; color: #ffffff; text-transform: uppercase; font-size: 12px;">
+                                OP MASTER
+                            </span>
+                        </div>
+                        
+                        <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.5px; text-align: center;">Email Verification</h1>
+                        <p style="color: #94a3b8; font-size: 15px; line-height: 1.6; margin: 0 auto 32px auto; max-width: 440px; text-align: center;">
+                            To secure your collection and start trading on the Grand Line, please use the code below.
+                        </p>
+                        
+                        <div style="background-color: rgba(255, 255, 255, 0.03); padding: 32px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 24px; position: relative;">
+                            <div style="font-size: 48px; font-weight: 900; letter-spacing: 12px; color: #f59e0b; font-family: 'Courier New', monospace; text-align: center; width: 100%;">
+                                ${otp}
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 30px;">
+                             <div style="display: inline-block; padding-bottom: 8px; border-bottom: 1px solid rgba(248, 113, 113, 0.3);">
+                                <span style="color: #f87171; font-size: 12px; font-weight: 700;">
+                                    <span style="font-size: 14px; vertical-align: middle; margin-right: 6px;">⚠️</span> Expiring in 3 minutes
+                                </span>
+                            </div>
+                        </div>
 
-// Verify connection configuration on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('[AUTH][EMAIL_ERROR] Brevo initialization failed:', error.message);
-    } else {
-        console.log('[AUTH][EMAIL] Brevo is ready to send verification codes');
+                        <div style="border-top: 1px solid #1e293b; padding-top: 30px; text-align: center;">
+                            <p style="font-size: 12px; color: #64748b; margin: 0 0 8px 0; text-align: center;">
+                                If you didn't request this, please ignore this email.
+                            </p>
+                            <p style="font-size: 11px; font-weight: 800; color: #f59e0b; text-transform: uppercase; letter-spacing: 2px; margin: 0; text-align: center;">
+                                Mastering the Grand Line
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `
+        }, {
+            headers: {
+                'api-key': process.env.BREVO_SMTP_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('[AUTH][EMAIL_API_ERROR]', error.response?.data || error.message);
+        throw new Error(error.response?.data?.message || 'Brevo API failure');
     }
-});
+};
 
 // Temporary storage for OTPs (In-memory for now)
 const otps = new Map(); // email -> { hashedOtp, userData, expiresAt, attempts, lastSentAt }
@@ -183,54 +216,6 @@ setInterval(() => {
         console.log(`[AUTH][JANITOR] Purged ${cleaned} expired OTP sessions.`);
     }
 }, 5 * 60 * 1000);
-
-const sendOTPEmail = async (email, otp) => {
-    const mailOptions = {
-        from: '"OP Master Support" <arunforgame100@gmail.com>',
-        to: email,
-        subject: '🏴‍☠️ Email Verification from OP Masters Support Team',
-        html: `
-            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 40px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 24px; color: #f8fafc; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-                <div style="padding: 40px 30px; text-align: center;">
-                    <div style="margin-bottom: 32px;">
-                        <span style="display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border-radius: 10px; font-weight: 800; letter-spacing: 1.5px; color: #ffffff; text-transform: uppercase; font-size: 12px;">
-                            OP MASTER
-                        </span>
-                    </div>
-                    
-                    <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.5px; text-align: center;">Email Verification</h1>
-                    <p style="color: #94a3b8; font-size: 15px; line-height: 1.6; margin: 0 auto 32px auto; max-width: 440px; text-align: center;">
-                        To secure your collection and start trading on the Grand Line, please use the code below.
-                    </p>
-                    
-                    <div style="background-color: rgba(255, 255, 255, 0.03); padding: 32px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 24px; position: relative;">
-                        <div style="font-size: 48px; font-weight: 900; letter-spacing: 12px; color: #f59e0b; font-family: 'Courier New', monospace; text-align: center; width: 100%;">
-                            ${otp}
-                        </div>
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 30px;">
-                        <div style="display: inline-block; padding-bottom: 8px; border-bottom: 1px solid rgba(248, 113, 113, 0.3);">
-                            <span style="color: #f87171; font-size: 12px; font-weight: 700;">
-                                <span style="font-size: 14px; vertical-align: middle; margin-right: 6px;">⚠️</span> Expiring in 3 minutes
-                            </span>
-                        </div>
-                    </div>
-
-                    <div style="border-top: 1px solid #1e293b; padding-top: 30px; text-align: center;">
-                        <p style="font-size: 12px; color: #64748b; margin: 0 0 8px 0; text-align: center;">
-                            If you didn't request this, please ignore this email.
-                        </p>
-                        <p style="font-size: 11px; font-weight: 800; color: #f59e0b; text-transform: uppercase; letter-spacing: 2px; margin: 0; text-align: center;">
-                            Mastering the Grand Line
-                        </p>
-                    </div>
-                </div>
-            </div>
-        `
-    };
-    return transporter.sendMail(mailOptions);
-};
 
 // --- EMAIL DIAGNOSTIC TOOL ---
 app.get('/api/debug/test-email', async (req, res) => {
