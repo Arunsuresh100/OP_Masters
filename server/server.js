@@ -16,7 +16,7 @@ import { OAuth2Client } from 'google-auth-library';
 import Joi from 'joi';
 import { exec } from 'child_process';
 import bcrypt from 'bcrypt';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import disposableDomains from 'disposable-email-domains' with { type: 'json' };
 
@@ -141,8 +141,15 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
-// --- EMAIL CONFIGURATION (Resend API - Cloud Safe) ---
-const resend = new Resend(process.env.RESEND_API_KEY);
+// --- EMAIL CONFIGURATION (Brevo SMTP - Cloud & Free Friendly) ---
+const transporter = nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    auth: {
+        user: 'arunforgame100@gmail.com', // Your Brevo login email
+        pass: process.env.BREVO_SMTP_KEY  // Your 64-character SMTP key
+    }
+});
 
 // Temporary storage for OTPs (In-memory for now)
 const otps = new Map(); // email -> { hashedOtp, userData, expiresAt, attempts, lastSentAt }
@@ -163,8 +170,8 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 const sendOTPEmail = async (email, otp) => {
-    const { error } = await resend.emails.send({
-        from: 'OP Master Support <onboarding@resend.dev>',
+    const mailOptions = {
+        from: '"OP Master Support" <arunforgame100@gmail.com>',
         to: email,
         subject: '🏴‍☠️ Email Verification from OP Masters Support Team',
         html: `
@@ -206,8 +213,8 @@ const sendOTPEmail = async (email, otp) => {
                 </div>
             </div>
         `
-    });
-    if (error) throw new Error(error.message);
+    };
+    return transporter.sendMail(mailOptions);
 };
 
 // --- EMAIL DIAGNOSTIC TOOL ---
