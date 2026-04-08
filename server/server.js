@@ -141,20 +141,24 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
-// --- EMAIL CONFIGURATION (Hardened for Gmail Service) ---
+// --- EMAIL CONFIGURATION (Hardened for Cloud Port 587) ---
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use TLS (STARTTLS)
+    requireTLS: true,
     auth: {
         user: (process.env.EMAIL_USER || '').trim(),
         pass: (process.env.EMAIL_PASS || '').trim()
     },
     pool: true,
-    connectionTimeout: 20000, // 20s
-    greetingTimeout: 20000,
-    socketTimeout: 30000      // 30s
+    connectionTimeout: 30000, // 30s for slow handshakes
+    greetingTimeout: 30000,
+    socketTimeout: 45000      
 });
 
 // Verify connection configuration on startup
+/* 🛠️ SILENCED FOR INSTANT DEPLOYMENT
 transporter.verify((error, success) => {
     if (error) {
         console.error('[AUTH][EMAIL_ERROR] Transporter initialization failed:', error);
@@ -162,6 +166,7 @@ transporter.verify((error, success) => {
         console.log('[AUTH][EMAIL] Server is ready to send verification codes');
     }
 });
+*/
 
 // Temporary storage for OTPs (In-memory for now)
 const otps = new Map(); // email -> { hashedOtp, userData, expiresAt, attempts, lastSentAt }
@@ -232,18 +237,25 @@ const sendOTPEmail = async (email, otp) => {
 // --- EMAIL DIAGNOSTIC TOOL ---
 app.get('/api/debug/test-email', async (req, res) => {
     const targetEmail = req.query.email;
+    const user = process.env.EMAIL_USER;
+    const pass = process.env.EMAIL_PASS;
+
+    if (!user || !pass) {
+        return res.status(500).send(`<h1>❌ CONFIG ERROR</h1><p>Missing EMAIL_USER or EMAIL_PASS in Render Environment Variables.</p>`);
+    }
+
     if (!targetEmail) return res.status(400).send('Usage: /api/debug/test-email?email=your-email@gmail.com');
     
     try {
         await transporter.sendMail({
-            from: `"OP Master Diagnostic" <${process.env.EMAIL_USER}>`,
+            from: `"OP Master Diagnostic" <${user}>`,
             to: targetEmail,
             subject: '🔍 Diagnostic Test from OP Masters',
             html: '<h1>✅ Success</h1><p>The email system is working.</p>'
         });
         res.send('<h1>✅ SUCCESS</h1><p>Email system is working.</p>');
     } catch (err) {
-        res.status(500).send(`<h1>❌ EMAIL FAILED</h1><p>Error: ${err.message}</p>`);
+        res.status(500).send(`<h1>❌ EMAIL FAILED</h1><p>Error: ${err.message}</p><p>Possible Reason: Verify your App Password on Google.</p>`);
     }
 });
 
