@@ -208,7 +208,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
         }
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // Increased to 60s for SMTP reliability
 
         try {
             const res = await fetch(`${API_BASE}/api/auth/signup/init`, {
