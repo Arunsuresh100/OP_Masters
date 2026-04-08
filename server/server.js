@@ -143,9 +143,10 @@ const authenticateToken = async (req, res, next) => {
 
 // --- EMAIL CONFIGURATION (Standard Cloud Config: Port 587) ---
 const transporter = nodemailer.createTransport({
+    pool: true, // Keep connection alive (Faster!)
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // Use TLS (STARTTLS)
+    secure: false, 
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -838,10 +839,12 @@ app.post('/api/auth/signup/init', authLimiter, async (req, res) => {
             lastSentAt: Date.now()
         });
 
-        // 4. Send Email (Required 'await' for cloud stability)
-        await sendOTPEmail(email, otp);
-        console.log(`[AUTH][OTP] Sent to: ${maskEmail(email)}`);
-
+        // 4. Send Email (NON-BLOCKING BACKGROUND SEND)
+        sendOTPEmail(email, otp).catch(err => {
+            console.error('[AUTH][BACKGROUND_ERROR] Email failed in background:', err.message);
+        });
+        
+        console.log(`[AUTH][OTP] Triggered background send for: ${maskEmail(email)}`);
         res.json({ success: true, message: 'OTP sent to your email ID' });
     } catch (err) {
         console.error('[AUTH][ERROR] Signup Init:', err.message);
@@ -944,11 +947,11 @@ app.post('/api/auth/signup/verify', async (req, res) => {
             role: newUser.role
         }, JWT_SECRET, { expiresIn: '24h' });
 
-        const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+        // HARDCODED FOR CROSS-DOMAIN
         res.cookie('auth_token', sessionToken, {
             httpOnly: true,
-            secure: isProd,
-            sameSite: isProd ? 'none' : 'lax',
+            secure: true,
+            sameSite: 'none',
             maxAge: 24 * 60 * 60 * 1000
         });
 
