@@ -271,10 +271,15 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function (origin, callback) {
+        // DIAGNOSTIC LOG: This will show up in your Render Logs
+        if (origin) console.log(`[CORS][DEBUG] Incoming Origin: ${origin}`);
+        
         if (!origin) return callback(null, true);
-        const isVercel = origin.endsWith('.vercel.app');
-        const isRender = origin.endsWith('.onrender.com');
+        
+        const isVercel = origin.includes('.vercel.app');
+        const isRender = origin.includes('.onrender.com');
         const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
+
         if (allowedOrigins.includes(origin) || isVercel || isRender || isLocal) {
             callback(null, true);
         } else {
