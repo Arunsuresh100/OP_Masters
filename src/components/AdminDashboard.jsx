@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ArrowRightLeft
 } from 'lucide-react';
+import { API_URL } from '../constants';
 import { 
   XAxis, 
   YAxis, 
@@ -98,7 +99,7 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
     setLoadingUsers(true);
     try {
       const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users?admin_secret=${secret}`, { credentials: 'include' });
+      const res = await fetch(`${API_URL}/api/admin/users?admin_secret=${secret}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
@@ -116,7 +117,7 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
     setLoadingStats(true);
     try {
       const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/stats?admin_secret=${secret}`, { credentials: 'include' });
+      const res = await fetch(`${API_URL}/api/admin/stats?admin_secret=${secret}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         console.log("[DEBUG] Admin stats fetched:", data);
@@ -148,7 +149,7 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
     setLoadingInventory(true);
     try {
       const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/inventory?admin_secret=${secret}`, { credentials: 'include' });
+      const res = await fetch(`${API_URL}/api/admin/inventory?admin_secret=${secret}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setInventory(data);
@@ -164,7 +165,7 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
   const fetchAllCards = async () => {
     if (activeTab !== 'inventory' || allCards.length > 0) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
+      const res = await fetch(`${API_URL}/api/cards`);
       if (res.ok) {
         const data = await res.json();
         setAllCards(data);
@@ -186,7 +187,7 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
   const handleDeleteInventoryItem = async (id) => {
     try {
       // FIX: Use RESTful path parameter instead of query string to match server route
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/inventory/${id}?admin_secret=${import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100'}`, {
+      const res = await fetch(`${API_URL}/api/admin/inventory/${id}?admin_secret=${import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100'}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -210,7 +211,7 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
     if (!showDeleteModal) return;
     try {
       const secret = import.meta.env.VITE_ADMIN_SECRET || 'Op_masters@100';
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users/${showDeleteModal}?admin_secret=${secret}`, {
+      const res = await fetch(`${API_URL}/api/admin/users/${showDeleteModal}?admin_secret=${secret}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -299,7 +300,7 @@ const AdminDashboard = ({ activeTab = 'dashboard' }) => {
         type: 'Character'
       };
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/inventory`, {
+      const res = await fetch(`${API_URL}/api/admin/inventory`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

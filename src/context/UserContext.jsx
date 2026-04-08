@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { API_URL } from '../constants';
 
 const UserContext = createContext();
 
@@ -33,7 +33,7 @@ export const UserProvider = ({ children }) => {
 
             // Sync with Server (Security)
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+                const res = await fetch(`${API_URL}/api/auth/me`, {
                     credentials: 'include'
                 });
                 
@@ -74,8 +74,8 @@ export const UserProvider = ({ children }) => {
         const fetchCloudData = async () => {
             try {
                 const [vaultRes, wishlistRes] = await Promise.all([
-                    fetch(`${import.meta.env.VITE_API_URL}/api/user/vault`, { credentials: 'include' }),
-                    fetch(`${import.meta.env.VITE_API_URL}/api/user/wishlist`, { credentials: 'include' })
+                    fetch(`${API_URL}/api/user/vault`, { credentials: 'include' }),
+                    fetch(`${API_URL}/api/user/wishlist`, { credentials: 'include' })
                 ]);
 
                 if (!guardAuth(vaultRes) || !guardAuth(wishlistRes)) return;
@@ -104,7 +104,7 @@ export const UserProvider = ({ children }) => {
         setWishlist(updatedWishlist);
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/wishlist${isRemoving ? `/${cardId}` : ''}`, {
+            const res = await fetch(`${API_URL}/api/user/wishlist${isRemoving ? `/${cardId}` : ''}`, {
                 method: isRemoving ? 'DELETE' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: isRemoving ? null : JSON.stringify({ card_id: cardId }),
@@ -128,7 +128,7 @@ export const UserProvider = ({ children }) => {
         setOwnedCards(updatedOwned);
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/vault${isRemoving ? `/${cardId}` : ''}`, {
+            const res = await fetch(`${API_URL}/api/user/vault${isRemoving ? `/${cardId}` : ''}`, {
                 method: isRemoving ? 'DELETE' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: isRemoving ? null : JSON.stringify({ card_id: cardId, quantity }),
@@ -155,7 +155,7 @@ export const UserProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
+            await fetch(`${API_URL}/api/auth/logout`, {
                 method: 'POST',
                 credentials: 'include'
             });
@@ -186,7 +186,7 @@ export const UserProvider = ({ children }) => {
         localStorage.setItem('op_user', JSON.stringify(updatedUser));
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+            const res = await fetch(`${API_URL}/api/users/profile`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ avatar_id: avatarId }),
@@ -204,7 +204,7 @@ export const UserProvider = ({ children }) => {
         localStorage.setItem('op_user', JSON.stringify(updatedUser));
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+            const res = await fetch(`${API_URL}/api/users/profile`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newName }),

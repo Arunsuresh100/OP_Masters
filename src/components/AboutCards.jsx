@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, ArrowRight, ShieldCheck, Database, Search } from 'lucide-react';
+import { API_URL } from '../constants';
 
 const AboutCards = () => {
     return (
@@ -73,7 +74,7 @@ const AboutCards = () => {
                          
                          {/* High Value Card Image */}
                          <img 
-                            src={`${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent("https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p3.png?260330")}`} 
+                            src={`${API_URL}/api/card-image?url=${encodeURIComponent("https://en.onepiece-cardgame.com/images/cardlist/card/OP13-118_p3.png?260330")}`} 
                             alt="Manga Rare Pull" 
                             className="w-full h-full object-contain rounded-[2rem] shadow-2xl transform group-hover:scale-105 transition-transform duration-700" 
                          />

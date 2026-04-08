@@ -3,6 +3,7 @@ import { X, Shield, Mail, Lock, Eye, EyeOff, User, Smartphone, ArrowLeft, CheckC
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useUser } from '../context/UserContext';
+import { API_URL } from '../constants';
 
 const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
     const navigate = useNavigate();
@@ -41,8 +42,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
     const [touched, setTouched] = useState({});
     
     const { login } = useUser();
-    const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const API_BASE = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
+    const API_BASE = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
 
     // MOBILE-ONLY BACKGROUND LOCK
     useEffect(() => {

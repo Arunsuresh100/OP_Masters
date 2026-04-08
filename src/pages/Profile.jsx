@@ -11,7 +11,7 @@ import {
   User, CheckCircle2, AlertCircle, Plus, Minus, X, Trash2
 } from 'lucide-react';
 import { formatPrice } from '../utils';
-import { USD_TO_INR, RARITIES } from '../constants';
+import { USD_TO_INR, RARITIES, API_URL } from '../constants';
 
 const getDeterministicChange = (cardId, userEmail) => {
     const seed = `${cardId}-${userEmail || 'guest'}`;
@@ -26,7 +26,7 @@ const getDeterministicChange = (cardId, userEmail) => {
 
 const getCardImageUrl = (url) => {
   if (!url) return '';
-  return `${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
+  return `${API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
 };
 
 // Character Avatars
@@ -160,7 +160,7 @@ const Profile = () => {
         if (loadingCards && (activeTab === 'vault' || activeTab === 'wishlist')) {
             const fetchCards = async () => {
                 try {
-                    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
+                    const response = await fetch(`${API_URL}/api/cards`);
                     const data = await response.json();
                     setAllCards(data);
                 } catch (err) {

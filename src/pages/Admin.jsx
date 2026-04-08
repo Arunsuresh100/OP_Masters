@@ -15,6 +15,7 @@ import AdminDashboard from '../components/AdminDashboard';
 import TicketManager from '../components/TicketManager';
 import logoImg from '../assets/logo.jpg';
 import vegapunkImg from '../assets/Vegapunk.png';
+import { API_URL } from '../constants';
 
 // Simple Safety Wrapper to prevent White Screen Crashes
 const SafeModule = ({ children }) => {
@@ -64,7 +65,7 @@ const Admin = () => {
   React.useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/check`, { credentials: 'include' });
+        const res = await fetch(`${API_URL}/api/auth/check`, { credentials: 'include' });
         if (res.ok) {
           setAuthorized(true);
         }
@@ -79,7 +80,7 @@ const Admin = () => {
 
   const handleAuth = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
@@ -99,7 +100,7 @@ const Admin = () => {
 
   const handleLogout = async () => {
     try {
-        await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+        await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' });
     } catch (e) { console.error(e); }
     setAuthorized(false);
     setPassword('');

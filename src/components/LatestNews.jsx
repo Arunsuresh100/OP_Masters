@@ -1,5 +1,6 @@
 import React from 'react';
 import { Newspaper, Calendar, ArrowUpRight, Megaphone, Hash, Activity } from 'lucide-react';
+import { API_URL } from '../constants';
 
 const NewsWireItem = ({ category, title, date, link, tagColor, index, isVisible }) => (
   <a 
@@ -57,7 +58,7 @@ const LatestNews = () => {
     React.useEffect(() => {
         const fetchNews = async () => {
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/news`);
+                const res = await fetch(`${API_URL}/api/news`);
                 const data = await res.json();
                 setNews(data);
             } catch (err) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, DollarSign, Info, ShieldCheck, ArrowRight, Wallet, CreditCard, TrendingUp, TrendingDown, AlertTriangle, Loader2 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
-import { USD_TO_INR } from '../constants';
+import { USD_TO_INR, API_URL } from '../constants';
 
 const BuyModal = ({ isOpen, onClose, card }) => {
     const { user, openAuth } = useUser();
@@ -69,7 +69,7 @@ const BuyModal = ({ isOpen, onClose, card }) => {
         /* 
         // Backend Logic (Disabled for Beta)
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/trade/transaction`, {
+            const response = await fetch(`${API_URL}/api/trade/transaction`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

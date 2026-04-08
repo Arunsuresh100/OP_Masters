@@ -3,7 +3,9 @@ import { useUser } from './UserContext';
 
 const SupportContext = createContext();
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_URL } from '../constants';
+
+const API_BASE = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
 
 export const SupportProvider = ({ children }) => {
     const [tickets, setTickets] = useState([]);

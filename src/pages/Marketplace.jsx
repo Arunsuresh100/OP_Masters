@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Activity, DollarSign, X, ChevronRight, BarChart3, Clock, ArrowRightLeft, Wallet, AlertCircle, PlusCircle, HelpCircle, Zap, Info, SlidersHorizontal, Globe, Coins, Diamond, ShoppingCart, Tag, Heart } from 'lucide-react';
-import { RARITIES, USD_TO_INR } from '../constants';
+import { RARITIES, USD_TO_INR, API_URL } from '../constants';
 import { formatPrice } from '../utils';
 import { useUser } from '../context/UserContext';
 import ListingModal from '../components/ListingModal';
@@ -10,7 +10,7 @@ import BuyModal from '../components/BuyModal';
 
 const getCardImageUrl = (url) => {
   if (!url) return '';
-  return `${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
+  return `${API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
 };
 
 const CardImage = ({ src, alt, className }) => {
@@ -203,7 +203,7 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
 
       // Try live market-rates endpoint first
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/market-rates`);
+        const res = await fetch(`${API_URL}/api/market-rates`);
         if (res.ok) {
           const data = await res.json();
           rawCards = data?.rates || [];
@@ -213,7 +213,7 @@ const Marketplace = ({ currency, setCurrency, searchQuery, marketLocale, setMark
 
       // Fallback: if market-rates returned nothing, use /api/cards
       if (rawCards.length === 0) {
-        const res2 = await fetch(`${import.meta.env.VITE_API_URL}/api/cards`);
+        const res2 = await fetch(`${API_URL}/api/cards`);
         const data2 = await res2.json();
         rawCards = data2?.cards || (Array.isArray(data2) ? data2 : []);
       }

@@ -11,7 +11,7 @@ import Profile from './pages/Profile';
 import AuthModals from './components/AuthModals';
 import ScrollToTop from './components/ScrollToTop';
 import { useUser } from './context/UserContext';
-import { CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS } from './constants';
+import { CHANNEL_HANDLE, CHANNEL_ID, CHANNEL_LOGO_URL, FALLBACK_CHANNEL_DATA, FALLBACK_VIDEOS, API_URL } from './constants';
 import { parseDuration, timeAgo, formatDuration, formatCompactNumber } from './utils';
 
 // Using a public path for the logo to prevent build crashes if the file is missing
@@ -51,7 +51,7 @@ const App = () => {
     const fetchYouTubeData = async () => {
       const startTime = Date.now();
       try {
-        const backendUrl = `${import.meta.env.VITE_API_URL}/api/youtube`;
+        const backendUrl = `${API_URL}/api/youtube`;
         
         // 1. Fetch channel info from proxy
         const channelResponse = await fetch(`${backendUrl}/channel`);

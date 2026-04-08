@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Upload, X, Info, Filter, SlidersHorizontal, ChevronLeft, ChevronRight, Package, CheckCircle2 } from 'lucide-react';
-import { RARITIES, USD_TO_INR } from '../constants';
+import { RARITIES, USD_TO_INR, API_URL } from '../constants';
 import { formatPrice } from '../utils';
 import { useUser } from '../context/UserContext';
 
@@ -8,7 +8,7 @@ const getCardImageUrl = (url) => {
   if (!url) return '';
   // If it's a direct upload (base64) or a blob, return it directly
   if (url.startsWith('data:') || url.startsWith('blob:')) return url;
-  return `${import.meta.env.VITE_API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
+  return `${API_URL}/api/card-image?url=${encodeURIComponent(url)}`;
 };
 
 const ImageWithLoader = ({ src, alt, className }) => {
@@ -212,7 +212,7 @@ const Cards = ({ currency, setCurrency, searchQuery, marketLocale, setMarketLoca
   };
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/cards`)
+    fetch(`${API_URL}/api/cards`)
       .then(res => res.json())
       .then(data => {
         const sortedData = Array.isArray(data) ? data : [];
