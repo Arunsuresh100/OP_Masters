@@ -759,12 +759,12 @@ app.post('/api/auth/login', async (req, res) => {
             role: user.role || 'user'
         }, JWT_SECRET, { expiresIn: '24h' });
 
-        const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
-        res.clearCookie('admin_token'); // Rip apart ghost admin session
+        // HARDCODED FOR CROSS-DOMAIN (Vercel + Render)
+        res.clearCookie('admin_token', { httpOnly: true, secure: true, sameSite: 'none' });
         res.cookie('auth_token', sessionToken, {
             httpOnly: true,
-            secure: isProd,
-            sameSite: isProd ? 'none' : 'lax',
+            secure: true,
+            sameSite: 'none',
             maxAge: 24 * 60 * 60 * 1000
         });
 
