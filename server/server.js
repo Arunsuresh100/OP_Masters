@@ -99,7 +99,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.set("trust proxy", 1); // Trust Render's load balancer for secure cookies
+app.set("trust proxy", 1); 
+app.use(express.json()); 
+app.use(cookieParser());
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YOUTUBE_API_KEY;
 const CHANNEL_ID = process.env.CHANNEL_ID;
@@ -139,11 +141,11 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
-// --- EMAIL CONFIGURATION ---
+// --- EMAIL CONFIGURATION (Standard Cloud Config: Port 587) ---
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false, // Use TLS (STARTTLS)
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -236,10 +238,6 @@ const sendOTPEmail = async (email, otp) => {
 
 // 1. Secure HTTP Headers
 app.use(helmet());
-
-// 2. Global Middleware (CRITICAL: Must be before routes)
-app.use(express.json()); // Allows server to read signup form data
-app.use(cookieParser()); // Allows server to read login cookies
 
 // 2. Strict CORS
 const allowedOrigins = [
@@ -847,7 +845,8 @@ app.post('/api/auth/signup/init', authLimiter, async (req, res) => {
         res.json({ success: true, message: 'OTP sent to your email ID' });
     } catch (err) {
         console.error('[AUTH][ERROR] Signup Init:', err.message);
-        res.status(500).json({ error: 'Failed to initiate signup. Please try again.' });
+        // RETURN ACTUAL ERROR FOR DIAGNOSTICS DEPLOYMENT
+        res.status(500).json({ error: `Server Error: ${err.message}. Please check Render logs.` });
     }
 });
 

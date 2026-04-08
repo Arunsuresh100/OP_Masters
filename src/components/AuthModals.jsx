@@ -207,28 +207,36 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             return setError('Access Denied: You must be at least 18 years old.');
         }
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+
         try {
             const res = await fetch(`${API_BASE}/api/auth/signup/init`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(signupData),
-                credentials: 'include'
+                credentials: 'include',
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Signup failed');
 
             setSuccess('OTP sent to your email ID');
             
-            // Wait 1 second so user sees it on the signup form, then move to OTP
             setTimeout(() => {
-                setSuccess(''); // Clear it so it doesn't show in the OTP box
+                setSuccess('');
                 setView('otp');
                 setTimer(180);
             }, 1000);
         } catch (err) {
+            clearTimeout(timeoutId);
             console.error('Signup Error:', err);
-            setError(err.message || 'Could not connect to server.');
+            const msg = err.name === 'AbortError' 
+                ? 'Server is taking too long to respond. Please try again.'
+                : (err.message || 'Could not connect to server.');
+            setError(msg);
         } finally {
             setLoading(false);
         }
