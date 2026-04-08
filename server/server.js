@@ -225,13 +225,21 @@ const sendOTPEmail = async (email, otp) => {
             </div>
         `
     };
-    return transporter.sendMail(mailOptions);
-};
+    // SECURITY: Add timeout to prevent server hanging if Google is slow
+    const emailPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email service timed out')), 15000)
+    );
 
-// --- SECURITY MIDDLEWARE ---
+    return Promise.race([emailPromise, timeoutPromise]);
+};
 
 // 1. Secure HTTP Headers
 app.use(helmet());
+
+// 2. Global Middleware (CRITICAL: Must be before routes)
+app.use(express.json()); // Allows server to read signup form data
+app.use(cookieParser()); // Allows server to read login cookies
 
 // 2. Strict CORS
 const allowedOrigins = [
@@ -248,26 +256,23 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
+        // Explicitly allow Vercel and Localhost origins
         if (!origin) return callback(null, true);
         
-        // Dynamic matching for Vercel and Render domains
-        const isAllowed = allowedOrigins.some(allowed => {
-            if (allowed.includes('*')) {
-                const regex = new RegExp('^' + allowed.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
-                return regex.test(origin);
-            }
-            return allowed === origin;
-        }) || origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com');
+        const isVercel = origin.endsWith('.vercel.app');
+        const isRender = origin.endsWith('.onrender.com');
+        const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
 
-        if (isAllowed) {
+        if (isVercel || isRender || isLocal) {
             callback(null, true);
         } else {
             console.warn(`[SECURITY] Blocked CORS Origin: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
+            callback(new Error('CORS blocked for this origin'));
         }
     },
-    credentials: true // Crucial for cross-domain cookies
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 const API_URL = 'https://en.onepiece-cardgame.com/';
