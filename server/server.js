@@ -819,8 +819,8 @@ app.post('/api/auth/signup/init', authLimiter, async (req, res) => {
     const emailDomain = email.split('@')[1];
     let isDisposable = false;
     try {
-        const debounceRes = await fetch(`https://disposable.debounce.io/?email=${email}`);
-        const debounceData = await debounceRes.json();
+        const debounceRes = await axios.get(`https://disposable.debounce.io/?email=${email}`, { timeout: 8000 });
+        const debounceData = debounceRes.data;
         if (debounceData.disposable === 'true') isDisposable = true;
     } catch (err) {
         if (emailDomain && disposableDomains.includes(emailDomain)) isDisposable = true;
@@ -858,13 +858,18 @@ app.post('/api/auth/signup/init', authLimiter, async (req, res) => {
             lastSentAt: Date.now()
         });
 
-        // 4. Send Email (NON-BLOCKING BACKGROUND SEND)
-        sendOTPEmail(email, otp).catch(err => {
-            console.error('[AUTH][BACKGROUND_ERROR] Email failed in background:', err.message);
-        });
-        
-        console.log(`[AUTH][OTP] Triggered background send for: ${maskEmail(email)}`);
-        res.json({ success: true, message: 'OTP sent to your email ID' });
+        // 4. Send Email
+        try {
+            await sendOTPEmail(email, otp);
+            console.log(`[AUTH][OTP] Successfully sent to: ${maskEmail(email)}`);
+            res.json({ success: true, message: 'OTP sent to your email ID' });
+        } catch (mailError) {
+            console.error('[AUTH][EMAIL_FAILED] Critical Error:', mailError.message);
+            // Specific error for production debugging
+            return res.status(500).json({ 
+                error: `Mail Delivery Failed: ${mailError.message}. Check SMTP secrets in Render Dashboard.` 
+            });
+        }
     } catch (err) {
         console.error('[AUTH][ERROR] Signup Init:', err.message);
         // RETURN ACTUAL ERROR FOR DIAGNOSTICS DEPLOYMENT
@@ -890,6 +895,7 @@ app.post('/api/auth/signup/resend', async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         record.hashedOtp = hashOTP(otp);
         record.lastSentAt = Date.now();
+        record.expiresAt = Date.now() + 3 * 60 * 1000; // Refresh 3 min window
         record.attempts = 0; // Reset attempts on resend
 
         await sendOTPEmail(email, otp);

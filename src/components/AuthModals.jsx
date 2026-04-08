@@ -116,7 +116,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             setOtpArray(['', '', '', '', '', '']);
             setError('');
             setSuccess('');
-            setTimer(600);
+            setTimer(180);
             setResendCooldown(0);
             setIsValidating(false);
         }
@@ -294,7 +294,7 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
             if (!res.ok) throw new Error(data.error);
             
             setOtpArray(['', '', '', '', '', '']);
-            setTimer(600);
+            setTimer(180); // Reset to 3 minutes
             setResendCooldown(60);
             setSuccess('New code sent to your email!');
         } catch (err) {
