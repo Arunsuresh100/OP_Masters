@@ -141,7 +141,6 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
-// --- EMAIL CONFIGURATION (Standard Cloud Config: Port 587) ---
 // --- EMAIL CONFIGURATION (Hardened for Gmail Service) ---
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -227,14 +226,26 @@ const sendOTPEmail = async (email, otp) => {
             </div>
         `
     };
-    // SECURITY: Add timeout to prevent server hanging if Google is slow
-    const emailPromise = transporter.sendMail(mailOptions);
-    const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Email service timed out')), 15000)
-    );
-
-    return Promise.race([emailPromise, timeoutPromise]);
+    return transporter.sendMail(mailOptions);
 };
+
+// --- EMAIL DIAGNOSTIC TOOL ---
+app.get('/api/debug/test-email', async (req, res) => {
+    const targetEmail = req.query.email;
+    if (!targetEmail) return res.status(400).send('Usage: /api/debug/test-email?email=your-email@gmail.com');
+    
+    try {
+        await transporter.sendMail({
+            from: `"OP Master Diagnostic" <${process.env.EMAIL_USER}>`,
+            to: targetEmail,
+            subject: '🔍 Diagnostic Test from OP Masters',
+            html: '<h1>✅ Success</h1><p>The email system is working.</p>'
+        });
+        res.send('<h1>✅ SUCCESS</h1><p>Email system is working.</p>');
+    } catch (err) {
+        res.status(500).send(`<h1>❌ EMAIL FAILED</h1><p>Error: ${err.message}</p>`);
+    }
+});
 
 // 1. Secure HTTP Headers
 app.use(helmet());
