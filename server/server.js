@@ -99,6 +99,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.set("trust proxy", 1); // Trust Render's load balancer for secure cookies
 const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.YOUTUBE_API_KEY;
 const CHANNEL_ID = process.env.CHANNEL_ID;
@@ -140,10 +141,24 @@ const authenticateToken = async (req, res, next) => {
 
 // --- EMAIL CONFIGURATION ---
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
+
+// Verify connection configuration on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('[AUTH][EMAIL_ERROR] Transporter initialization failed:', error);
+    } else {
+        console.log('[AUTH][EMAIL] Server is ready to send verification codes');
     }
 });
 
@@ -249,10 +264,10 @@ app.use(cors({
             callback(null, true);
         } else {
             console.warn(`[SECURITY] Blocked CORS Origin: ${origin}`);
-            callback(null, false); // Don't throw error, just block
+            callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true
+    credentials: true // Crucial for cross-domain cookies
 }));
 
 const API_URL = 'https://en.onepiece-cardgame.com/';
@@ -344,8 +359,16 @@ const authenticateAny = async (req, res, next) => {
             .single();
 
         if (error || !user) {
-            res.clearCookie('admin_token');
-            res.clearCookie('auth_token');
+            res.clearCookie('auth_token', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None'
+        });
+        res.clearCookie('admin_token', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None'
+        });
             return res.status(401).json({ error: 'Session no longer valid.' });
         }
 
@@ -812,9 +835,9 @@ app.post('/api/auth/signup/init', authLimiter, async (req, res) => {
             lastSentAt: Date.now()
         });
 
-        // 4. Send Email (Non-blocking for faster UI feel)
-        sendOTPEmail(email, otp).catch(e => console.error('[AUTH][EMAIL_ERROR]', e.message));
-        console.log(`[AUTH][OTP] Triggered for: ${maskEmail(email)}`);
+        // 4. Send Email (Required 'await' for cloud stability)
+        await sendOTPEmail(email, otp);
+        console.log(`[AUTH][OTP] Sent to: ${maskEmail(email)}`);
 
         res.json({ success: true, message: 'OTP sent to your email ID' });
     } catch (err) {
