@@ -265,18 +265,15 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Explicitly allow Vercel and Localhost origins
         if (!origin) return callback(null, true);
-        
         const isVercel = origin.endsWith('.vercel.app');
         const isRender = origin.endsWith('.onrender.com');
         const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
-
-        if (isVercel || isRender || isLocal) {
+        if (allowedOrigins.includes(origin) || isVercel || isRender || isLocal) {
             callback(null, true);
         } else {
             console.warn(`[SECURITY] Blocked CORS Origin: ${origin}`);
-            callback(new Error('CORS blocked for this origin'));
+            callback(new Error('Not allowed by CORS'));
         }
     },
     credentials: true,
@@ -1899,10 +1896,12 @@ app.listen(PORT, () => {
     
     // Background card sync (Doesn't block main loop)
     const runStartupSync = () => {
+       /* 🧪 TEMPORARILY DISABLED FOR EMERGENCY DEPLOYMENT STABILIZATION
        exec('node card_scraper.js', { maxBuffer: 1024 * 1024 * 10 }, (error, stdout) => {
            if (error) console.error(`[SYNC ERROR] ${error.message}`);
            else console.log(`[STARTUP SYNC] ${stdout.trim()}`);
        });
+       */
     };
     
     // Delay slightly to ensure server is fully ready
