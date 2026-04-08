@@ -142,18 +142,17 @@ const authenticateToken = async (req, res, next) => {
 };
 
 // --- EMAIL CONFIGURATION (Standard Cloud Config: Port 587) ---
+// --- EMAIL CONFIGURATION (Hardened for Gmail Service) ---
 const transporter = nodemailer.createTransport({
-    pool: true, // Keep connection alive (Faster!)
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, 
+    service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: (process.env.EMAIL_USER || '').trim(),
+        pass: (process.env.EMAIL_PASS || '').trim()
     },
-    tls: {
-        rejectUnauthorized: false
-    }
+    pool: true,
+    connectionTimeout: 20000, // 20s
+    greetingTimeout: 20000,
+    socketTimeout: 30000      // 30s
 });
 
 // Verify connection configuration on startup
