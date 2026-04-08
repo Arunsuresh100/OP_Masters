@@ -330,7 +330,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
 app.get('/', (req, res) => {
-    res.send('One Piece Trade Server is Live! Go to /api/cards to see data.');
+    res.send(`<h1>One Piece Trade Server is Live!</h1><p><b>Version:</b> 2.0.1 - CORS & BREVO_API_FIX</p><p>Go to /api/cards to see data.</p>`);
 });
 
 // --- AUTH MIDDLEWARE ---
@@ -1894,7 +1894,11 @@ app.delete('/api/support/tickets/:id', authenticateAny, async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT} with Secure CORS`);
+    console.log(`=========================================`);
+    console.log(`🚀 DEPLOY VERSION: 2.0.1 - CORS & BREVO_API_FIX`);
+    console.log(`📡 Server running on port ${PORT}`);
+    console.log(`🌍 Allowed Origin: https://opmasterss.vercel.app`);
+    console.log(`=========================================`);
     
     // Background card sync (Doesn't block main loop)
     const runStartupSync = () => {
