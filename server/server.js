@@ -142,6 +142,15 @@ const authenticateToken = async (req, res, next) => {
 
 // --- EMAIL CONFIGURATION (Brevo API - Unblockable) ---
 const sendOTPEmail = async (email, otp) => {
+    const rawKey = process.env.BREVO_SMTP_KEY;
+    
+    if (!rawKey) {
+        console.error('[AUTH][EMAIL_DIAGNOSTIC] Error: BREVO_SMTP_KEY is MISSING in Environment Variables.');
+        throw new Error('Email configuration error: Key missing.');
+    }
+
+    const API_KEY = rawKey.trim();
+
     try {
         const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
             sender: { name: "OP Master Support", email: "arunforgame100@gmail.com" },
@@ -188,14 +197,15 @@ const sendOTPEmail = async (email, otp) => {
             `
         }, {
             headers: {
-                'api-key': process.env.BREVO_SMTP_KEY,
+                'api-key': API_KEY,
+                'x-sib-api-key': API_KEY, // Fallback for some proxies
                 'Content-Type': 'application/json'
             }
         });
         return response.data;
     } catch (error) {
         console.error('[AUTH][EMAIL_API_ERROR]', error.response?.data || error.message);
-        throw new Error(error.response?.data?.message || 'Brevo API failure');
+        throw new Error(error.response?.data?.message || 'Mail Delivery Failed (API Error). Check Brevo keys.');
     }
 };
 
