@@ -145,9 +145,24 @@ const authenticateToken = async (req, res, next) => {
 const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
     port: 587,
+    secure: false, // Use STARTTLS
     auth: {
-        user: 'arunforgame100@gmail.com', // Your Brevo login email
-        pass: process.env.BREVO_SMTP_KEY  // Your 64-character SMTP key
+        user: 'arunforgame100@gmail.com',
+        pass: (process.env.BREVO_SMTP_KEY || '').trim()
+    },
+    pool: true,
+    connectionTimeout: 10000, // 10s
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    debug: true // Log SMTP traffic to Render logs
+});
+
+// Verify connection configuration on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('[AUTH][EMAIL_ERROR] Brevo initialization failed:', error.message);
+    } else {
+        console.log('[AUTH][EMAIL] Brevo is ready to send verification codes');
     }
 });
 
