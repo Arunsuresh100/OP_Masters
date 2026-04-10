@@ -1,26 +1,3 @@
-import { API_KEY, CHANNEL_ID } from './constants';
-
-// Target the hidden "Uploads" playlist for 100% accuracy
-const UPLOADS_PLAYLIST_ID = CHANNEL_ID.replace(/^UC/, 'UU');
-
-export const fetchYouTubeVideos = async (limit = 6) => {
-  const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=${limit}&playlistId=${UPLOADS_PLAYLIST_ID}&key=${API_KEY}`;
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if (!data.items) return [];
-    return data.items.map((item) => ({
-      id: item.snippet.resourceId.videoId,
-      title: item.snippet.title,
-      thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
-      timeAgo: timeAgo(item.snippet.publishedAt),
-      publishedAt: item.snippet.publishedAt
-    }));
-  } catch (error) {
-    console.error("YouTube Fetch Error:", error);
-    return [];
-  }
-};
 
 export const formatDuration = (seconds) => {
   if (!seconds) return '0:00';

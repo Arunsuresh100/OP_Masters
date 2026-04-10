@@ -170,9 +170,11 @@ const sendOTPEmail = async (email, otp) => {
                             To secure your collection and start trading on the Grand Line, please use the code below.
                         </p>
                         
-                        <div style="background-color: rgba(255, 255, 255, 0.03); padding: 32px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 24px; position: relative;">
-                            <div style="font-size: 48px; font-weight: 900; letter-spacing: 12px; color: #f59e0b; font-family: 'Courier New', monospace; text-align: center; width: 100%;">
-                                ${otp}
+                        <div style="background-color: rgba(255, 255, 255, 0.03); padding: 24px 16px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 24px;">
+                            <div style="display: table; margin: 0 auto; border-collapse: separate; border-spacing: 6px;">
+                                <div style="display: table-row;">
+                                    ${otp.split('').map(digit => `<div style="display: table-cell; width: 44px; height: 52px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; text-align: center; vertical-align: middle; font-size: 28px; font-weight: 900; color: #f59e0b; font-family: 'Courier New', monospace;">${digit}</div>`).join('')}
+                                </div>
                             </div>
                         </div>
                         

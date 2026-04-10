@@ -1,3 +1,4 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { API_URL } from '../constants';
 
@@ -21,9 +22,10 @@ export const UserProvider = ({ children }) => {
     useEffect(() => {
         const checkAuth = async () => {
             const savedUser = localStorage.getItem('op_user');
+            const hadStoredSession = !!(savedUser && savedUser !== 'undefined');
             
             // Optimistic Load (Speed)
-            if (savedUser && savedUser !== 'undefined') {
+            if (hadStoredSession) {
                 try {
                     setUser(JSON.parse(savedUser));
                 } catch (err) {
@@ -42,13 +44,24 @@ export const UserProvider = ({ children }) => {
                     setUser(data.user);
                     localStorage.setItem('op_user', JSON.stringify(data.user));
                 } else if (res.status === 401) {
-                    // Session expired or invalid
-                    console.warn('[AUTH] Session background check failed. Logging out.');
-                    logout();
+                    // IMPORTANT: Only clear state if there was a stored session that is now stale.
+                    // Do NOT call logout() if no session existed — this prevents racing with a
+                    // concurrent Google login that sets the cookie after this check starts.
+                    if (hadStoredSession) {
+                        console.warn('[AUTH] Stale session detected. Clearing local state.');
+                        setUser(null);
+                        setTransactions([]);
+                        setWishlist([]);
+                        setOwnedCards({});
+                        localStorage.removeItem('op_user');
+                        localStorage.removeItem('op_wishlist');
+                        localStorage.removeItem('op_owned_cards');
+                    }
+                    // If no stored session, this is a fresh visitor — do nothing.
                 }
             } catch (err) {
                 console.error('[AUTH] Background sync error:', err);
-                // If network fails, we keep the local state but the next API call will catch it
+                // If network fails, keep the local state — next API call will catch it
             } finally {
                 setLoading(false);
             }
