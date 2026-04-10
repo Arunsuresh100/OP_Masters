@@ -8,6 +8,7 @@ import Marketplace from './pages/Marketplace';
 import Cards from './pages/Cards';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
 import AuthModals from './components/AuthModals';
 import ScrollToTop from './components/ScrollToTop';
 import { useUser } from './context/UserContext';
@@ -200,6 +201,9 @@ const App = () => {
         } />
         <Route path="/admin" element={
           <Admin />
+        } />
+        <Route path="/forgot-password" element={
+          <ForgotPassword />
         } />
       </Routes>
       </div>

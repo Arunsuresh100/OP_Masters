@@ -1,6 +1,20 @@
 {
   "news": [
     {
+      "title": "Championship 26-27 Regionals Season 1 has been updated.",
+      "date": "APRIL 10, 2026",
+      "category": "NEWS",
+      "link": "https://en.onepiece-cardgame.com/events/regional-season1-26-27.html",
+      "tagColor": "from-pink-500 to-rose-500"
+    },
+    {
+      "title": "Treasure Cup May 2026 ~ has been updated.",
+      "date": "APRIL 10, 2026",
+      "category": "NEWS",
+      "link": "https://en.onepiece-cardgame.com/events/treasure-cup-may-2026.html",
+      "tagColor": "from-pink-500 to-rose-500"
+    },
+    {
       "title": "Armageddon Expo Auckland Autumn 2026 has been announced.",
       "date": "APRIL 3, 2026",
       "category": "NEWS",
@@ -15,21 +29,7 @@
       "tagColor": "from-pink-500 to-rose-500"
     },
     {
-      "title": "Treasure Cup May 2026 ~ has been updated.",
-      "date": "APRIL 3, 2026",
-      "category": "NEWS",
-      "link": "https://en.onepiece-cardgame.com/events/treasure-cup-may-2026.html",
-      "tagColor": "from-pink-500 to-rose-500"
-    },
-    {
       "title": "Banned/Restricted Card Addition Notice",
-      "date": "MARCH 31, 2026",
-      "category": "NEWS",
-      "link": "https://en.onepiece-cardgame.com/news/restriction-260501.html",
-      "tagColor": "from-pink-500 to-rose-500"
-    },
-    {
-      "title": "Banned/Restricted Cards effective from April 10, 2026 has been announced.",
       "date": "MARCH 31, 2026",
       "category": "NEWS",
       "link": "https://en.onepiece-cardgame.com/news/restriction-260501.html",

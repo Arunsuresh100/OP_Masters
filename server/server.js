@@ -141,12 +141,12 @@ const authenticateToken = async (req, res, next) => {
 };
 
 // --- EMAIL CONFIGURATION (Brevo API - Unblockable) ---
-const sendOTPEmail = async (email, otp) => {
+const sendOTPEmail = async (email, otp, isReset = false) => {
     const rawKey = process.env.BREVO_SMTP_KEY;
     
     if (!rawKey) {
-        console.error('[AUTH][EMAIL_DIAGNOSTIC] Error: BREVO_SMTP_KEY is MISSING in Environment Variables.');
-        throw new Error('Email configuration error: Key missing.');
+        console.error('[AUTH][EMAIL_DIAGNOSTIC] Error: BREVO_SMTP_KEY is MISSING.');
+        throw new Error('Email configuration error.');
     }
 
     const API_KEY = rawKey.trim();
@@ -155,7 +155,7 @@ const sendOTPEmail = async (email, otp) => {
         const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
             sender: { name: "OP Master Support", email: "arunforgame100@gmail.com" },
             to: [{ email: email }],
-            subject: '🏴‍☠️ Email Verification from OP Masters Support Team',
+            subject: isReset ? '🔐 Reset Password from Support Team' : '🏴‍☠️ Email Verification - OP Masters',
             htmlContent: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 40px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 24px; color: #f8fafc; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
                     <div style="padding: 40px 30px; text-align: center;">
@@ -165,9 +165,11 @@ const sendOTPEmail = async (email, otp) => {
                             </span>
                         </div>
                         
-                        <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.5px; text-align: center;">Email Verification</h1>
+                        <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0 0 12px 0; letter-spacing: -0.5px; text-align: center;">
+                            ${isReset ? 'Reset Your Password' : 'Email Verification'}
+                        </h1>
                         <p style="color: #94a3b8; font-size: 15px; line-height: 1.6; margin: 0 auto 32px auto; max-width: 440px; text-align: center;">
-                            To secure your collection and start trading on the Grand Line, please use the code below.
+                            ${isReset ? 'Hello, we received a request to reset your password. Please use the secure support code below to proceed with the reset.' : 'To secure your collection and start trading on the Grand Line, please use the code below.'}
                         </p>
                         
                         <div style="background-color: rgba(255, 255, 255, 0.03); padding: 24px 16px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 24px;">
@@ -329,6 +331,15 @@ const authLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 10, // Limit each IP to 10 OTP requests per hour (increased slightly for testing)
     message: { error: 'Security Alert: Too many verification attempts. Please try again in an hour.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// 5. Reset Password Limiter (Anti-Spam)
+const resetPasswordLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 reset requests
+    message: { error: 'Too many reset attempts. Please wait 15 minutes.' },
     standardHeaders: true,
     legacyHeaders: false,
 });
@@ -849,23 +860,188 @@ app.post('/api/auth/signup/init', authLimiter, async (req, res) => {
             attempts: 0,
             lastSentAt: Date.now()
         });
-
+        
         // 4. Send Email
-        try {
-            await sendOTPEmail(email, otp);
-            console.log(`[AUTH][OTP] Successfully sent to: ${maskEmail(email)}`);
-            res.json({ success: true, message: 'OTP sent to your email ID' });
-        } catch (mailError) {
-            console.error('[AUTH][EMAIL_FAILED] Critical Error:', mailError.message);
-            // Specific error for production debugging
-            return res.status(500).json({ 
-                error: `Mail Delivery Failed: ${mailError.message}. Check SMTP secrets in Render Dashboard.` 
-            });
-        }
+        await sendOTPEmail(email, otp);
+        console.log(`[AUTH] OTP Initialized for ${maskEmail(email)}`);
+        res.json({ success: true, message: 'OTP sent to email.' });
     } catch (err) {
-        console.error('[AUTH][ERROR] Signup Init:', err.message);
-        // RETURN ACTUAL ERROR FOR DIAGNOSTICS DEPLOYMENT
-        res.status(500).json({ error: `Server Error: ${err.message}. Please check Render logs.` });
+        console.error('[AUTH] Signup Init Failed:', err);
+        res.status(500).json({ error: 'Failed to initialize signup' });
+    }
+});
+
+// --- ELITE PASSWORD RESET FLOW ---
+
+// Stage 1: Initialize Reset (Send OTP)
+app.post('/api/auth/reset/init', resetPasswordLimiter, async (req, res) => {
+    let { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+    email = email.toLowerCase().trim();
+
+    try {
+        // 1. Check if user exists
+        const { data: user, error: userError } = await supabase
+            .from('users')
+            .select('id, name')
+            .eq('email', email)
+            .single();
+
+        // Standard Security: Even if user doesn't exist, we return success to prevent email discovery.
+        if (userError || !user) {
+            console.log(`[AUTH][RESET] Reset requested for non-existent email: ${maskEmail(email)}`);
+            return res.json({ success: true, message: 'If an account exists, a reset code has been sent.' });
+        }
+
+        // 2. Cleanup: Remove old reset attempts for this email
+        await supabase.from('password_resets').delete().eq('email', email);
+
+        // 3. Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const hashedOtp = hashOTP(otp);
+
+        // 4. Store in DB (Persistence)
+        const { error: insertError } = await supabase
+            .from('password_resets')
+            .insert({
+                email,
+                hashed_otp: hashedOtp,
+                expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 mins
+                attempts: 0
+            });
+
+        if (insertError) throw insertError;
+
+        // 5. Send Email
+        await sendOTPEmail(email, otp, true);
+        console.log(`[AUTH][RESET] Reset OTP sent to ${maskEmail(email)}`);
+        res.json({ success: true, message: 'Reset code sent to your email.' });
+
+    } catch (err) {
+        console.error('[AUTH][RESET] Init Failed:', err);
+        res.status(500).json({ error: 'Internal server error during reset initialization.' });
+    }
+});
+
+// Stage 2: Verify OTP & Issue Reset Token
+app.post('/api/auth/reset/verify', resetPasswordLimiter, async (req, res) => {
+    let { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
+    email = email.toLowerCase().trim();
+
+    try {
+        // 1. Fetch reset record
+        const { data: record, error } = await supabase
+            .from('password_resets')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (error || !record) {
+            return res.status(400).json({ error: 'Invalid or expired reset session.' });
+        }
+
+        // 2. Expiry Check
+        if (new Date() > new Date(record.expires_at)) {
+            await supabase.from('password_resets').delete().eq('email', email);
+            return res.status(400).json({ error: 'Reset code has expired.' });
+        }
+
+        // 3. Attempt Defense
+        if (record.attempts >= 5) {
+            await supabase.from('password_resets').delete().eq('email', email);
+            return res.status(400).json({ error: 'Too many failed attempts. Please request a new code.' });
+        }
+
+        // 4. Verify Hashed OTP
+        if (record.hashed_otp !== hashOTP(otp)) {
+            await supabase.from('password_resets')
+                .update({ attempts: record.attempts + 1 })
+                .eq('email', email);
+            return res.status(400).json({ error: 'Invalid reset code.' });
+        }
+
+        // 5. Issue Secure Reset Token (JWT - 10 min expiry)
+        const resetToken = jwt.sign({ 
+            email, 
+            purpose: 'password_reset' 
+        }, JWT_SECRET, { expiresIn: '10m' });
+
+        // Update record with token and clear OTP for security
+        await supabase.from('password_resets')
+            .update({ hashed_otp: null, reset_token: resetToken })
+            .eq('email', email);
+
+        res.json({ success: true, resetToken });
+        console.log(`[AUTH][RESET] OTP Verified for ${maskEmail(email)}. Token issued.`);
+
+    } catch (err) {
+        console.error('[AUTH][RESET] Verification Failed:', err);
+        res.status(500).json({ error: 'Internal server error during verification.' });
+    }
+});
+
+// Stage 3: Complete Reset (Update Password)
+app.post('/api/auth/reset/complete', async (req, res) => {
+    let { email, resetToken, newPassword } = req.body;
+    
+    if (!email || !resetToken || !newPassword) {
+        return res.status(400).json({ error: 'Missing required reset credentials.' });
+    }
+    
+    if (newPassword.length < 8 || !/\d/.test(newPassword) || !/[a-zA-Z]/.test(newPassword)) {
+        return res.status(400).json({ error: 'Password must be 8+ characters with at least one letter and one number.' });
+    }
+
+    try {
+        // 1. Verify Reset Token (Signature & Expiry)
+        let decoded;
+        try {
+            decoded = jwt.verify(resetToken, JWT_SECRET);
+        } catch (err) {
+            return res.status(400).json({ error: 'Reset token is invalid or has expired.' });
+        }
+
+        if (decoded.email !== email || decoded.purpose !== 'password_reset') {
+            return res.status(400).json({ error: 'Invalid token payload.' });
+        }
+
+        // 2. Verify token against Database
+        const { data: record, error } = await supabase
+            .from('password_resets')
+            .select('*')
+            .eq('email', email)
+            .eq('reset_token', resetToken)
+            .single();
+
+        if (error || !record) {
+            return res.status(400).json({ error: 'Reset session is no longer valid.' });
+        }
+
+        // 3. Hash & Update Password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ password: hashedPassword })
+            .eq('email', email);
+
+        if (updateError) throw updateError;
+
+        // 4. SECURITY: Mandatory Session Invalidation & Cleanup
+        await supabase.from('password_resets').delete().eq('email', email);
+        
+        // Clear all auth cookies
+        res.clearCookie('auth_token', { httpOnly: true, secure: true, sameSite: 'none' });
+        res.clearCookie('admin_token', { httpOnly: true, secure: true, sameSite: 'none' });
+
+        res.json({ success: true, message: 'Password updated successfully. Please log in.' });
+        console.log(`[AUTH][RESET] Password successfully reset for ${maskEmail(email)}.`);
+
+    } catch (err) {
+        console.error('[AUTH][RESET] Completion Failed:', err);
+        res.status(500).json({ error: 'Internal server error during password reset.' });
     }
 });
 

@@ -410,7 +410,16 @@ const AuthModals = ({ isOpen, onClose, initialMode = 'login' }) => {
                                 </div>
                                 
                                 <div className="flex justify-end">
-                                    <button type="button" onClick={() => { setSuccess('Reset link sent to ' + (formData.email || 'your email')); setError(''); }} className="text-[9px] font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest transition-colors">Forgot Password?</button>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => { 
+                                            onClose();
+                                            navigate('/forgot-password');
+                                        }} 
+                                        className="text-[9px] font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest transition-colors"
+                                    >
+                                        Forgot Password?
+                                    </button>
                                 </div>
 
                                 <div className="w-full">
